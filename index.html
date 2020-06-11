@@ -29,7 +29,7 @@ function hash(data) {
 function color(node) {
   if (node.node_type == 'Seed') {
     return 'blue';
-  } else if (node.verifications && node.verifications.length) {
+  } else if (node.verifications && node.verifications.includes('BrightID')) {
     return 'green';
   } else {
     return 'yellow';
