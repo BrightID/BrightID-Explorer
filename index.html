@@ -1,461 +1,82 @@
-
 <html>
   <head>
     <title>BrightID Graph</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
     <script src = "https://d3js.org/d3.v3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
-    <script type="text/javascript">
-
-const big_r = 8;
-const small_r = 6;
-
-function b64ToUrlSafeB64(s) {
-  const alts = {
-    '/': '_',
-    '+': '-',
-    '=': '',
-  };
-  return s.replace(/[/+=]/g, (c) => alts[c]);
-}
-
-function hash(data) {
-  const h = CryptoJS.SHA256(data);
-  const b = h.toString(CryptoJS.enc.Base64);
-  return b64ToUrlSafeB64(b);
-}
-
-function color(node) {
-  if (node.node_type == 'Seed') {
-    return 'blue';
-  } else if (node.verifications && node.verifications.includes('BrightID')) {
-    return 'green';
-  } else {
-    return 'yellow';
-  }
-};
-
-function move(x, y, z) {
-  svg.transition().duration(1500)
-    .call(zoom.translate([((x*-1*z) + (window.innerWidth/2)), ((y*-1*z) + window.innerHeight/2)])
-    .scale(z).event);
-}
-
-
-last_selected_ids = [];
-function reset_colors(next) {
-  last_selected_ids.forEach(id => {
-    const circle = d3.select((nodes[id].name ? '#back_' : '#node_')+id);
-    circle.style('fill', color(nodes[id]));
-  });
-  last_selected_ids = next;
-  next.forEach(id => {
-    const circle = d3.select((nodes[id].name ? '#back_' : '#node_')+id);
-    circle.style('fill', 'red');
-  });
-}
-
-function set_photo(id, photo) {
-  const node = d3.select('#node_'+id);
-  const p = d3.select(node[0][0].parentNode);
-  const r = nodes[id].rank >= 90 ? big_r : small_r;
-  const size = nodes[id].rank >= 90 ? 'big' : 'small';
-  p.append('circle')
-    .attr('id', 'back_' + id)
-    .attr('r', r+2)
-    .style('fill', function(d) {
-      return color(d)
-    });
-
-  p.append("image")
-    .attr("x", -r)
-    .attr("y", -r)
-    .attr("width", r*2)
-    .attr("height", r*2)
-    .attr("xlink:href", photo)
-    .attr("clip-path", "url(#"+size+"-avatar-clip)")  
-}
-
-function select_group(id) {
-  $('#brightid').val(id);
-  let circle, sum_x = 0, sum_y = 0;
-  for (member of groups[id].members) {
-    sum_x += nodes[member].x;
-    sum_y += nodes[member].y;
-  }
-  reset_colors(groups[id].members);
-  const n = groups[id].members.length;
-  move(sum_x/n, sum_y/n, 1.2);
-}
-
-function select_node(id) {
-  if (id === 'all') {
-    const centerNode = nodes['AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA'];
-    return move(centerNode.x, centerNode.y, 0.8);
-  }
-  const node = nodes[id];
-  if (node.photo) {
-    s = '<img align="right" src="' + node.photo + '" style="border-radius: 50%; width: 42px; height: 42px;"/>';
-    $('#node_info').html(s);
-  } else {
-    $('#node_info').html('');
-  }
-  $('#rank').html(node.rank);
-  $('#brightid').val(node.id);
-  $('#connections').val(node.id);
-  move(node.x, node.y, 2);
-  
-  reset_colors([node.id, ...node.connections]);
-  $("#groups").empty().append(new Option('', 'none'));
-  for (const g of node.groups) {
-    $("#groups").append(new Option(get_group_name(g), g));
-  };
-}
-
-function get_group_name(g) {
-  return (groups[g] && groups[g].name) || g;
-}
-
-
-async function get_backup(key1, key2, password) {
-  try {
-    const data = await $.get(`/storage/${key1}/${key2}`);  
-    return CryptoJS.AES.decrypt(data, password).toString(
-      CryptoJS.enc.Utf8,
-    );
-  } catch {
-    return '';
-  }
-}
-
-async function load_info() {
-  const code = $('#code').val();
-  const password = $('#password').val();
-  $('#login').html('Loading ...')
-  const aesKey = code.substr(0, 24);
-  const uuid = code.substr(24, 12);
-  const b64ip = `${code.substr(36, 6)}==`;
-  const ipAddress = Uint8Array.from(atob(b64ip), c => c.charCodeAt(0)).join('.');
-  const data = await $.get(`/profile/download/${uuid}1`);
-  if (!data.data) {
-    return alert('no result found');
-  }
-  const decrypted = CryptoJS.AES.decrypt(data.data, aesKey).toString(
-    CryptoJS.enc.Utf8,
-  );
-  user = JSON.parse(decrypted);
-  const api_data = await $.get('/api/v4/users/' + user.id);
-  Object.assign(user, api_data);
-  const key1 = hash(user.id + password);
-  let backup_data = await get_backup(key1, 'data', password);
-  if (!backup_data) {
-    return alert('no backup found');
-  }
-  backup_data = JSON.parse(backup_data);
-  Object.assign(user, {
-    ...backup_data.userData,
-    connections: backup_data.connections,
-    groups: backup_data.groups
-  });
-  if (nodes[user.id]) {
-    Object.assign(nodes[user.id], { name: user.name, photo: await get_backup(key1, user.id, password) });
-    set_photo(user.id, nodes[user.id].photo);
-  }
-  if (user.name) {
-    $("#connections").append(new Option(user.name, user.id));
-  }
-  for (const c of (user.connections || [])) {
-    if (nodes[c.id]) {
-      Object.assign(nodes[c.id], { name: c.name, photo: await get_backup(key1, c.id, password) });
-      $("#connections").append(new Option(c.name, c.id));
-      set_photo(c.id, nodes[c.id].photo);
-    }
-  };
-  
-  for (const g of (user.groups || [])) {
-    if (groups[g.id]) {
-      Object.assign(groups[g.id], { name: g.name, photo: await get_backup(key1, g.id, password) });
-    }
-  };
-  $('#login').hide();
-  $('#search').show();
-  $('#info').show();
-}
-
-$( document ).ready(function() {
-  $('#brightid').change(function() {
-    const id = $(this).val();
-    if (nodes[id]) {
-      select_node(id);
-    } else if (groups[id]) {
-      select_group(id);
-    }
-  });
-
-  $('#connections').change(function() {
-    const id = $(this).val();
-    select_node(id);
-  });
-
-  $('#groups').change(function() {
-    const id = $(this).val();
-    select_group(id);
-  });
-
-  $.get('/backups/brightid.json', function (json) {
-    json = JSON.parse(json);
-    nodes = {};
-    json.nodes.forEach(node => node.size = parseInt(node.rank) >= 90 ? 8 : 5);
-    json.nodes.forEach(node => nodes[node.id] = node);
-    groups = {};
-    json.nodes.forEach(node => {
-      node.groups.forEach(group => {
-        if (!groups[group]) {
-          groups[group] = { members: [] };
-        }
-        groups[group].members.push(node.id);
-      });
-    });
-    json.nodes.forEach(node => nodes[node.id].connections = []);
-    json.edges.forEach(edge => {
-      nodes[edge[0]].connections.push(edge[1]);
-      nodes[edge[1]].connections.push(edge[0]);
-    });
-
-    draw_graph(json, color, (node) => {
-      select_node(node.id);
-    });
-  });
-
-  $('#load').click(load_info);
-});
-
-
-function draw_graph(server_graph, color, clickHandler) {
-  var w = window.innerWidth;
-  var h = window.innerHeight;
-
-  var outline = false;
-
-  var size = d3.scale.pow().exponent(1)
-    .domain([1, 100])
-    .range([8, 24]);
-
-  var force = d3.layout.force()
-    .linkDistance(60)
-    .charge(-300)
-  .size([w,h]);
-
-  var default_node_color = "#ccc";
-  //var default_node_color = "rgb(3,190,100)";
-  var default_link_color = "brown";
-  var nominal_stroke = .5;
-  var max_stroke = 4.5;
-  var min_zoom = 0.1;
-  var max_zoom = 7;
-  d3.select("#graph_div").selectAll("*").remove();
-  svg = d3.select("#graph_div").append("svg");
-  defs = svg.append("defs");
-  defs.append("clipPath")
-    .attr("id", "small-avatar-clip")
-    .append("circle")
-    .attr("cx", 0)
-    .attr("cy", 0)
-    .attr("r", small_r)
-    .style("stroke-width", 3)
-    .style('stroke', "red");
-
-  defs.append("clipPath")
-    .attr("id", "big-avatar-clip")
-    .append("circle")
-    .attr("cx", 0)
-    .attr("cy", 0)
-    .attr("r", big_r);
-  zoom = d3.behavior.zoom().scaleExtent([min_zoom, max_zoom])
-  var g = svg.append("g");
-  svg.style("cursor", "move");
-  graph = {
-    'links': [],
-    'nodes': server_graph.nodes
-  };
-  var nodes_map = {}
-  for (var i = 0; i < server_graph.nodes.length; i++) {
-    nodes_map[server_graph.nodes[i].id] = i
-  }
-  server_graph.edges.forEach(function(e) {
-    graph.links.push({
-      'source': nodes_map[e[0]],
-      'target': nodes_map[e[1]]
-    });
-  });
-  var linkedByIndex = {};
-  graph.links.forEach(function(d) {
-    linkedByIndex[d.source + "," + d.target] = true;
-  });
-
-  function isConnected(a, b) {
-    return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index == b.index;
-  }
-
-  function hasConnections(a) {
-    for (var property in linkedByIndex) {
-      s = property.split(",");
-      if ((s[0] == a.index || s[1] == a.index) && linkedByIndex[property]) return true;
-    }
-    return false;
-  }
-
-  force
-    .nodes(graph.nodes)
-    .links(graph.links)
-    .start();
-
-  var link = g.selectAll(".link")
-    .data(graph.links)
-    .enter().append("line")
-    .attr("class", "link")
-    .style("stroke-width", nominal_stroke)
-    .style("stroke", default_link_color)
-
-  var node = g.selectAll(".node")
-    .data(graph.nodes)
-    .enter().append("g")
-    .attr("class", "node")
-    .call(force.drag)
-  node.on("dblclick.zoom", function(d) {
-    d3.event.stopPropagation();
-    var dcx = (window.innerWidth / 2 - d.x * zoom.scale());
-    var dcy = (window.innerHeight / 2 - d.y * zoom.scale());
-    zoom.translate([dcx, dcy]);
-    g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + zoom.scale() + ")");
-  });
-
-  var tocolor = "fill";
-  var towhite = "stroke";
-  if (outline) {
-    tocolor = "stroke"
-    towhite = "fill"
-  }
-  var circle = node.append("path")
-    .attr("d", d3.svg.symbol()
-      .size(function(d) {
-        return Math.PI * Math.pow(d.size, 2);
-      })
-      .type(function(d) {
-        return d.type;
-      }))
-    .style(tocolor, function(d) {
-      return color(d);
-    })
-    .attr("id", function (d) {
-      return 'node_' + d.id;
-    })
-
-  node.on("click", clickHandler);
-  node.on("mouseover", function(d) {
-    svg.style("cursor", "pointer");
-  }).on("mouseout", function(d) {
-    svg.style("cursor", "move");
-  });
-
-  zoom.on("zoom", function() {
-    var stroke = nominal_stroke;
-    if (nominal_stroke * zoom.scale() > max_stroke) stroke = max_stroke / zoom.scale();
-    link.style("stroke-width", stroke);
-    // circle.style("stroke-width", stroke);
-    circle.attr("d", d3.svg.symbol()
-      .size(function(d) {
-        return Math.PI * Math.pow(d.size, 2);
-      })
-      .type(function(d) {
-        return d.type;
-      }))
-
-
-    g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-  });
-
-  svg.call(zoom);
-
-  resize();
-  window.focus();
-  d3.select(window).on("resize", resize);
-
-  force.on("tick", function() {
-
-    node.attr("transform", function(d) {
-      return "translate(" + d.x + "," + d.y + ")";
-    });
-
-    link.attr("x1", function(d) {
-        return d.source.x;
-      })
-      .attr("y1", function(d) {
-        return d.source.y;
-      })
-      .attr("x2", function(d) {
-        return d.target.x;
-      })
-      .attr("y2", function(d) {
-        return d.target.y;
-      });
-
-    node.attr("cx", function(d) {
-        return d.x;
-      })
-      .attr("cy", function(d) {
-        return d.y;
-      });
-  });
-
-  function resize() {
-    var width = $("#graph_div").width(),
-      height = $("#graph_div").height();
-    svg.attr("width", width).attr("height", height);
-
-    force.size([force.size()[0] + (width - w) / zoom.scale(), force.size()[1] + (height - h) / zoom.scale()]).resume();
-  }
-
-  function isNumber(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-  }
-}
-    </script>
+    <script src="app.js"></script>
   </head>
   <body style="margin: 0px;">
-    <div style="background-color: #eee; height: 48px; width: 100%; position: fixed;">
-      <div id="search" style="padding: 10px; float: left;">
-        BrightID/GroupID:
-        <input id="brightid" style="width: 400px;"/>
-        Rank: <span id="rank"> </span>
-      </div>
-      <div id="login" style="float: right; padding: 2px;">
-        <label style="display: inline-block; width: 150px; margin-bottom: 5px;" for="code">Connection Code:</label>
-        <input type="text" id="code" name="code">
-        <br/>
-        <label style="display: inline-block; width: 150px;" for="password">Backup Password:</label>
-        <input type="password" id="password" name="password">
-        <button id="load">Load</button>
-      </div>
-      <div id="info" style="float: right; display: none;">
-        <div style="float: left">
-          <label style="display: inline-block; width: 100px;" for="connections">Connections</label>
-          <select id="connections" style="width: 200px; margin-bottom: 5px;">
-            <option value="all">All</option>
-          </select>
+    <div id="sidenav" class="sidenav">
+      <a id="logoutbtn">Logout</a>
+      <a class="closebtn" onclick="close_nav()">Close</a>
+      <div id="menuform">
+        <div id="loginform">
+          <label for="code">Connection Code:</label>
+          <input type="text" id="code" name="code">
           <br/>
-          <label style="display: inline-block; width: 100px;" for="groups">Groups</label>
-          <select id="groups" style="width: 200px;">
-            <option value="none"></option>
-          </select>
+          <label for="password">Backup Password:</label>
+          <input type="password" id="password" name="password">
+          <button id="load">Load</button>
         </div>
-        <div id="node_info" style="vertical-align: middle; line-height: 64px; float: right; width: 64px;"></div>
+        <label for="code">Upload Regions File:</label>
+        <input type='file' name="regionfile" id='regionfile' accept=".csv"/>
       </div>
+      <div id="userform">
+        <img align="right" id="photo"/>
+        <div id="name"> </div>
+        <div>
+          Rank: <span id="rank"> </span>
+        </div>
+        <label for="brightid">BrightID:</label>
+        <div id="brightid"></div>
+        <input id="brightidtext">
+        <button id="copybrightid">Copy to Clipboard</button>
+        <label for="groups">Groups:</label>
+        <img align="right" id="usergroupphoto"/>
+        <select id="groups" name="groups">
+          <option value="none"></option>
+        </select>
+        <input id="groupstext">
+        <button id="copygroup">Copy to Clipboard</button>
+      </div>
+      <div id="groupform">
+        <img align="right" id="groupphoto"/>
+        <div id="groupname"> </div>
+        <div>
+          Rank: <span id="grouprank"> </span>
+        </div>
+        <label for="groupid">Group ID:</label>
+        <div id="groupid"></div>
+        <input id="groupidtext">
+        <button id="copygroupid">Copy to Clipboard</button>
+        <label for="members">Members:</label>
+        <img align="right" id="groupuserphoto"/>
+        <select id="members" name="members">
+          <option value="none"></option>
+        </select>
+        <input id="memberstext">
+        <button id="copymember">Copy to Clipboard</button>
+      </div>
+    </div>
+    <div style="background-color: #eee; height: 48px; width: 100%; position: fixed;">
+      <div id="searchbox">
+        Search:
+        <select name="searchfield" id="searchfield" style="width: 500px;">
+          <optgroup label="Regions" id="regionsgroup">
+            <option value="Complete Graph">Complete Graph</option>
+          </optgroup>
+          <optgroup label="Users" id="usersgroup"></optgroup>
+          <optgroup label="Groups" id="groupsgroup"></optgroup>
+        </select>
+      </div>
+      <img id="menubtn" src="images/menu.png"/>
     </div>
     <div id="graph_div" style="width: 100%; height: 100%;"></div>
   </body>
-
-
 </html>
 
