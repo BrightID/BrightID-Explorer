@@ -20,6 +20,23 @@ function copy_member() {
   document.execCommand("copy");
 }
 
+function set_date_range() {
+  const v = $("#daterange").val();
+  const today = Date.now();
+  let days;
+  if (v == 'none') {
+    fromdate = new Date(today + 2*24*60*60*1000);
+  } else if (v == 'day') {
+    fromdate = new Date(today - 1*24*60*60*1000);
+  } else if (v == 'week') {
+    fromdate = new Date(today - 7*24*60*60*1000);
+  } else if (v == 'month') {
+    fromdate = new Date(today - 30*24*60*60*1000);
+  }
+  $('#fromdate').val(fromdate.toISOString().split('T')[0]);
+  $('#todate').val(new Date(today).toISOString().split('T')[0]);
+  highlight_edges();
+}
 
 function open_nav() {
   document.getElementById("sidenav").style.width = "300px";
@@ -64,6 +81,19 @@ function parse_regions(s) {
     }
   }
   $("#searchfield").select2({ tags: true });
+}
+
+function highlight_edges() {
+  const fromdate = new Date($('#fromdate').val()).getTime();
+  const todate = new Date($('#todate').val()).getTime() + 24*60*60*1000;
+  for (let k in edges) {
+    const [source, target] = k.split(',');
+    if (fromdate <= edges[k] && edges[k] <= todate) {
+      d3.select(`#line_${source}_${target}`).style("stroke", 'red');
+    } else {
+      d3.select(`#line_${source}_${target}`).style("stroke", default_link_color);
+    }
+  }
 }
 
 const big_r = 8;
@@ -329,9 +359,10 @@ async function load_info() {
 }
 
 $( document ).ready(function() {
+  nodes = {};
+  edges = {};
   $.get('/backups/brightid.json', function (json) {
     json = JSON.parse(json);
-    nodes = {};
     json.nodes.forEach(node => node.size = parseInt(node.rank) >= 90 ? 8 : 5);
     json.nodes.forEach(node => nodes[node.id] = node);
     groups = {};
@@ -358,6 +389,7 @@ $( document ).ready(function() {
     });
     json.nodes.forEach(node => nodes[node.id].connections = []);
     json.edges.forEach(edge => {
+      edges[edge[0] + ',' + edge[1]] = edge[2];
       nodes[edge[0]].connections.push(edge[1]);
       nodes[edge[1]].connections.push(edge[0]);
     });
@@ -367,6 +399,7 @@ $( document ).ready(function() {
     });
   });
   $('#searchfield').change(function() {
+    close_nav();
     const val = $('#searchfield').val();
     if (! val) {
       return;
@@ -423,7 +456,18 @@ $( document ).ready(function() {
   });
   $('#regionfile').change(read_regions);
   $("#searchfield").select2({ tags: true });
+  $('#daterange').change(set_date_range);
+  set_date_range();
+  $('#fromdate').change(highlight_edges);
+  $('#todate').change(highlight_edges);
 });
+
+default_node_color = "#ccc";
+default_link_color = "#ccc";
+nominal_stroke = .5;
+max_stroke = 4.5;
+min_zoom = 0.1;
+max_zoom = 7;
 
 function draw_graph(server_graph, color, clickHandler) {
   var w = window.innerWidth;
@@ -440,13 +484,6 @@ function draw_graph(server_graph, color, clickHandler) {
     .charge(-300)
   .size([w,h]);
 
-  var default_node_color = "#ccc";
-  //var default_node_color = "rgb(3,190,100)";
-  var default_link_color = "brown";
-  var nominal_stroke = .5;
-  var max_stroke = 4.5;
-  var min_zoom = 0.1;
-  var max_zoom = 7;
   d3.select("#graph_div").selectAll("*").remove();
   svg = d3.select("#graph_div").append("svg");
   defs = svg.append("defs");
@@ -466,7 +503,7 @@ function draw_graph(server_graph, color, clickHandler) {
     .attr("cy", 0)
     .attr("r", big_r);
   zoom = d3.behavior.zoom().scaleExtent([min_zoom, max_zoom])
-  var g = svg.append("g");
+  g = svg.append("g");
   svg.style("cursor", "move");
   graph = {
     'links': [],
@@ -479,12 +516,9 @@ function draw_graph(server_graph, color, clickHandler) {
   server_graph.edges.forEach(function(e) {
     graph.links.push({
       'source': nodes_map[e[0]],
-      'target': nodes_map[e[1]]
+      'target': nodes_map[e[1]],
+      'timestamp': e[2],
     });
-  });
-  var linkedByIndex = {};
-  graph.links.forEach(function(d) {
-    linkedByIndex[d.source + "," + d.target] = true;
   });
 
   force
@@ -495,6 +529,9 @@ function draw_graph(server_graph, color, clickHandler) {
   var link = g.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
+    .attr('id', function(edge) {
+      return 'line_' + edge['source'].id + '_' + edge['target'].id;
+    })
     .attr("class", "link")
     .style("stroke-width", nominal_stroke)
     .style("stroke", default_link_color)
@@ -599,18 +636,6 @@ function draw_graph(server_graph, color, clickHandler) {
 
   function isNumber(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
-  }
-
-  function isConnected(a, b) {
-    return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index == b.index;
-  }
-
-  function hasConnections(a) {
-    for (var property in linkedByIndex) {
-      s = property.split(",");
-      if ((s[0] == a.index || s[1] == a.index) && linkedByIndex[property]) return true;
-    }
-    return false;
   }
 
 }
