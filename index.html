@@ -16,15 +16,15 @@
       <a class="closebtn" onclick="close_nav()">Close</a>
       <div id="menuform">
         <div id="loginform" class="box">
-          <label for="code">Connection Code:</label>
-          <input type="text" id="code" name="code">
+          <label for="brightid">BrightID:</label>
+          <input type="text" id="brightid" name="brightid">
           <br/>
           <label for="password">Backup Password:</label>
           <input type="password" id="password" name="password">
           <button id="load">Load</button>
         </div>
         <div class="box">
-          <label for="code">Upload Regions File:</label>
+          <label for="regionfile">Upload Regions File:</label>
           <input type='file' name="regionfile" id='regionfile' accept=".csv"/>
         </div>
         <div class="box">
@@ -45,16 +45,16 @@
         <div>
           Rank: <span id="rank"> </span>
         </div>
-        <label for="brightid">BrightID:</label>
-        <div id="brightid"></div>
-        <input id="brightidtext">
+        <label for="brightidtext">BrightID:</label>
+        <div id="brightidtext"></div>
+        <input id="brightidfield">
         <button id="copybrightid">Copy to Clipboard</button>
         <label for="groups">Groups:</label>
         <img align="right" id="usergroupphoto"/>
         <select id="groups" name="groups">
           <option value="none"></option>
         </select>
-        <input id="groupstext">
+        <input id="groupsfield">
         <button id="copygroup">Copy to Clipboard</button>
       </div>
       <div id="groupform">
@@ -65,14 +65,14 @@
         </div>
         <label for="groupid">Group ID:</label>
         <div id="groupid"></div>
-        <input id="groupidtext">
+        <input id="groupidfield">
         <button id="copygroupid">Copy to Clipboard</button>
         <label for="members">Members:</label>
         <img align="right" id="groupuserphoto"/>
         <select id="members" name="members">
           <option value="none"></option>
         </select>
-        <input id="memberstext">
+        <input id="membersfield">
         <button id="copymember">Copy to Clipboard</button>
       </div>
     </div>

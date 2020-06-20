@@ -36,6 +36,10 @@
   padding: 10px;
 }
 
+#brightid {
+  font-size: 10px;
+}
+
 .box {
   padding-bottom: 20px;
 }
@@ -96,19 +100,19 @@
   margin-top: -42px;
 }
 
-#groupstext {
+#groupsfield {
+  position: absolute;
+  left: -1000px;
+  top: -1000px
+}
+
+#brightidfield {
   position: absolute;
   left: -1000px;
   top: -1000px
 }
 
 #brightidtext {
-  position: absolute;
-  left: -1000px;
-  top: -1000px
-}
-
-#brightid {
   font-size: 10px;
   margin-bottom: 10px;
 }
@@ -143,13 +147,13 @@
   margin-top: -42px;
 }
 
-#memberstext {
+#membersfield {
   position: absolute;
   left: -1000px;
   top: -1000px
 }
 
-#groupidtext {
+#groupidfield {
   position: absolute;
   left: -1000px;
   top: -1000px

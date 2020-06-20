@@ -1,22 +1,22 @@
 function copy_brightid() {
-  $("#brightidtext").select();
+  $("#brightidfield").select();
   document.execCommand("copy");
 }
 
 function copy_group() {
-  $("#groupstext").val($('#groups').val());
-  $("#groupstext").select();
+  $("#groupsfield").val($('#groups').val());
+  $("#groupsfield").select();
   document.execCommand("copy");
 }
 
 function copy_groupid() {
-  $("#groupidtext").select();
+  $("#groupidfield").select();
   document.execCommand("copy");
 }
 
 function copy_member() {
-  $("#memberstext").val($('#members').val());
-  $("#memberstext").select();
+  $("#membersfield").val($('#members').val());
+  $("#membersfield").select();
   document.execCommand("copy");
 }
 
@@ -162,7 +162,7 @@ function set_photo(id, photo) {
     .attr("width", r*2)
     .attr("height", r*2)
     .attr("xlink:href", photo)
-    .attr("clip-path", "url(#"+size+"-avatar-clip)")  
+    .attr("clip-path", "url(#"+size+"-avatar-clip)")
 }
 
 function select_group(id, selected_member, show_details) {
@@ -190,8 +190,8 @@ function select_group(id, selected_member, show_details) {
   }
   $('#grouprank').html(group.rank);
   $('#groupid').html(id);
-  $('#groupidtext').val(id);
-  
+  $('#groupidfield').val(id);
+
   $('#groupuserphoto').hide();
   $("#members").empty().append(new Option('', 'none'));
   for (const member of group.members) {
@@ -245,11 +245,11 @@ function select_node(id, show_details) {
     $('#photo').hide();
   }
   $('#rank').html(node.rank);
-  $('#brightid').html(node.id);
-  $('#brightidtext').val(node.id);
+  $('#brightidtext').html(node.id);
+  $('#brightidfield').val(node.id);
   move(node.x, node.y, 2);
   reset_colors([node.id, ...node.connections], node.id);
-  
+
   $('#usergroupphoto').hide();
   $("#groups").empty().append(new Option('', 'none'));
   for (const g of node.groups) {
@@ -320,31 +320,41 @@ function load_groups(user, key1, password) {
 }
 
 async function load_info() {
-  const code = $('#code').val();
-  const password = $('#password').val();
-  const aesKey = code.substr(0, 24);
-  const uuid = code.substr(24, 12);
-  const b64ip = `${code.substr(36, 6)}==`;
-  const ipAddress = Uint8Array.from(atob(b64ip), c => c.charCodeAt(0)).join('.');
-  const data = await $.get(`/profile/download/${uuid}1`);
-  if (!data.data) {
-    return alert('no result found');
+  const brightid = $('#brightid').val();
+  if (brightid.indexOf('==') > -1) {
+    const code = brightid;
+    const aesKey = code.substr(0, 24);
+    const uuid = code.substr(24, 12);
+    const b64ip = `${code.substr(36, 6)}==`;
+    const ipAddress = Uint8Array.from(atob(b64ip), c => c.charCodeAt(0)).join('.');
+    const data = await $.get(`/profile/download/${uuid}1`);
+    if (!data.data) {
+      return alert('no result found');
+    }
+    const decrypted = CryptoJS.AES.decrypt(data.data, aesKey).toString(
+      CryptoJS.enc.Utf8,
+    );
+    user = JSON.parse(decrypted);
+  } else {
+    user = { id: brightid };
   }
-  const decrypted = CryptoJS.AES.decrypt(data.data, aesKey).toString(
-    CryptoJS.enc.Utf8,
-  );
-  user = JSON.parse(decrypted);
+  const password = $('#password').val();
   const api_data = await $.get('/api/v4/users/' + user.id);
   Object.assign(user, api_data);
   const key1 = hash(user.id + password);
-  backup_data = await $.get(`/storage/${key1}/data`);
+  try {
+    backup_data = await $.get(`/storage/${key1}/data`);
+  } catch {
+    return alert('Invalid BrightID or password or backup not available')
+  }
+
   backup_data = CryptoJS.AES.decrypt(backup_data, password).toString(
     CryptoJS.enc.Utf8,
   );
   close_nav();
   $('#loginform').hide();
   $('#logoutbtn').show();
-
+  localStorage.brightid = user.id;
   if (!backup_data) {
     return alert('no backup found');
   }
@@ -424,7 +434,7 @@ $( document ).ready(function() {
     } else {
       $('#usergroupphoto').hide();
     }
-    select_group(id, $('#brightidtext').val(), false);
+    select_group(id, $('#brightidfield').val(), false);
   });
 
   $('#members').change(function() {
@@ -460,6 +470,9 @@ $( document ).ready(function() {
   set_date_range();
   $('#fromdate').change(highlight_edges);
   $('#todate').change(highlight_edges);
+  if (localStorage.brightid) {
+    $('#brightid').val(localStorage.brightid);
+  }
 });
 
 default_node_color = "#ccc";
