@@ -320,32 +320,25 @@ function load_groups(user, key1, password) {
 }
 
 async function load_info() {
-  const brightid = $('#brightid').val();
-  if (brightid.indexOf('==') > -1) {
-    const code = brightid;
-    const aesKey = code.substr(0, 24);
-    const uuid = code.substr(24, 12);
-    const b64ip = `${code.substr(36, 6)}==`;
-    const ipAddress = Uint8Array.from(atob(b64ip), c => c.charCodeAt(0)).join('.');
-    const data = await $.get(`/profile/download/${uuid}1`);
-    if (!data.data) {
-      return alert('no result found');
-    }
-    const decrypted = CryptoJS.AES.decrypt(data.data, aesKey).toString(
+  const code = $('#code').val();
+  const password = $('#password').val();
+  if (code.indexOf('==') > -1) {
+    const brightid = CryptoJS.AES.decrypt(code, password).toString(
       CryptoJS.enc.Utf8,
     );
-    user = JSON.parse(decrypted);
-  } else {
+    console.log('brightid', brightid);
     user = { id: brightid };
+  } else {
+    user = { id: code };
   }
-  const password = $('#password').val();
-  const api_data = await $.get('/api/v4/users/' + user.id);
-  Object.assign(user, api_data);
-  const key1 = hash(user.id + password);
+
   try {
+    const api_data = await $.get('/api/v4/users/' + user.id);
+    Object.assign(user, api_data);
+    key1 = hash(user.id + password);
     backup_data = await $.get(`/storage/${key1}/data`);
   } catch {
-    return alert('Invalid BrightID or password or backup not available')
+    return alert('Invalid explorer code or password or backup not available')
   }
 
   backup_data = CryptoJS.AES.decrypt(backup_data, password).toString(
@@ -354,7 +347,7 @@ async function load_info() {
   close_nav();
   $('#loginform').hide();
   $('#logoutbtn').show();
-  localStorage.brightid = user.id;
+  localStorage.explorer_code = code;
   if (!backup_data) {
     return alert('no backup found');
   }
@@ -470,8 +463,8 @@ $( document ).ready(function() {
   set_date_range();
   $('#fromdate').change(highlight_edges);
   $('#todate').change(highlight_edges);
-  if (localStorage.brightid) {
-    $('#brightid').val(localStorage.brightid);
+  if (localStorage.explorer_code) {
+    $('#code').val(localStorage.explorer_code);
   }
 });
 
