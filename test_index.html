@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <title>BrightID Graph</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+    <script src = "https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
+    <script src="test_app.js"></script>
+  </head>
+  <body style="margin: 0px;">
+    <div id="sidenav" class="sidenav">
+      <a id="logoutbtn">Logout</a>
+      <a class="closebtn" onclick="close_nav()">Close</a>
+      <div id="menuform">
+        <div id="loginform" class="box">
+          <label for="code">Explorer Code:</label>
+          <input type="text" id="code" name="code">
+          <br/>
+          <label for="password">Backup Password:</label>
+          <input type="password" id="password" name="password">
+          <button id="load">Load</button>
+        </div>
+        <div class="box">
+          <label for="regionfile">Upload Regions File:</label>
+          <input type='file' name="regionfile" id='regionfile' accept=".csv"/>
+        </div>
+        <div class="box">
+          <label for="daterange">Highlight Connections within:</label>
+          <select id="daterange" name="daterange">
+            <option value="none">None</option>
+            <option value="day">Last Day</option>
+            <option value="week">Last Week</option>
+            <option value="month">Last Month</option>
+          </select>
+          <input type="date" id="fromdate" name="fromdate"/>
+          <input type="date" id="todate" name="todate"/>
+        </div>
+      </div>
+      <div id="userform">
+        <img align="right" id="photo"/>
+        <div id="name"> </div>
+        <div>
+          Rank: <span id="rank"> </span>
+        </div>
+        <div>
+          Verifications: <span id="verifications"> </span>
+        </div>
+        <label for="brightidtext">BrightID:</label>
+        <div id="brightidtext"></div>
+        <input id="brightidfield">
+        <button id="copybrightid">Copy to Clipboard</button>
+        <label for="groups">Groups:</label>
+        <img align="right" id="usergroupphoto"/>
+        <select id="groups" name="groups">
+          <option value="none"></option>
+        </select>
+        <input id="groupsfield">
+        <button id="copygroup">Copy to Clipboard</button>
+      </div>
+      <div id="groupform">
+        <img align="right" id="groupphoto"/>
+        <div id="groupname"> </div>
+        <div>
+          Rank: <span id="grouprank"> </span>
+        </div>
+        <label for="groupid">Group ID:</label>
+        <div id="groupid"></div>
+        <input id="groupidfield">
+        <button id="copygroupid">Copy to Clipboard</button>
+        <label for="members">Members:</label>
+        <img align="right" id="groupuserphoto"/>
+        <select id="members" name="members">
+          <option value="none"></option>
+        </select>
+        <input id="membersfield">
+        <button id="copymember">Copy to Clipboard</button>
+      </div>
+    </div>
+    <div style="background-color: #eee; height: 48px; width: 100%; position: fixed;">
+      <div id="searchbox">
+        Search:
+        <select name="searchfield" id="searchfield" style="width: 500px;">
+          <optgroup label="Verifications" id="verificationsgroup">
+            <option value="BrightID">BrightID</option>
+            <option value="DollarForEveryone">DollarForEveryone</option>
+            <option value="CallJoined">CallJoined</option>
+            <option value="SeedConnected">SeedConnected</option>
+            <option value="Rank 1+">Rank 1+</option>
+            <option value="Rank 2+">Rank 2+</option>
+            <option value="Rank 3+">Rank 3+</option>
+            <option value="Rank 4+">Rank 4+</option>
+            <option value="Rank 5">Rank 5</option>
+          </optgroup>
+          <optgroup label="Regions" id="regionsgroup">
+            <option value="Complete Graph">Complete Graph</option>
+          </optgroup>
+          <optgroup label="Users" id="usersgroup"></optgroup>
+          <optgroup label="Groups" id="groupsgroup"></optgroup>
+        </select>
+      </div>
+      <img id="menubtn" src="images/menu.png"/>
+    </div>
+    <div id="graph_div" style="width: 100%; height: 100%;"></div>
+  </body>
+</html>
+
