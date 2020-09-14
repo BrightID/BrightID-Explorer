@@ -75,6 +75,47 @@
         <input id="membersfield">
         <button id="copymember">Copy to Clipboard</button>
       </div>
+      <div id="statisticsform">
+        <div class="container grid-container">
+
+          <div class="card">
+            <p class="card__name">
+              <img src="images/seed.png" class="card__image">
+              No. Seeds
+            </p>
+            <div class="card_num" id="num_seeds">
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="card__name">
+              <img src="images/node.png" class="card__image">
+              No. Nodes
+            </p>
+            <div class="card_num" id="num_nodes">
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="card__name">
+              <img src="images/verified.png" class="card__image">
+              No. Verified
+            </p>
+            <div class="card_num" id="num_verified">
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="card__name">
+              <img src="images/connection.png" class="card__image">
+              Avg Connections
+            </p>
+            <div class="card_num" id="average_connection">
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
     <div style="background-color: #eee; height: 48px; width: 100%; position: fixed;">
       <div id="searchbox">
@@ -87,7 +128,12 @@
           <optgroup label="Groups" id="groupsgroup"></optgroup>
         </select>
       </div>
-      <img id="menubtn" src="images/menu.png"/>
+      <div id="right_header">
+        <a id="statisticsbtn" href="#">
+          Statistics
+        </a>
+        <img id="menubtn" src="images/menu.png"/>
+      </div>
     </div>
     <div id="graph_div" style="width: 100%; height: 100%;"></div>
   </body>
