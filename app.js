@@ -147,8 +147,8 @@ function reset_colors(next, selected_member) {
 function set_photo(id, photo) {
   const node = d3.select('#node_'+id);
   const p = d3.select(node[0][0].parentNode);
-  const r = nodes[id].rank >= 90 ? big_r : small_r;
-  const size = nodes[id].rank >= 90 ? 'big' : 'small';
+  const r = nodes[id].rank >= 3 ? big_r : small_r;
+  const size = nodes[id].rank >= 3 ? 'big' : 'small';
   p.append('circle')
     .attr('id', 'back_' + id)
     .attr('r', r+2)
@@ -204,6 +204,25 @@ function select_group(id, selected_member, show_details) {
   }
 }
 
+function select_verification(v) {
+  const members = [];
+  if (v.startsWith('Rank ')) {
+    const rank = parseInt(v.replace('Rank ', '').replace('+', ''));
+    for (let id in nodes) {
+      if (nodes[id].rank >= rank) {
+        members.push(id);
+      }
+    }
+  } else {
+    for (let id in nodes) {
+      if (nodes[id]?.verifications?.includes(v)) {
+        members.push(id);
+      }
+    }
+  }
+  reset_colors(members);
+}
+
 function select_region(name) {
   if (name == 'Complete Graph') {
     const centerNode = nodes['AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA'];
@@ -245,6 +264,7 @@ function select_node(id, show_details) {
     $('#photo').hide();
   }
   $('#rank').html(node.rank);
+  $('#verifications').html(node.verifications ? node.verifications.join(', ') : '');
   $('#brightidtext').html(node.id);
   $('#brightidfield').val(node.id);
   move(node.x, node.y, 2);
@@ -395,7 +415,7 @@ $( document ).ready(function() {
   edges = {};
   $.get('/backups/brightid.json', function (json) {
     json = JSON.parse(json);
-    json.nodes.forEach(node => node.size = parseInt(node.rank) >= 90 ? 8 : 5);
+    json.nodes.forEach(node => node.size = parseInt(node.rank) >= 3 ? 8 : 5);
     json.nodes.forEach(node => nodes[node.id] = node);
     groups = {};
     json.nodes.forEach(node => {
@@ -437,7 +457,9 @@ $( document ).ready(function() {
       return;
     }
     const id = val.trim();
-    if (nodes[id]) {
+    if (['BrightID', 'SeedConnected', 'CallJoined', 'DollarForEveryone'].includes(id) || id.startsWith('Rank ')) {
+      select_verification(id);
+    } else if (nodes[id]) {
       select_node(id, true);
     } else if (groups[id]) {
       select_group(id, null, true);

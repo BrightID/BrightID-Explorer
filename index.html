@@ -45,6 +45,9 @@
         <div>
           Rank: <span id="rank"> </span>
         </div>
+        <div>
+          Verifications: <span id="verifications"> </span>
+        </div>
         <label for="brightidtext">BrightID:</label>
         <div id="brightidtext"></div>
         <input id="brightidfield">
@@ -121,6 +124,17 @@
       <div id="searchbox">
         Search:
         <select name="searchfield" id="searchfield" style="width: 500px;">
+          <optgroup label="Verifications" id="verificationsgroup">
+            <option value="BrightID">BrightID</option>
+            <option value="DollarForEveryone">DollarForEveryone</option>
+            <option value="CallJoined">CallJoined</option>
+            <option value="SeedConnected">SeedConnected</option>
+            <option value="Rank 1+">Rank 1+</option>
+            <option value="Rank 2+">Rank 2+</option>
+            <option value="Rank 3+">Rank 3+</option>
+            <option value="Rank 4+">Rank 4+</option>
+            <option value="Rank 5">Rank 5</option>
+          </optgroup>
           <optgroup label="Regions" id="regionsgroup">
             <option value="Complete Graph">Complete Graph</option>
           </optgroup>
