@@ -47,7 +47,7 @@ function close_nav() {
 }
 
 function set_nav(type) {
-  for (let id of ['userform', 'groupform', 'menuform']) {
+  for (let id of ['userform', 'groupform', 'menuform', 'statisticsform']) {
     $('#'+id).hide();
   }
   $('#'+type+'form').show();
@@ -281,6 +281,35 @@ function select_node(id, show_details) {
   }
 }
 
+function update_statistics() {
+  const [num_verified, num_seeds, average_connection] = count_statistics();
+  $('#num_nodes').show();
+  $('#num_nodes').html(Object.keys(nodes).length);
+  $('#num_verified').show();
+  $('#num_verified').html(num_verified);
+  $('#num_seeds').show();
+  $('#num_seeds').html(num_seeds);
+  $('#num_seeds').show();
+  $('#average_connection').html(average_connection);
+  set_nav('statistics');
+  open_nav();
+}
+
+function count_statistics() {
+  let num_verified = num_seeds = sum_neighbors = 0;
+  Object.keys(nodes).forEach(id => {
+    let node = nodes[id];
+    if (node.verifications && node.verifications.includes('BrightID')) {
+      num_verified++;
+      sum_neighbors += node.connections.length;
+    }
+    if (node.node_type == 'Seed') {
+      num_seeds++
+    }
+  });
+  return [num_verified, num_seeds, Math.ceil(sum_neighbors / num_verified)]
+}
+
 function get_group_name(g) {
   return (groups[g] && groups[g].name) || g;
 }
@@ -467,6 +496,9 @@ $( document ).ready(function() {
     set_nav('menu');
     open_nav();
   });
+
+  $('#statisticsbtn').click(update_statistics);
+
   $('#logoutbtn').click(() => {
     location.reload();
   });
