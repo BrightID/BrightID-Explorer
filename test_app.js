@@ -115,9 +115,10 @@ function hash(data) {
 }
 
 function color(node) {
+  let verifications_name = node.verifications.map(v => v.name)
   if (node.node_type == 'Seed') {
     return 'blue';
-  } else if (node.verifications && node.verifications.includes('BrightID')) {
+  } else if (verifications_name && verifications_name.includes('BrightID')) {
     return 'green';
   } else {
     return 'yellow';
@@ -207,15 +208,19 @@ function select_group(id, selected_member, show_details) {
 function select_verification(v) {
   const members = [];
   if (v.startsWith('Rank ')) {
-    const rank = parseInt(v.replace('Rank ', '').replace('+', ''));
+    const _rank = parseInt(v.replace('Rank ', '').replace('+', ''));
     for (let id in nodes) {
-      if (nodes[id].rank >= rank) {
+      var yekta = nodes[id].verifications.find(obj => {
+        return obj.name === 'Yekta'
+      })
+      if (yekta && yekta.rank >= _rank){
         members.push(id);
       }
     }
   } else {
     for (let id in nodes) {
-      if (nodes[id]?.verifications?.includes(v)) {
+      let verifications_name = nodes[id].verifications.map(v => v.name)
+      if (verifications_name?.includes(v)) {
         members.push(id);
       }
     }
@@ -263,8 +268,17 @@ function select_node(id, show_details) {
   } else {
     $('#photo').hide();
   }
-  $('#rank').html(node.rank);
-  $('#verifications').html(node.verifications ? node.verifications.join(', ') : '');
+  var str_verifications = "</br>";
+  for (var a=0; a<node.verifications.length; a++) {
+    for (const [key, value] of Object.entries(node.verifications[a])) {
+      if (key != "timestamp") {
+        str_verifications += `${key}: ${value}&nbsp;&nbsp;&nbsp;&nbsp;`
+      }
+    }
+    str_verifications += '</br>'
+  }
+  let verifications_name = node.verifications.map(v => v.name)
+  $('#verifications').html(str_verifications);
   $('#brightidtext').html(node.id);
   $('#brightidfield').val(node.id);
   move(node.x, node.y, 2);
@@ -299,7 +313,8 @@ function count_statistics() {
   let num_verified = num_seeds = sum_neighbors = 0;
   Object.keys(nodes).forEach(id => {
     let node = nodes[id];
-    if (node.verifications && node.verifications.includes('BrightID')) {
+    let verifications_name = node.verifications.map(v => v.name)
+    if (verifications_name && verifications_name.includes('BrightID')) {
       num_verified++;
       sum_neighbors += node.connections.length;
     }
