@@ -115,10 +115,9 @@ function hash(data) {
 }
 
 function color(node) {
-  let verifications_name = node.verifications.map(v => v.name)
   if (node.node_type == 'Seed') {
     return 'blue';
-  } else if (verifications_name && verifications_name.includes('BrightID')) {
+  } else if (node.verifications && 'BrightID' in node.verifications) {
     return 'green';
   } else {
     return 'yellow';
@@ -210,17 +209,13 @@ function select_verification(v) {
   if (v.startsWith('Rank ')) {
     const _rank = parseInt(v.replace('Rank ', '').replace('+', ''));
     for (let id in nodes) {
-      var yekta = nodes[id].verifications.find(obj => {
-        return obj.name === 'Yekta'
-      })
-      if (yekta && yekta.rank >= _rank){
+      if ('Yekta' in nodes[id].verifications && nodes[id].verifications.Yekta.rank >= _rank){
         members.push(id);
       }
     }
   } else {
     for (let id in nodes) {
-      let verifications_name = nodes[id].verifications.map(v => v.name)
-      if (verifications_name?.includes(v)) {
+      if (v in nodes[id].verifications) {
         members.push(id);
       }
     }
@@ -269,15 +264,15 @@ function select_node(id, show_details) {
     $('#photo').hide();
   }
   var str_verifications = "</br>";
-  for (var a=0; a<node.verifications.length; a++) {
-    for (const [key, value] of Object.entries(node.verifications[a])) {
+  for (const name in node.verifications) {
+    str_verifications += `&nbsp;&nbsp;&nbsp;&nbsp;${name}`
+    for (const [key, value] of Object.entries(node.verifications[name])) {
       if (key != "timestamp") {
-        str_verifications += `${key}: ${value}&nbsp;&nbsp;&nbsp;&nbsp;`
+        str_verifications += `&nbsp;&nbsp;&nbsp;&nbsp;${key}: ${value}`
       }
     }
     str_verifications += '</br>'
   }
-  let verifications_name = node.verifications.map(v => v.name)
   $('#verifications').html(str_verifications);
   $('#brightidtext').html(node.id);
   $('#brightidfield').val(node.id);
@@ -314,7 +309,7 @@ function count_statistics() {
   Object.keys(nodes).forEach(id => {
     let node = nodes[id];
     let verifications_name = node.verifications.map(v => v.name)
-    if (verifications_name && verifications_name.includes('BrightID')) {
+    if (node.verifications && 'BrightID' in node.verifications) {
       num_verified++;
       sum_neighbors += node.connections.length;
     }
