@@ -308,7 +308,6 @@ function count_statistics() {
   let num_verified = num_seeds = sum_neighbors = 0;
   Object.keys(nodes).forEach(id => {
     let node = nodes[id];
-    let verifications_name = node.verifications.map(v => v.name)
     if (node.verifications && 'BrightID' in node.verifications) {
       num_verified++;
       sum_neighbors += node.connections.length;
