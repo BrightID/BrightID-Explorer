@@ -9,32 +9,13 @@ BACKUP_URL = 'https://storage.googleapis.com/brightid-backups/brightid.tar.gz'
 
 
 def main():
-    # load json from backup file
-    json_graph = load_backup()
-    graph = nx.Graph()
-    nodes = {}
-    for node in json_graph['nodes']:
-        nodes[node['id']] = node
-        graph.add_node(node['id'])
-    for edge in json_graph['edges']:
-        graph.add_edge(edge[0], edge[1])
-
-    # remove the unconnected nodes to the main component
-    main_component = sorted([comp for comp in nx.connected_components(
-        graph)], key=lambda l: len(l), reverse=True)[0]
-    for node in json_graph['nodes']:
-        if node['id'] not in main_component:
-            json_graph['nodes'].remove(node)
-            graph.remove_node(node['id'])
-    for edge in list(json_graph['edges']):
-        if nodes[edge[0]] not in json_graph['nodes'] or nodes[edge[1]] not in json_graph['nodes']:
-            if edge in json_graph['edges']:
-                json_graph['edges'].remove(edge)
+    json_graph = load_from_backup()
     with open('/var/www/html/explorer/brightid.json', 'w') as f:
         f.write(json.dumps(json_graph))
 
 
-def load_backup():
+def load_from_backup():
+    # read data from the backup
     rar_addr = '/tmp/brightid.tar.gz'
     zip_addr = '/tmp/brightid.zip'
     backup = requests.get(BACKUP_URL)
@@ -46,31 +27,53 @@ def load_backup():
     groups = records(zip_addr, 'groups')
     connections = records(zip_addr, 'connections')
     verifications = records(zip_addr, 'verifications')
+
+    # remove the unconnected nodes to the main component
+    graph = nx.Graph()
+    graph.add_nodes_from(users.keys())
+    graph.add_edges_from([(c['_from'].replace(
+        'users/', ''), c['_to'].replace('users/', '')) for c in connections.values()])
+    main_component = sorted([comp for comp in nx.connected_components(
+        graph)], key=lambda l: len(l), reverse=True)[0]
+    for node in list(graph):
+        if node not in main_component:
+            graph.remove_node(node)
+
+    # generate the JSON
     ret = {'nodes': [], 'edges': [], 'groups': []}
     for u in users:
+        if u not in graph:
+            continue
         users[u] = {'id': u, 'groups': [], 'verifications': {}}
         ret['nodes'].append(users[u])
     for v in verifications.values():
         u = v['user']
+        if u not in graph:
+            continue
         name = v['name']
-        if u in users:
-            for k in ['name', '_key', '_id', '_rev', 'user']:
-                del v[k]
-            users[u]['verifications'][name] = v
+        for k in ['name', '_key', '_id', '_rev', 'user']:
+            del v[k]
+        users[u]['verifications'][name] = v
     for user_group in user_groups.values():
         u = user_group['_from'].replace('users/', '')
+        if u not in graph:
+            continue
         g = user_group['_to'].replace('groups/', '')
         users[u]['groups'].append(g)
         if groups[g].get('seed', False):
             users[u]['node_type'] = 'Seed'
     for c in connections.values():
+        _from = c['_from'].replace('users/', '')
+        _to = c['_to'].replace('users/', '')
+        if _from not in graph or _to not in graph:
+            continue
         ret['edges'].append([
-            c['_from'].replace('users/', ''),
-            c['_to'].replace('users/', ''),
+            _from,
+            _to,
             c['timestamp']
         ])
     for g in groups:
-        ret['groups'].append({'id': g, 'rank': groups[g]['score'], 'seed': groups[g].get(
+        ret['groups'].append({'id': g, 'seed': groups[g].get(
             'seed', False), 'region': groups[g].get('region', None)})
     return ret
 
