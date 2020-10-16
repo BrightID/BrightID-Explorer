@@ -1,0 +1,40 @@
+.list-group-item-action:hover {
+  background-color: error;
+}
+
+.hiden {
+  display: none;
+}
+
+.sidebar {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+#sidebar-wrapper .list-group {
+  width: 100% !important;
+}
+.mycard {
+  width: 80%;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+body {
+  //   overflow: hidden;
+}
+
+.groupsBrightId {
+  width: 90%;
+  // width: 100px;
+}
+
+#toggled {
+}
+
+@media (min-width: 768px) {
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: -35vw !important;
+  }
+}

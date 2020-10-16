@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import zipfile
 import tarfile
@@ -6,11 +7,13 @@ import requests
 import networkx as nx
 
 BACKUP_URL = 'https://storage.googleapis.com/brightid-backups/brightid.tar.gz'
+INITIAL_QUOTA = 700
+MONTHLY_QUOTA = 200
 
 
 def main():
     json_graph = load_from_backup()
-    with open('/var/www/html/explorer/brightid.json', 'w') as f:
+    with open('../brightid.json', 'w') as f:
         f.write(json.dumps(json_graph))
 
 
@@ -38,14 +41,17 @@ def load_from_backup():
     for node in list(graph):
         if node not in main_component:
             graph.remove_node(node)
+            del users[node]
 
     # generate the JSON
-    ret = {'nodes': [], 'edges': [], 'groups': []}
+    ret = {'nodes': [], 'links': [], 'groups': []}
+    groupsUsedQuota = {}
+    groupsQuota = {}
     for u in users:
         if u not in graph:
             continue
-        users[u] = {'id': u, 'groups': [], 'verifications': {}}
-        ret['nodes'].append(users[u])
+        users[u] = {'id': u, 'groups': [],
+                    'verifications': {}, 'seed_groups': 0, 'quota': 0}
     for v in verifications.values():
         u = v['user']
         if u not in graph:
@@ -54,6 +60,28 @@ def load_from_backup():
         for k in ['name', '_key', '_id', '_rev', 'user']:
             del v[k]
         users[u]['verifications'][name] = v
+        if name == 'SeedConnected':
+            g = v['seedGroup'].replace('groups/', '')
+            if g not in groupsUsedQuota:
+                groupsUsedQuota[g] = 0
+            groupsUsedQuota[g] += 1
+        if name == 'Yekta':
+            if v['rank'] > 2:
+                users[u]['size'] = 4
+            else:
+                users[u]['size'] = 2
+
+    for g in groups:
+        groupDic = {'id': g, 'seed': groups[g].get(
+            'seed', False), 'region': groups[g].get('region', None)}
+        if groups[g].get('seed', False):
+            duration = int(time.time() - groups[g]['timestamp'] / 1000)
+            months = int(duration / (30 * 24 * 60 * 60))
+            groupDic['quota'] = (INITIAL_QUOTA + months *
+                                 MONTHLY_QUOTA) - groupsUsedQuota.get(g, 0)
+            groupsQuota[g] = groupDic['quota']
+        ret['groups'].append(groupDic)
+
     for user_group in user_groups.values():
         u = user_group['_from'].replace('users/', '')
         if u not in graph:
@@ -61,20 +89,20 @@ def load_from_backup():
         g = user_group['_to'].replace('groups/', '')
         users[u]['groups'].append(g)
         if groups[g].get('seed', False):
+            users[u]['seed_groups'] += 1
             users[u]['node_type'] = 'Seed'
+            users[u]['quota'] += groupsQuota[g]
     for c in connections.values():
         _from = c['_from'].replace('users/', '')
         _to = c['_to'].replace('users/', '')
         if _from not in graph or _to not in graph:
             continue
-        ret['edges'].append([
-            _from,
-            _to,
-            c['timestamp']
-        ])
-    for g in groups:
-        ret['groups'].append({'id': g, 'seed': groups[g].get(
-            'seed', False), 'region': groups[g].get('region', None)})
+        ret['links'].append({
+            'source': _from,
+            'target': _to,
+            'timestamp': c['timestamp']
+        })
+    ret['nodes'] = list(users.values())
     return ret
 
 

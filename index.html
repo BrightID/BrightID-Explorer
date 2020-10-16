@@ -1,152 +1,281 @@
-<html>
-  <head>
-    <title>BrightID Graph</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
-    <script src = "https://d3js.org/d3.v3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
-    <script src="app.js"></script>
-  </head>
-  <body style="margin: 0px;">
-    <div id="sidenav" class="sidenav">
-      <a id="logoutbtn">Logout</a>
-      <a class="closebtn" onclick="close_nav()">Close</a>
-      <div id="menuform">
-        <div id="loginform" class="box">
-          <label for="code">Explorer Code:</label>
-          <input type="text" id="code" name="code">
-          <br/>
-          <label for="password">Backup Password:</label>
-          <input type="password" id="password" name="password">
-          <button id="load">Load</button>
-        </div>
-        <div class="box">
-          <label for="regionfile">Upload Regions File:</label>
-          <input type='file' name="regionfile" id='regionfile' accept=".csv"/>
-        </div>
-        <div class="box">
-          <label for="daterange">Highlight Connections within:</label>
-          <select id="daterange" name="daterange">
-            <option value="none">None</option>
-            <option value="day">Last Day</option>
-            <option value="week">Last Week</option>
-            <option value="month">Last Month</option>
-          </select>
-          <input type="date" id="fromdate" name="fromdate"/>
-          <input type="date" id="todate" name="todate"/>
-        </div>
-      </div>
-      <div id="userform">
-        <img align="right" id="photo"/>
-        <div id="name"> </div>
-        <div>
-          Verifications: <span id="verifications"> </span>
-        </div>
-        <label for="brightidtext">BrightID:</label>
-        <div id="brightidtext"></div>
-        <input id="brightidfield">
-        <button id="copybrightid">Copy to Clipboard</button>
-        <label for="groups">Groups:</label>
-        <img align="right" id="usergroupphoto"/>
-        <select id="groups" name="groups">
-          <option value="none"></option>
-        </select>
-        <input id="groupsfield">
-        <button id="copygroup">Copy to Clipboard</button>
-      </div>
-      <div id="groupform">
-        <img align="right" id="groupphoto"/>
-        <div id="groupname"> </div>
-        <div>
-          Rank: <span id="grouprank"> </span>
-        </div>
-        <label for="groupid">Group ID:</label>
-        <div id="groupid"></div>
-        <input id="groupidfield">
-        <button id="copygroupid">Copy to Clipboard</button>
-        <label for="members">Members:</label>
-        <img align="right" id="groupuserphoto"/>
-        <select id="members" name="members">
-          <option value="none"></option>
-        </select>
-        <input id="membersfield">
-        <button id="copymember">Copy to Clipboard</button>
-      </div>
-      <div id="statisticsform">
-        <div class="container grid-container">
+<!DOCTYPE html>
+<html lang="en">
 
-          <div class="card">
-            <p class="card__name">
-              <img src="images/seed.png" class="card__image">
-              No. Seeds
-            </p>
-            <div class="card_num" id="num_seeds">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <title>Explorer brightID</title>
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet" />
+  <link rel="stylesheet" href="vendor/scss/custom.css" />
+  <link rel="stylesheet" href="vendor/scss/myStyle.css" />
+
+  <!-- Custom styles for this template -->
+  <link href="css/simple-sidebar.css" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous" />
+  <link href="css/all.css" rel="stylesheet" />
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
+  <script src="//unpkg.com/force-graph"></script>
+  <script src="app.js"></script>
+</head>
+
+<body>
+  <div class="d-flex toggled" id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-dark border-right " id="sidebar-wrapper" style="height: 100vh; width: 35vw;">
+      <div class="sidebar-heading" style="height: 10vh">
+        <h1 class="text-light h4">Explorer brightID</h1>
+      </div>
+      <div id="sidebarMenu" class="list-group list-group-flush sidebar" style="height: 90vh">
+        <a href="#" onclick="openCollapsible('loginDetail')" class="list-group-item list-group-item-action bg-primary">
+          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          Login
+        </a>
+        <div class="hiden menu-item-body" id="loginDetail">
+          <div id="loginform">
+            <div class="input-group ">
+              <input id="code" type="text" name="id" class="form-control m-2" height="10px" placeholder="Explorer Code" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+            </div>
+            <div class="input-group">
+              <input id="password" type="password" name="password" class="form-control m-2" height="10px" placeholder="Backup Password" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+            </div>
+            <div class="row justify-content-md-center">
+              <button id="load" class="btn btn-primary align-center">Login</button>
             </div>
           </div>
-
-          <div class="card">
-            <p class="card__name">
-              <img src="images/node.png" class="card__image">
-              No. Nodes
-            </p>
-            <div class="card_num" id="num_nodes">
+          <div id="logoutbtnform">
+            <div class="row justify-content-md-center mt-3">
+              <button id="logoutbtn" class="btn btn-primary align-center">Logout</button>
             </div>
           </div>
-
-          <div class="card">
-            <p class="card__name">
-              <img src="images/verified.png" class="card__image">
-              No. Verified
-            </p>
-            <div class="card_num" id="num_verified">
-            </div>
-          </div>
-
-          <div class="card">
-            <p class="card__name">
-              <img src="images/connection.png" class="card__image">
-              Avg Connections
-            </p>
-            <div class="card_num" id="average_connection">
-            </div>
-          </div>
-
         </div>
-      </div>
-    </div>
-    <div style="background-color: #eee; height: 48px; width: 100%; position: fixed;">
-      <div id="searchbox">
-        Search:
-        <select name="searchfield" id="searchfield" style="width: 500px;">
-          <optgroup label="Verifications" id="verificationsgroup">
-            <option value="BrightID">BrightID</option>
-            <option value="DollarForEveryone">DollarForEveryone</option>
-            <option value="CallJoined">CallJoined</option>
-            <option value="SeedConnected">SeedConnected</option>
-            <option value="Rank 1+">Rank 1+</option>
-            <option value="Rank 2+">Rank 2+</option>
-            <option value="Rank 3+">Rank 3+</option>
-            <option value="Rank 4+">Rank 4+</option>
-            <option value="Rank 5">Rank 5</option>
-          </optgroup>
-          <optgroup label="Regions" id="regionsgroup">
-            <option value="Complete Graph">Complete Graph</option>
-          </optgroup>
-          <optgroup label="Users" id="usersgroup"></optgroup>
-          <optgroup label="Groups" id="groupsgroup"></optgroup>
-        </select>
-      </div>
-      <div id="right_header">
-        <a id="statisticsbtn" href="#">
+
+        <a href="#" onclick="openCollapsible('statisticsDitail')" class="list-group-item list-group-item-action bg-primary">
+          <i style='font-size:16px' class='fas'>&#xf105; </i>
           Statistics
         </a>
-        <img id="menubtn" src="images/menu.png"/>
+        <div class="hiden menu-item-body" id="statisticsDitail">
+          <div class="containar">
+            <div class="row justify-content-md-center mt-2">
+              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
+                <div class="card-header"> <i class="fas fa-seedling mr-2"></i>No. Seeds</div>
+                <div class="card-body text-dark justify-center">
+                  <h1 class="card-title text-center" id="num_seeds"></h1>
+                </div>
+              </div>
+            </div>
+            <div class="row justify-content-md-center ">
+              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
+                <div class="card-header"> <i class="fas fa-user mr-2"></i>No. Nodes</div>
+                <div class="card-body text-dark justify-center">
+                  <h1 class="text-center" id="num_nodes"></h1>
+                </div>
+              </div>
+            </div>
+            <div class="row justify-content-md-center ">
+              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
+                <div class="card-header"><i class="fas fa-check-circle mr-2"></i>No. verified</div>
+                <div class="card-body text-dark justify-center">
+                  <h1 class="text-center" id="num_verified"></h1>
+                </div>
+              </div>
+            </div>
+            <div class="row justify-content-md-center ">
+              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
+                <div class="card-header"><i class="fab fa-hubspot"></i>Avg Connections</div>
+                <div class="card-body text-dark justify-center">
+                  <h1 class="text-center" id="average_connection"> </h1>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="#" onclick="openCollapsible('linkDetail')" class="list-group-item list-group-item-action bg-primary">
+          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          Links
+        </a>
+        <div class="hiden menu-item-body" id="linkDetail">
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">Upload Regions File:</h6>
+          </div>
+          <div class="input-group px-2 mb-4">
+            <div class="custom-file">
+              <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+              <input type="file" class="custom-file-input" id="inputGroupFile01 regionfile">
+            </div>
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">Highlight Connections within:</h6>
+          </div>
+          <div class="input-group mb-3 px-2">
+            <select class="custom-select" id="daterange">
+              <option value="none" selected>None</option>
+              <option value="all">All</option>
+              <option value="day">Last Day</option>
+              <option value="week">Last Week</option>
+              <option value="month">Last Month</option>
+            </select>
+          </div>
+          <div class="input-group px-2">
+            <input class="form-control  mb-2" type="date" id="fromdate" name="fromdate" />
+          </div>
+          <div class="input-group px-2">
+            <input class="form-control  mb-2" type="date" id="todate" name="todate" />
+          </div>
+        </div>
+
+        <a id="userbtntitle" onclick="openCollapsible('userDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
+          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          User
+        </a>
+        <div class="hiden menu-item-body" id="userDitail">
+          <div class="row mt-2 px-4">
+            <h6 class="text-white">BrightID:</h6> <br>
+            <input style="opacity: 0;" type="text" id="brightidfield" value="">
+          </div>
+          <div class="text-white ml-4" style="font-size: 12px;" id="brightidtext"></div>
+          <div class="row justify-content-md-center">
+            <button id="copybrightid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">Groups:</h6>
+          </div>
+          <div class="row ml-3">
+            <select id="groups" name="groups" class="groupsBrightId">
+              <option value="none"></option>
+            </select>
+          </div>
+          <div class="row justify-content-md-center mt-2">
+            <button id="showGroup" class="btn btn-primary align-center mb-5">Show Group</button>
+          </div>
+          <div id="seedData">
+            <div class="row mt-2 px-4">
+              <h6 class="text-white">No. Seed Groups: </h6>
+              <h6 class="text-white ml-2" id="noSeedGroups"></h6>
+            </div>
+            <div class="row mt-2 px-4">
+              <h6 class="text-white">Seed Quota: </h6>
+              <h6 class="text-white ml-2" id="quotaValue"></h6>
+            </div>
+          </div>
+          <div class="row mt-2 px-4">
+            <h6 class="text-white">Verifications:</h6>
+          </div>
+          <div class="text-white px-4" id="verifications"></div>
+        </div>
+        <a id="groupbtntitle" onclick="openCollapsible('groupDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
+          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          Group
+        </a>
+        <div class="hiden menu-item-body" id="groupDitail">
+          <div class="row mt-2 px-4">
+            <h6 class="text-white">Group ID:</h6> <br>
+          </div>
+          <div class="text-white ml-3" style="font-size: 12px;" id="groupidtext"></div>
+          <div class="row justify-content-md-center">
+            <button id="copygroupid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">Members:</h6>
+            <h6 class="text-white ml-2" id="groupmemberscount"></h6>
+          </div>
+          <div class="row ml-3">
+            <select id="members" name="members" class="groupsBrightId">
+              <option value="none"></option>
+            </select>
+          </div>
+          <div class="row justify-content-md-center mt-2">
+            <button id="showMemeber" class="btn btn-primary align-center mb-5">Show Memeber</button>
+          </div>
+          <div id="seedConnectedDiv">
+            <div class="row mt-2">
+              <h6 class="text-white ml-4">Users conected to this seed group:</h6>
+              <h6 class="text-white ml-2" id="groupseedconectedcount"></h6>
+            </div>
+            <div class="row ml-3">
+              <select id="seedConnected" name="seedConnected" class="groupsBrightId">
+                <option value="none"></option>
+              </select>
+            </div>
+            <div class="row justify-content-md-center mt-2">
+              <button id="showUser" class="btn btn-primary align-center mb-5">Show User</button>
+            </div>
+          </div>
+          <input style="opacity: 0;" type="text" id="groupidfield" value="">
+        </div>
       </div>
     </div>
-    <div id="graph_div" style="width: 100%; height: 100%;"></div>
-  </body>
-</html>
+    <!-- /#sidebar-wrapper -->
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+        <button onclick="update_statistics()" class="btn btn-primary" id="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <form class="form-inline ml-3">
+          <div id="searchbox">
+            <select name="searchfield" id="searchfield" class="searchfield">
+              <optgroup label="Verifications" id="verificationsgroup">
+                <option value="BrightID">BrightID</option>
+                <option value="DollarForEveryone">DollarForEveryone</option>
+                <option value="CallJoined">CallJoined</option>
+                <option value="SeedConnected">SeedConnected</option>
+                <option value="Rank 1+">Rank 1+</option>
+                <option value="Rank 2+">Rank 2+</option>
+                <option value="Rank 3+">Rank 3+</option>
+                <option value="Rank 4+">Rank 4+</option>
+                <option value="Rank 5">Rank 5</option>
+              </optgroup>
+              <optgroup label="Regions" id="regionsgroup">
+                <option value="Complete Graph">Complete Graph</option>
+              </optgroup>
+              <optgroup label="Users" id="usersgroup"></optgroup>
+              <optgroup label="Groups" id="groupsgroup"></optgroup>
+            </select>
+          </div>
+        </form>
 
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+            <li class="nav-item active">
+              <a href="https://brightid.org" style="outline: none;">
+                <img width="100px" src="https://uploads-ssl.webflow.com/5e54622b3f6e65be8baf0653/5e57958e0eb38846a2658298_brightid-reversed.svg" alt="">
+              </a>
+        </div>
+      </nav>
+
+      <div style="height: 90vh;" class="container-fluid mx-0 px-0">
+        <div style="height: 100%;" id="graph_div"></div>
+        <!-- graph place -->
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/script/script.js"></script>
+  <!-- Menu Toggle Script -->
+  <script>
+  $('#menu-toggle').click(function (e) {
+    e.preventDefault();
+    $('#wrapper').toggleClass('toggled');
+  });
+  </script>
+</body>
+
+</html>
