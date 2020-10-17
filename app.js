@@ -455,7 +455,7 @@ function draw_graph(data) {
         ctx.beginPath();
         ctx.arc(x, y, size / 2, 0, Math.PI * 2, true);
         ctx.clip();
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = color;
         ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
         ctx.stroke();
         ctx.restore();
