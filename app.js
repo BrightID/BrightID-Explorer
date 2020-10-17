@@ -530,7 +530,7 @@ $(document).ready(function () {
     } else {
       $("#usergroupphoto").hide();
     }
-    select_group(id, true);
+    select_group(id, false);
   });
   $("#members").change(function () {
     const id = $(this).val();
@@ -540,7 +540,7 @@ $(document).ready(function () {
     } else {
       $("#groupuserphoto").hide();
     }
-    select_node(nodes[id], true);
+    select_node(nodes[id], false);
   });
   $("#seedConnected").change(function () {
     const id = $(this).val();
