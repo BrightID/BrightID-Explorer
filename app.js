@@ -370,7 +370,8 @@ function select_node(node, show_details) {
         var d = new Date(value);
         value = d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
       } else if (key == "seedGroup") {
-        value = value.replace("groups/", "");
+        let groupId = value.replace("groups/", "");
+        value = groups[groupId].region ? groups[groupId].region : groupId;
       }
       keyValue +=
         '<div class="card-value-container"> <div class="inline-text">' +
