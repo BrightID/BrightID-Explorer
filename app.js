@@ -224,9 +224,13 @@ function select_group(id, show_details) {
   }
   const n = group.members.length;
   move(sum_x / n, sum_y / n, 1.2);
-  reds = [];
-  oranges = [];
-  oranges = group.members;
+  if (group.seed) {
+    reds = group.members;
+    oranges = group.seedConnected;
+  } else {
+    reds = [];
+    oranges = group.members;
+  }
   Graph.nodeColor(reset_colors);
   // group details
   if (group.name) {
@@ -238,7 +242,7 @@ function select_group(id, show_details) {
   } else {
     $("#groupnamecontainer").hide();
   }
-  if (group.quota > 0) {
+  if (group.quota) {
     $("#groupquotacontainer").show();
     $("#groupquota").html(group.quota);
   } else {
@@ -293,7 +297,6 @@ function select_verification(v) {
     }
   }
   reds = [];
-  oranges = [];
   oranges = members;
   Graph.nodeColor(reset_colors);
 }
@@ -306,9 +309,8 @@ function select_region(name) {
     Graph.nodeColor(reset_colors);
     return move(centerNode.x, centerNode.y, 0.7);
   }
-  const groupId = regions[name][0];
-  if (groups[groupId]) {
-    select_group(groupId, true);
+  if (regions[name].length == 1 && groups[regions[name][0]]) {
+    select_group(regions[name][0], true);
   } else {
     let sum_x = 0;
     let sum_y = 0;
@@ -328,7 +330,6 @@ function select_region(name) {
       sum_y += nodes[id].y;
     }
     reds = [];
-    oranges = [];
     oranges = members;
     Graph.nodeColor(reset_colors);
     const n = members.length;
