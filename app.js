@@ -410,13 +410,9 @@ function select_node(node, show_details) {
 
 function update_statistics() {
   const [num_verified, num_seeds, average_connection] = count_statistics();
-  $("#num_nodes").show();
   $("#num_nodes").html(Object.keys(nodes).length);
-  $("#num_verified").show();
   $("#num_verified").html(num_verified);
-  $("#num_seeds").show();
   $("#num_seeds").html(num_seeds);
-  $("#num_seeds").show();
   $("#average_connection").html(average_connection);
 }
 
@@ -590,4 +586,5 @@ $(document).ready(function () {
   if (localStorage.explorer_code) {
     $("#code").val(localStorage.explorer_code);
   }
+  update_statistics();
 });
