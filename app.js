@@ -230,13 +230,22 @@ function select_group(id, show_details) {
   Graph.nodeColor(reset_colors);
   // group details
   if (group.name) {
-    $("#groupname").show();
+    $("#groupnamecontainer").show();
     $("#groupname").html(group.name);
+  } else if (group.region) {
+    $("#groupnamecontainer").show();
+    $("#groupname").html(group.region);
   } else {
-    $("#groupname").hide();
+    $("#groupnamecontainer").hide();
+  }
+  if (group.quota > 0) {
+    $("#groupquotacontainer").show();
+    $("#groupquota").html(group.quota);
+  } else {
+    $("#groupquotacontainer").hide();
   }
   if (group.photo) {
-    $("#groupphoto").show();
+    $("#groupphotocontainer").show();
     $("#groupphoto").attr("src", group.photo);
   } else {
     $("#groupphoto").hide();
@@ -295,31 +304,36 @@ function select_region(name) {
     reds = [];
     oranges = [];
     Graph.nodeColor(reset_colors);
-    return move(centerNode.x, centerNode.y, 0.8);
+    return move(centerNode.x, centerNode.y, 0.7);
   }
-  let sum_x = 0;
-  let sum_y = 0;
-  let count = 0;
-  const members = [];
-  for (let id of regions[name]) {
-    if (nodes[id]) {
-      members.push(id);
-    } else if (groups[id]) {
-      for (member of groups[id].members) {
-        members.push(member);
+  const groupId = regions[name][0];
+  if (groups[groupId]) {
+    select_group(groupId, true);
+  } else {
+    let sum_x = 0;
+    let sum_y = 0;
+    let count = 0;
+    const members = [];
+    for (let id of regions[name]) {
+      if (nodes[id]) {
+        members.push(id);
+      } else if (groups[id]) {
+        for (member of groups[id].members) {
+          members.push(member);
+        }
       }
     }
+    for (const id of members) {
+      sum_x += nodes[id].x;
+      sum_y += nodes[id].y;
+    }
+    reds = [];
+    oranges = [];
+    oranges = members;
+    Graph.nodeColor(reset_colors);
+    const n = members.length;
+    move(sum_x / n, sum_y / n, 1.2);
   }
-  for (const id of members) {
-    sum_x += nodes[id].x;
-    sum_y += nodes[id].y;
-  }
-  reds = [];
-  oranges = [];
-  oranges = members;
-  Graph.nodeColor(reset_colors);
-  const n = members.length;
-  move(sum_x / n, sum_y / n, 1.2);
 }
 
 function get_group_name(g) {
@@ -438,7 +452,7 @@ function draw_graph(data) {
     .linkVisibility((link) => false)
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject(({ img, x, y, color }, ctx) => {
-      let size = 16;
+      let size = 20;
       if (img) {
         ctx.save();
         ctx.beginPath();
