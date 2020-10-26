@@ -50,8 +50,8 @@ def load_from_backup():
     for u in users:
         if u not in graph:
             continue
-        users[u] = {'id': u, 'groups': [],
-                    'verifications': {}, 'seed_groups': 0, 'quota': 0}
+        users[u] = {'id': u, 'groups': [], 'verifications': {
+        }, 'seed_groups': 0, 'quota': 0, 'trusted': users[u].get('trusted', list())}
     for v in verifications.values():
         u = v['user']
         if u not in graph:

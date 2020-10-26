@@ -14,6 +14,9 @@ function hash(data) {
 }
 
 function load_users(user, key1, password) {
+  nodes[user.id].trusted.forEach((t) => {
+    $('<div class="text-white row mt-2 px-4" style="font-size: 12px;">').text(t).appendTo("#recoveries");
+  })
   $("<option>").val(user.id).text(user.name).appendTo("#usersgroup");
   $.get(`/storage/${key1}/${user.id}`).done((data) => {
     data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
