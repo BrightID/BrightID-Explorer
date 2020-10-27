@@ -14,9 +14,6 @@ function hash(data) {
 }
 
 function load_users(user, key1, password) {
-  nodes[user.id].trusted.forEach((t) => {
-    $('<div class="text-white row mt-2 px-4" style="font-size: 12px;">').text(t).appendTo("#recoveries");
-  })
   $("<option>").val(user.id).text(user.name).appendTo("#usersgroup");
   $.get(`/storage/${key1}/${user.id}`).done((data) => {
     data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
@@ -26,6 +23,8 @@ function load_users(user, key1, password) {
       name: user.name,
       img: img1,
     });
+    $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
+    $('#userimage').prepend('<img src="' + data + '" class="profile-image"/>');
   });
   for (const c of user.connections || []) {
     // skip c.id === user.id to solve bugs related to users connected to themselves!
@@ -41,6 +40,10 @@ function load_users(user, key1, password) {
       Object.assign(nodes[c.id], { img: img2 });
     });
   }
+  nodes[user.id].trusted.forEach((tid) => {
+    let text = nodes[tid] ? nodes[tid].name : tid;
+    $('<div class="text-white row mt-2 px-4" style="font-size: 12px;">').text(text).appendTo("#recoveries");
+  });
   $("#searchfield").select2({ tags: true });
 }
 

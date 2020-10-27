@@ -90,6 +90,16 @@
   width: 300px;
 }
 
+.text-center {
+  text-align: center
+}
+
+.profile-image {
+  width: 10vw;
+  border-radius: 50%
+}
+
+
 @media (min-width: 768px) {
   #wrapper.toggled #sidebar-wrapper {
     margin-left: -35vw !important;
