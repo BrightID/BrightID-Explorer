@@ -456,8 +456,9 @@ function draw_graph(data) {
     .linkVisibility((link) => false)
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject(({ img, x, y, color }, ctx) => {
-      let size = 20;
+      let size = 30;
       if (img) {
+        ctx.lineWidth = 5;
         ctx.save();
         ctx.beginPath();
         ctx.arc(x, y, size / 2, 0, Math.PI * 2, true);
