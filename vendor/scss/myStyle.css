@@ -99,6 +99,10 @@
   border-radius: 50%
 }
 
+.user-image {
+  width: 6vw;
+  border-radius: 50%
+}
 
 @media (min-width: 768px) {
   #wrapper.toggled #sidebar-wrapper {

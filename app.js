@@ -24,7 +24,7 @@ function load_users(user, key1, password) {
       img: img1,
     });
     $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
-    $('#userimage').prepend('<img src="' + data + '" class="profile-image"/>');
+    $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
   });
   for (const c of user.connections || []) {
     // skip c.id === user.id to solve bugs related to users connected to themselves!
@@ -42,7 +42,7 @@ function load_users(user, key1, password) {
   }
   nodes[user.id].trusted.forEach((tid) => {
     let text = nodes[tid] ? nodes[tid].name : tid;
-    $('<div class="text-white row mt-2 px-4" style="font-size: 12px;">').text(text).appendTo("#recoveries");
+    $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#recoveries");
   });
   $("#searchfield").select2({ tags: true });
 }
@@ -356,16 +356,27 @@ function select_node(node, show_details) {
     $("#seedData").hide();
   }
   if (node.name) {
-    $("#name").show();
+    $("#nameContainer").show();
     $("#name").html(node.name);
   } else {
-    $("#name").hide();
+    $("#nameContainer").hide();
   }
-  if (node.photo) {
-    $("#photo").show();
-    $("#photo").attr("src", node.photo);
+  if (node.img) {
+    $("#userimage").show();
+    $("#userimage").empty();
+    $('#userimage').prepend('<img src="' + node.img.src + '" class="user-image"/>');
   } else {
-    $("#photo").hide();
+    $("#userimage").hide();
+  }
+  if (node.trusted) {
+    $("#userRecoveryContainer").show();
+    $("#userRecoveries").empty();
+    node.trusted.forEach((tid) => {
+      let text = nodes[tid] ? nodes[tid].name : tid;
+      $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
+    });
+  } else {
+    $("#userRecoveryContainer").hide();
   }
   var str_verifications = "";
   for (const name in node.verifications) {

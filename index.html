@@ -24,7 +24,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
   <script src="//unpkg.com/force-graph"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=1603886872"></script>
 </head>
 
 <body>
@@ -52,14 +52,111 @@
             </div>
           </div>
           <div id="logoutbtnform">
-            <div id="userimage" class="text-center"></div>
+            <div id="profileimage" class="text-center"></div>
             <div id="username" class="text-center"></div>
-            <h6 class="row mt-2 px-4 text-white">Trusted connections:</h6>
-            <div id="recoveries"></div>
+            <h6 class="row mt-2 px-4 text-white">Recovery connections:</h6>
+            <ul id="recoveries"></ul>
             <div class="row justify-content-md-center mt-3">
               <button id="logoutbtn" class="btn btn-primary align-center">Logout</button>
             </div>
           </div>
+        </div>
+
+        <a id="userbtntitle" onclick="openCollapsible('userDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
+          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          User
+        </a>
+        <div class="hiden menu-item-body" id="userDitail">
+          <div id="userimage" class="text-center"></div>
+          <div class="row mt-2 px-4" id="nameContainer">
+            <div class="text-white text-center mt-3" style="font-size: 16px;" id="name"></div>
+          </div>
+          <div class="row px-4">
+            <h6 class="text-white mt-3">BrightID:</h6> <br>
+            <input style="opacity: 0;" type="text" id="brightidfield" value="">
+          </div>
+          <div class="text-white ml-2" style="font-size: 12px;" id="brightidtext"></div>
+          <div class="row justify-content-md-center">
+            <button id="copybrightid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
+          </div>
+          <div id="userRecoveryContainer">
+            <h6 class="row mt-3 px-4 text-white">Recovery connections:</h6>
+            <ul id="userRecoveries"></ul>
+          </div>
+          <div id="seedData">
+            <div class="row px-4">
+              <h6 class="text-white mt-3">No. Seed Groups: </h6>
+              <h6 class="text-white mt-3 ml-2" id="noSeedGroups"></h6>
+            </div>
+            <div class="row mt-2 px-4">
+              <h6 class="text-white mt-3">Seed Quota: </h6>
+              <h6 class="text-white mt-3 ml-2" id="quotaValue"></h6>
+            </div>
+          </div>
+          <div class="row mt-2 px-4">
+            <h6 class="text-white mt-3">Verifications:</h6>
+          </div>
+          <div class="text-white px-4" id="verifications"></div>
+          <div class="row">
+            <h6 class="text-white ml-4 mt-3">Groups:</h6>
+          </div>
+          <div class="input-group px-2">
+            <select class="custom-select mt-3"  id="groups" name="groups">
+              <option value="none" selected="">None</option>
+            </select>
+          </div>
+          <div class="row justify-content-md-center mt-2">
+            <button id="showGroup" class="btn btn-primary align-center mb-5">Show Group</button>
+          </div>
+        </div>
+
+        <a id="groupbtntitle" onclick="openCollapsible('groupDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
+          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          Group
+        </a>
+        <div class="hiden menu-item-body" id="groupDitail">
+          <div class="row px-4" id="groupnamecontainer">
+            <h6 class="text-white mt-3">Group Name:</h6>
+            <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupname"></div>
+          </div>
+          <div class="row px-4" id="groupquotacontainer">
+            <h6 class="text-white mt-3">Seed Group Quota:</h6>
+            <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupquota"></div>
+          </div>
+          <div class="row px-4">
+            <h6 class="text-white mt-3">Group ID:</h6> <br>
+          </div>
+          <div class="text-white" style="font-size: 12px;" id="groupidtext"></div>
+          <div class="row justify-content-md-center">
+            <button id="copygroupid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4 mt-3">Members:</h6>
+            <h6 class="text-white mt-3 ml-2" id="groupmemberscount"></h6>
+          </div>
+          <div class="input-group mb-3 px-2">
+            <select class="custom-select"  id="members" name="members">
+              <option value="none" selected="">None</option>
+            </select>
+          </div>
+          <div class="row justify-content-md-center mt-2">
+            <button id="showMemeber" class="btn btn-primary align-center mb-5">Show Memeber</button>
+          </div>
+          <div id="seedConnectedDiv">
+            <div class="row">
+              <h6 class="text-white ml-4 mt-3">Users conected to this seed group:</h6>
+              <h6 class="text-white mt-3 ml-2" id="groupseedconectedcount"></h6>
+            </div>
+            <div class="input-group mb-3 px-2">
+              <select class="custom-select"  id="seedConnected" name="seedConnected">
+                <option value="none" selected="">None</option>
+              </select>
+            </div>
+            <div class="row justify-content-md-center mt-2">
+              <button id="showUser" class="btn btn-primary align-center mb-5">Show User</button>
+            </div>
+          </div>
+          <input style="opacity: 0;" type="text" id="groupidfield" value="">
         </div>
 
         <a href="#" onclick="openCollapsible('statisticsDitail')" class="list-group-item list-group-item-action bg-primary">
@@ -135,94 +232,6 @@
           <div class="input-group px-2">
             <input class="form-control  mb-2" type="date" id="todate" name="todate" />
           </div>
-        </div>
-
-        <a id="userbtntitle" onclick="openCollapsible('userDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
-          <i style='font-size:16px' class='fas'>&#xf105; </i>
-          User
-        </a>
-        <div class="hiden menu-item-body" id="userDitail">
-          <div class="row mt-2 px-4">
-            <h6 class="text-white">BrightID:</h6> <br>
-            <input style="opacity: 0;" type="text" id="brightidfield" value="">
-          </div>
-          <div class="text-white ml-2" style="font-size: 12px;" id="brightidtext"></div>
-          <div class="row justify-content-md-center">
-            <button id="copybrightid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
-          </div>
-          <div class="row mt-2">
-            <h6 class="text-white ml-4">Groups:</h6>
-          </div>
-          <div class="input-group mb-3 px-2">
-            <select class="custom-select"  id="groups" name="groups">
-              <option value="none" selected="">None</option>
-            </select>
-          </div>
-          <div class="row justify-content-md-center mt-2">
-            <button id="showGroup" class="btn btn-primary align-center mb-5">Show Group</button>
-          </div>
-          <div id="seedData">
-            <div class="row mt-2 px-4">
-              <h6 class="text-white">No. Seed Groups: </h6>
-              <h6 class="text-white ml-2" id="noSeedGroups"></h6>
-            </div>
-            <div class="row mt-2 px-4">
-              <h6 class="text-white">Seed Quota: </h6>
-              <h6 class="text-white ml-2" id="quotaValue"></h6>
-            </div>
-          </div>
-          <div class="row mt-2 px-4">
-            <h6 class="text-white">Verifications:</h6>
-          </div>
-          <div class="text-white px-4" id="verifications"></div>
-        </div>
-        <a id="groupbtntitle" onclick="openCollapsible('groupDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
-          <i style='font-size:16px' class='fas'>&#xf105; </i>
-          Group
-        </a>
-        <div class="hiden menu-item-body" id="groupDitail">
-          <div class="row mt-2 px-4" id="groupnamecontainer">
-            <h6 class="text-white">Group Name:</h6>
-            <div class="text-white ml-2" style="font-size: 14px;" id="groupname"></div>
-          </div>
-          <div class="row mt-2 px-4" id="groupquotacontainer">
-            <h6 class="text-white">Seed Group Quota:</h6>
-            <div class="text-white ml-2" style="font-size: 14px;" id="groupquota"></div>
-          </div>
-          <div class="row mt-2 px-4">
-            <h6 class="text-white">Group ID:</h6> <br>
-          </div>
-          <div class="text-white ml-2" style="font-size: 12px;" id="groupidtext"></div>
-          <div class="row justify-content-md-center">
-            <button id="copygroupid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
-          </div>
-          <div class="row mt-2">
-            <h6 class="text-white ml-4">Members:</h6>
-            <h6 class="text-white ml-2" id="groupmemberscount"></h6>
-          </div>
-          <div class="input-group mb-3 px-2">
-            <select class="custom-select"  id="members" name="members">
-              <option value="none" selected="">None</option>
-            </select>
-          </div>
-          <div class="row justify-content-md-center mt-2">
-            <button id="showMemeber" class="btn btn-primary align-center mb-5">Show Memeber</button>
-          </div>
-          <div id="seedConnectedDiv">
-            <div class="row mt-2">
-              <h6 class="text-white ml-4">Users conected to this seed group:</h6>
-              <h6 class="text-white ml-2" id="groupseedconectedcount"></h6>
-            </div>
-            <div class="input-group mb-3 px-2">
-              <select class="custom-select"  id="seedConnected" name="seedConnected">
-                <option value="none" selected="">None</option>
-              </select>
-            </div>
-            <div class="row justify-content-md-center mt-2">
-              <button id="showUser" class="btn btn-primary align-center mb-5">Show User</button>
-            </div>
-          </div>
-          <input style="opacity: 0;" type="text" id="groupidfield" value="">
         </div>
       </div>
     </div>
