@@ -248,7 +248,7 @@ function select_group(id, show_details) {
   } else {
     $("#groupnamecontainer").hide();
   }
-  if (group.quota) {
+  if ('quota' in group) {
     $("#groupquotacontainer").show();
     $("#groupquota").html(group.quota);
   } else {
