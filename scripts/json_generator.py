@@ -1,5 +1,4 @@
 import os
-import time
 import json
 import zipfile
 import tarfile
@@ -7,8 +6,7 @@ import requests
 import networkx as nx
 
 BACKUP_URL = 'https://storage.googleapis.com/brightid-backups/brightid.tar.gz'
-INITIAL_QUOTA = 700
-MONTHLY_QUOTA = 200
+DEFAULT_QUOTA = 50
 
 
 def main():
@@ -75,11 +73,9 @@ def load_from_backup():
         groupDic = {'id': g, 'seed': groups[g].get(
             'seed', False), 'region': groups[g].get('region', None)}
         if groups[g].get('seed', False):
-            duration = int(time.time() - groups[g]['timestamp'] / 1000)
-            months = int(duration / (30 * 24 * 60 * 60))
-            groupDic['quota'] = (INITIAL_QUOTA + months *
-                                 MONTHLY_QUOTA) - groupsUsedQuota.get(g, 0)
-            groupsQuota[g] = groupDic['quota']
+            quota = max(0, groups[g].get('quota', DEFAULT_QUOTA) - groupsUsedQuota.get(g, 0))
+            groupDic['quota'] = quota
+            groupsQuota[g] = quota
         ret['groups'].append(groupDic)
 
     for user_group in user_groups.values():
