@@ -6,6 +6,7 @@ import requests
 import networkx as nx
 
 BACKUP_URL = 'https://storage.googleapis.com/brightid-backups/brightid.tar.gz'
+CONNECTION_LEVELS = ['already known', 'recovery']
 DEFAULT_QUOTA = 50
 
 
@@ -28,7 +29,6 @@ def load_from_backup():
     groups = records(zip_addr, 'groups')
     connections = records(zip_addr, 'connections')
     verifications = records(zip_addr, 'verifications')
-
     # remove the unconnected nodes to the main component
     graph = nx.Graph()
     graph.add_nodes_from(users.keys())
@@ -73,7 +73,8 @@ def load_from_backup():
         groupDic = {'id': g, 'seed': groups[g].get(
             'seed', False), 'region': groups[g].get('region', None)}
         if groups[g].get('seed', False):
-            quota = max(0, groups[g].get('quota', DEFAULT_QUOTA) - groupsUsedQuota.get(g, 0))
+            quota = max(0, groups[g].get(
+                'quota', DEFAULT_QUOTA) - groupsUsedQuota.get(g, 0))
             groupDic['quota'] = quota
             groupsQuota[g] = quota
         ret['groups'].append(groupDic)
@@ -88,7 +89,15 @@ def load_from_backup():
             users[u]['seed_groups'] += 1
             users[u]['node_type'] = 'Seed'
             users[u]['quota'] += groupsQuota[g]
+    checked = set()
     for c in connections.values():
+        if c['level'] not in CONNECTION_LEVELS:
+            continue
+        key1 = '{}_{}'.format(c['_from'], c['_to'])
+        checked.add(key1)
+        key2 = '{}_{}'.format(c['_to'], c['_from'])
+        if key2 not in checked:
+            continue
         _from = c['_from'].replace('users/', '')
         _to = c['_to'].replace('users/', '')
         if _from not in graph or _to not in graph:
@@ -96,6 +105,7 @@ def load_from_backup():
         ret['links'].append({
             'source': _from,
             'target': _to,
+            'level': c['level'],
             'timestamp': c['timestamp']
         })
     ret['nodes'] = list(users.values())

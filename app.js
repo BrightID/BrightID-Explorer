@@ -211,8 +211,8 @@ function highlight_edges() {
       highlightLinks.add(link);
     }
   });
-  Graph.linkWidth((link) => (highlightLinks.has(link) ? 1 : 0.1));
-  Graph.linkVisibility((link) => (highlightLinks.has(link) ? true : false));
+  Graph.linkWidth((link) => (highlightLinks.has(link) ? 0.6 : 0.3));
+  Graph.linkColor((link) => (highlightLinks.has(link) ? "red" : "rgba(204, 204, 204, 1)"));
 }
 
 function move(x, y, z) {
@@ -348,6 +348,7 @@ function get_group_name(g) {
 }
 
 function select_node(node, show_details) {
+  $("#noConnections").html(node.connections.length);
   if (node.node_type == "Seed") {
     $("#quotaValue").html(node.quota);
     $("#noSeedGroups").html(node.seed_groups);
@@ -389,6 +390,10 @@ function select_node(node, show_details) {
       } else if (key == "seedGroup") {
         let groupId = value.replace("groups/", "");
         value = groups[groupId].region ? groups[groupId].region : groupId;
+      } else if (key == "raw_rank") {
+        value = value.toFixed(2)
+      } else if (!value && key == 'friend') {
+        continue;
       }
       keyValue +=
         '<div class="card-value-container"> <div class="inline-text">' +
@@ -419,8 +424,8 @@ function select_node(node, show_details) {
       highlightLinks.add(link);
     }
   });
-  Graph.linkWidth((link) => (highlightLinks.has(link) ? 1 : 0.1));
-  Graph.linkVisibility((link) => (highlightLinks.has(link) ? true : false));
+  Graph.linkWidth((link) => (highlightLinks.has(link) ? 0.6 : 0.3));
+  Graph.linkColor((link) => (highlightLinks.has(link) ? "red" : "rgba(204, 204, 204, 1)"));
   if (show_details) {
     openCollapsible("userDitail", true);
   }
@@ -457,14 +462,13 @@ function draw_graph(data) {
     .nodeId("id")
     .nodeVal("size")
     .nodeLabel("id")
-    .linkWidth(0.1)
+    .linkWidth(0.3)
     .nodeColor(reset_colors)
     .linkSource("source")
     .linkTarget("target")
     .onNodeClick((node) => {
       select_node(node, true);
     })
-    .linkVisibility((link) => false)
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject(({ img, x, y, color }, ctx) => {
       let size = 30;
@@ -523,7 +527,6 @@ $(document).ready(function () {
       }
     });
     data.links.forEach((edge) => {
-      // edges[edge.source + ',' + edge.target] = edge[2];
       nodes[edge.source].connections.push(edge.target);
       nodes[edge.target].connections.push(edge.source);
     });
