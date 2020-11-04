@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import zipfile
 import tarfile
 import requests
@@ -11,6 +12,7 @@ DEFAULT_QUOTA = 50
 
 
 def main():
+    print('Updating the graph explorer data. ', time.ctime())
     json_graph = load_from_backup()
     with open('../brightid.json', 'w') as f:
         f.write(json.dumps(json_graph))
