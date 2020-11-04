@@ -16,6 +16,8 @@ function hash(data) {
 function load_users(user, key1, password) {
   $("<option>").val(user.id).text(user.name).appendTo("#usersgroup");
   $.get(`/storage/${key1}/${user.id}`).done((data) => {
+    $("#username").empty();
+    $('#profileimage').empty();
     data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
     let img1 = new Image();
     img1.src = data;
@@ -25,6 +27,7 @@ function load_users(user, key1, password) {
     });
     $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
     $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
+    select_node(nodes[user.id], true);
   });
   for (const c of user.connections || []) {
     // skip c.id === user.id to solve bugs related to users connected to themselves!
@@ -40,10 +43,6 @@ function load_users(user, key1, password) {
       Object.assign(nodes[c.id], { img: img2 });
     });
   }
-  nodes[user.id].trusted.forEach((tid) => {
-    let text = nodes[tid]?.name || tid;
-    $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#recoveries");
-  });
   $("#searchfield").select2({ tags: true });
 }
 
@@ -479,7 +478,11 @@ function draw_graph(data) {
         ctx.arc(x, y, size / 2, 0, Math.PI * 2, true);
         ctx.clip();
         ctx.strokeStyle = color;
-        ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+        try {
+          ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+        } catch(err) {
+          console.log('Error in drawImage: ', err)
+        }
         ctx.stroke();
         ctx.restore();
       }
