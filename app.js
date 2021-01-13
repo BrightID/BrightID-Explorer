@@ -1,3 +1,7 @@
+selected_link_width = 1.0;
+link_width = 0.3;
+faded_color = "rgba(204, 204, 204, 1)";
+
 function b64ToUrlSafeB64(s) {
   const alts = {
     "/": "_",
@@ -109,22 +113,18 @@ async function load_info() {
   load_groups(user, key1, password);
 }
 
-function reset_colors(n) {
-  let color;
-  if (n.node_type == "Seed") {
-    color = "blue";
-  } else if (n.verifications && "BrightID" in n.verifications) {
-    color = "green";
-  } else {
-    color = "yellow";
-  }
-  if (reds.includes(n.id)) {
-    color = "red";
-  } else if (oranges.includes(n.id)) {
-    color = "orange";
-  }
-  n.color = color;
-  return color;
+function reset_link_colors(link) {
+  if (link.level == 'recovery') return 'blue';
+  else if (link.level == 'already known') return 'green';
+  else if (link.level == 'suspicious') return 'orange';
+  else if (link.level == 'reported') return 'red';
+  else return 'black';
+}
+
+function reset_node_colors(n) {
+  if (n.node_type == "Seed") return  "blue";
+  else if (n.verifications && "BrightID" in n.verifications) return "green";
+  else return "yellow";
 }
 
 function copy_brightid() {
@@ -203,15 +203,20 @@ function parse_regions(s) {
 
 function highlight_edges() {
   const highlightLinks = new Set();
+  const highlightNodes = new Set();
   const fromdate = new Date($("#fromdate").val()).getTime();
   const todate = new Date($("#todate").val()).getTime() + 24 * 60 * 60 * 1000;
   links.forEach((link) => {
     if (fromdate <= link.timestamp && link.timestamp <= todate) {
       highlightLinks.add(link);
+      highlightNodes.add(link.source.id);
+      highlightNodes.add(link.target.id);
     }
   });
-  Graph.linkWidth((link) => (highlightLinks.has(link) ? 0.6 : 0.3));
-  Graph.linkColor((link) => (highlightLinks.has(link) ? "red" : "rgba(204, 204, 204, 1)"));
+  Graph.nodeColor(n => highlightNodes.has(n.id) ? reset_node_colors(n) : faded_color);
+  Graph.linkWidth((link) => (highlightLinks.has(link) ? selected_link_width : link_width))
+    .linkColor((link) => (highlightLinks.has(link) ? reset_link_colors(link) : faded_color))
+    .linkDirectionalArrowLength((link) => highlightLinks.has(link) ? 16 : 6);
 }
 
 function move(x, y, z) {
@@ -230,13 +235,12 @@ function select_group(id, show_details) {
   const n = group.members.length;
   move(sum_x / n, sum_y / n, 1.2);
   if (group.seed) {
-    reds = group.members;
-    oranges = group.seedConnected;
+    Graph.nodeColor(n => group.members.includes(n.id) || group.seedConnected.includes(n.id) ? reset_node_colors(n) : faded_color);
   } else {
-    reds = [];
-    oranges = group.members;
+    Graph.nodeColor(n => group.members.includes(n.id) ? reset_node_colors(n) : faded_color);
   }
-  Graph.nodeColor(reset_colors);
+
+  Graph.linkColor(faded_color);
   // group details
   if (group.name) {
     $("#groupnamecontainer").show();
@@ -301,17 +305,15 @@ function select_verification(v) {
       }
     }
   }
-  reds = [];
-  oranges = members;
-  Graph.nodeColor(reset_colors);
+  Graph.nodeColor(n => members.includes(n.id) ? reset_node_colors(n) : faded_color);
+  Graph.linkColor(faded_color);
 }
 
 function select_region(name) {
   if (name == "Complete Graph") {
     const centerNode = nodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"];
-    reds = [];
-    oranges = [];
-    Graph.nodeColor(reset_colors);
+    Graph.nodeColor(reset_node_colors);
+    Graph.linkColor(reset_link_colors);
     return move(centerNode.x, centerNode.y, 0.7);
   }
   if (regions[name].length == 1 && groups[regions[name][0]]) {
@@ -334,9 +336,8 @@ function select_region(name) {
       sum_x += nodes[id].x;
       sum_y += nodes[id].y;
     }
-    reds = [];
-    oranges = members;
-    Graph.nodeColor(reset_colors);
+    Graph.nodeColor(n => members.includes(n.id) ? reset_node_colors(n) : faded_color);
+    Graph.linkColor(faded_color);
     const n = members.length;
     move(sum_x / n, sum_y / n, 1.2);
   }
@@ -348,6 +349,10 @@ function get_group_name(g) {
 
 function select_node(node, show_details) {
   $("#noConnections").html(node.connections.length);
+  Object.values(nodes).forEach(node => {
+    node.selected = false
+  });
+  node.selected = true;
   if (node.node_type == "Seed") {
     $("#quotaValue").html(node.quota);
     $("#noSeedGroups").html(node.seed_groups);
@@ -380,12 +385,13 @@ function select_node(node, show_details) {
   }
   var str_verifications = "";
   for (const name in node.verifications) {
-    let keyValue = "";
+    if (node.verifications[name].app) {
+      continue;
+    }
+    let details = [];
     for (let [key, value] of Object.entries(node.verifications[name])) {
       if (key == "timestamp") {
-        key = "Date";
-        var d = new Date(value);
-        value = d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
+        continue;
       } else if (key == "seedGroup") {
         let groupId = value.replace("groups/", "");
         value = groups[groupId].region ? groups[groupId].region : groupId;
@@ -394,23 +400,13 @@ function select_node(node, show_details) {
       } else if (!value && key == 'friend') {
         continue;
       }
-      keyValue +=
-        '<div class="card-value-container"> <div class="inline-text">' +
-        key +
-        ": " +
-        value +
-        "</div> </div>";
+      details.push(`${key}: ${value}`);
     }
-    str_verifications += creatCard(name, keyValue);
+    str_verifications += `<b>${name}</b> ${details.join(', ')}<br/>`;
   }
   $("#verifications").html(str_verifications);
   $("#brightidtext").html(node.id);
   $("#brightidfield").val(node.id);
-  reds = [];
-  oranges = [];
-  reds = [node.id];
-  oranges = node.connections;
-  Graph.nodeColor(reset_colors);
   move(node.x, node.y, 1.2);
   $("#usergroupphoto").hide();
   $("#groups").empty().append(new Option("", "none"));
@@ -423,8 +419,10 @@ function select_node(node, show_details) {
       highlightLinks.add(link);
     }
   });
-  Graph.linkWidth((link) => (highlightLinks.has(link) ? 0.6 : 0.3));
-  Graph.linkColor((link) => (highlightLinks.has(link) ? "red" : "rgba(204, 204, 204, 1)"));
+  Graph.nodeColor((n) => node.connections.includes(n.id) || n == node ? reset_node_colors(n) : faded_color)
+    .linkDirectionalArrowLength((link) => highlightLinks.has(link) ? 16 : 6)
+    .linkWidth((link) => highlightLinks.has(link) ? selected_link_width : link_width)
+    .linkColor((link) => highlightLinks.has(link) ? reset_link_colors(link) : faded_color);
   if (show_details) {
     openCollapsible("userDitail", true);
   }
@@ -457,18 +455,27 @@ function draw_graph(data) {
   const elem = document.getElementById("graph_div");
   Graph = ForceGraph()(elem)
     .graphData(data)
-    .linkColor(() => "rgba(204, 204, 204, 1)")
+    .linkColor(reset_link_colors)
     .nodeId("id")
     .nodeVal("size")
     .nodeLabel("id")
-    .linkWidth(0.3)
-    .nodeColor(reset_colors)
+    .linkWidth(link_width)
+    .nodeColor(reset_node_colors)
     .linkSource("source")
     .linkTarget("target")
     .onNodeClick((node) => {
-      select_node(node, true);
+      if (!node.selected) {
+        select_node(node, true);
+      } else {
+        node.selected = false;
+        Graph.linkWidth(link_width)
+          .nodeColor(reset_node_colors)
+          .linkColor(reset_link_colors)
+          .linkDirectionalArrowLength(6);
+      }
     })
     .nodeCanvasObjectMode(() => "after")
+    .linkDirectionalArrowLength(6)
     .nodeCanvasObject(({ img, x, y, color }, ctx) => {
       let size = 30;
       if (img) {
@@ -491,10 +498,9 @@ function draw_graph(data) {
 
 $(document).ready(function () {
   nodes = {};
-  oranges = [];
-  reds = [];
   $.get("brightid.json", function (data) {
     // data = JSON.parse(data);
+    data.links = data.links.filter(link => link.level != 'just met');
     links = data.links;
     data.nodes.forEach((node) => {
       node.connections = [];

@@ -7,7 +7,6 @@ import requests
 import networkx as nx
 
 BACKUP_URL = 'https://storage.googleapis.com/brightid-backups/brightid.tar.gz'
-CONNECTION_LEVELS = ['already known', 'recovery']
 DEFAULT_QUOTA = 50
 
 
@@ -91,18 +90,13 @@ def load_from_backup():
             users[u]['seed_groups'] += 1
             users[u]['node_type'] = 'Seed'
             users[u]['quota'] += groupsQuota[g]
-    checked = set()
     for c in connections.values():
-        if c['level'] not in CONNECTION_LEVELS:
-            continue
-        key1 = '{}_{}'.format(c['_from'], c['_to'])
-        checked.add(key1)
-        key2 = '{}_{}'.format(c['_to'], c['_from'])
-        if key2 not in checked:
-            continue
+        if c['level'] == 'just met': continue
         _from = c['_from'].replace('users/', '')
         _to = c['_to'].replace('users/', '')
         if _from not in graph or _to not in graph:
+            continue
+        if users[_to].get('node_type') == 'Seed':
             continue
         ret['links'].append({
             'source': _from,

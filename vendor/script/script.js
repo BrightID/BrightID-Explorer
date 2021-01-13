@@ -20,8 +20,3 @@ function openCollapsible(selectedId, reopen) {
 }
 
 $('#logoutbtnform').hide();
-
-function creatCard(title , text){
-  let newCard= '<dive class="row justify-content-md-center mt-2"><div class="card verificationsCard border-dark mb-3" style="max-width: 18rem;"><div class="card-header text-dark text-center"><h7>'+ title + '<i class="fas fa-check-circle ml-2 text-primary"></i></h7></div><div class="card-body text-dark justify-center"><p class="card-title text-center">' + text + '</p></div></div></dive>';
-  return newCard;
-}

@@ -95,10 +95,6 @@
               <h6 class="text-white mt-3 ml-2" id="quotaValue"></h6>
             </div>
           </div>
-          <div class="row mt-2 px-4">
-            <h6 class="text-white mt-3">Verifications:</h6>
-          </div>
-          <div class="text-white px-4" id="verifications"></div>
           <div class="row">
             <h6 class="text-white ml-4 mt-3">Groups:</h6>
           </div>
@@ -108,8 +104,12 @@
             </select>
           </div>
           <div class="row justify-content-md-center mt-2">
-            <button id="showGroup" class="btn btn-primary align-center mb-5">Show Group</button>
+            <button id="showGroup" class="btn btn-primary align-center">Show Group</button>
           </div>
+          <div class="row mt-2 px-4">
+            <h6 class="text-white mt-3">Verifications:</h6>
+          </div>
+          <div class="text-white px-4" id="verifications"></div>
         </div>
 
         <a id="groupbtntitle" onclick="openCollapsible('groupDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
@@ -290,8 +290,15 @@
               <li><span style='background:blue;'></span>Seed</li>
               <li><span style='background:green;'></span>Verified</li>
               <li><span style='background:yellow;'></span>Not Verified</li>
-              <li><span style='background:red;'></span>Selected</li>
-              <li><span style='background:orange;'></span>Neighbor</li>
+            </ul>
+          </div>
+          <div class='legend-title'>Link colors</div>
+          <div class='legend-scale'>
+            <ul class='legend-labels'>
+              <li><span style='background:blue;'></span>Recovery</li>
+              <li><span style='background:green;'></span>Already known</li>
+              <li><span style='background:orange;'></span>Suspicious</li>
+              <li><span style='background:red;'></span>Reported</li>
             </ul>
           </div>
         </div>
