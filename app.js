@@ -390,15 +390,26 @@ function select_node(node, show_details) {
     }
     let details = [];
     for (let [key, value] of Object.entries(node.verifications[name])) {
-      if (key == "timestamp") {
+      if (["timestamp", "hash", "block"].includes(key)) {
         continue;
-      } else if (key == "seedGroup") {
-        let groupId = value.replace("groups/", "");
-        value = groups[groupId].region ? groups[groupId].region : groupId;
+      } else if (!value && key == "friend") {
+        continue;
+      } else if (["reported", "connected"].includes(key) && value.length == 0) {
+        continue;
+      } else if (key == "connected") {
+        let seedGroups = [];
+        for (let groupId of value) {
+          seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
+        }
+        value = seedGroups.join(', ');
+      } else if (key == "reported") {
+        let seedGroups = [];
+        for (let groupId of value) {
+          seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
+        }
+        value = seedGroups.join(', ');
       } else if (key == "raw_rank") {
         value = value.toFixed(2)
-      } else if (!value && key == 'friend') {
-        continue;
       }
       details.push(`${key}: ${value}`);
     }
@@ -512,14 +523,12 @@ $(document).ready(function () {
         groups[group].members.push(node.id);
       });
       if (node.verifications.SeedConnected) {
-        let sg = node.verifications.SeedConnected.seedGroup.replace(
-          "groups/",
-          ""
-        );
-        if (!groups[sg]) {
-          groups[sg] = { members: [], seedConnected: [] };
+        for (const sg of node.verifications.SeedConnected.connected) {
+          if (!groups[sg]) {
+            groups[sg] = { members: [], seedConnected: [] };
+          }
+          groups[sg].seedConnected.push(node.id);
         }
-        groups[sg].seedConnected.push(node.id);
       }
     });
     data.groups.forEach((group) => {

@@ -60,10 +60,10 @@ def load_from_backup():
             del v[k]
         users[u]['verifications'][name] = v
         if name == 'SeedConnected':
-            g = v['seedGroup'].replace('groups/', '')
-            if g not in groupsUsedQuota:
-                groupsUsedQuota[g] = 0
-            groupsUsedQuota[g] += 1
+            for g in v['connected']:
+                if g not in groupsUsedQuota:
+                    groupsUsedQuota[g] = 0
+                groupsUsedQuota[g] += 1
         if name == 'Yekta':
             if v['rank'] > 2:
                 users[u]['size'] = 4
@@ -91,7 +91,8 @@ def load_from_backup():
             users[u]['node_type'] = 'Seed'
             users[u]['quota'] += groupsQuota[g]
     for c in connections.values():
-        if c['level'] == 'just met': continue
+        if c['level'] == 'just met':
+            continue
         _from = c['_from'].replace('users/', '')
         _to = c['_to'].replace('users/', '')
         if _from not in graph or _to not in graph:
