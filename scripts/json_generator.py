@@ -30,6 +30,9 @@ def load_from_backup():
     groups = records(zip_addr, 'groups')
     connections = records(zip_addr, 'connections')
     verifications = records(zip_addr, 'verifications')
+    variables = records(zip_addr, 'variables')
+    v_block = sorted([h['block']
+                      for h in variables['VERIFICATIONS_HASHES']['hashes']])[-2]
     # remove the unconnected nodes to the main component
     graph = nx.Graph()
     graph.add_nodes_from(users.keys())
@@ -52,6 +55,8 @@ def load_from_backup():
         users[u] = {'id': u, 'groups': [], 'verifications': {
         }, 'seed_groups': 0, 'quota': 0, 'trusted': users[u].get('trusted', list())}
     for v in verifications.values():
+        if v['block'] != v_block:
+            continue
         u = v['user']
         if u not in graph:
             continue
