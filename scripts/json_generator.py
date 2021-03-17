@@ -102,8 +102,6 @@ def load_from_backup():
         _to = c['_to'].replace('users/', '')
         if _from not in graph or _to not in graph:
             continue
-        if users[_to].get('node_type') == 'Seed':
-            continue
         ret['links'].append({
             'source': _from,
             'target': _to,
