@@ -35,8 +35,8 @@ def load_from_backup():
     ): c for c in connections.values()}
     verifications = records(zip_addr, 'verifications')
     variables = records(zip_addr, 'variables')
-    v_block = sorted([int(block)
-                      for block in variables['VERIFICATIONS_HASHES']['hashes']])[-1]
+    hashes = json.loads(variables['VERIFICATIONS_HASHES']['hashes'])
+    v_block = sorted([int(block) for block in hashes])[-1]
     # remove the unconnected nodes to the main component
     graph = nx.Graph()
     graph.add_nodes_from(users.keys())
