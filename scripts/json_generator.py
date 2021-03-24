@@ -29,10 +29,14 @@ def load_from_backup():
     users = records(zip_addr, 'users')
     groups = records(zip_addr, 'groups')
     connections = records(zip_addr, 'connections')
+    connections = {(
+        c['_from'].replace('users/', ''),
+        c['_to'].replace('users/', '')
+    ): c for c in connections.values()}
     verifications = records(zip_addr, 'verifications')
     variables = records(zip_addr, 'variables')
-    v_block = sorted([h['block']
-                      for h in variables['VERIFICATIONS_HASHES']['hashes']])[-2]
+    v_block = sorted([int(block)
+                      for block in variables['VERIFICATIONS_HASHES']['hashes']])[-1]
     # remove the unconnected nodes to the main component
     graph = nx.Graph()
     graph.add_nodes_from(users.keys())
@@ -101,6 +105,9 @@ def load_from_backup():
         _from = c['_from'].replace('users/', '')
         _to = c['_to'].replace('users/', '')
         if _from not in graph or _to not in graph:
+            continue
+        otherSideLevel = connections.get((_to, _from), {}).get('level')
+        if c['level'] == 'already known' and otherSideLevel == 'just met':
             continue
         ret['links'].append({
             'source': _from,
