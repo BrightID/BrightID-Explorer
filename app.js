@@ -101,6 +101,7 @@ function load_groups(user, key1, password) {
 }
 
 async function load_info() {
+  auto_login_done = true;
   let password;
   if (! localStorage['explorer_backup_data']) {
     const code = $("#code").val();
@@ -547,7 +548,6 @@ function draw_graph(data) {
     })
     .onEngineStop(() => {
       if (localStorage['explorer_backup_data'] && !auto_login_done) {
-        auto_login_done = true;
         load_info();
       }
     });
