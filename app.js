@@ -1,6 +1,8 @@
 selected_link_width = 1.0;
 link_width = 0.3;
 faded_color = "rgba(204, 204, 204, 1)";
+selected_node = undefined;
+auto_login_done = false;
 
 function b64ToUrlSafeB64(s) {
   const alts = {
@@ -19,20 +21,26 @@ function hash(data) {
 
 function load_users(user, key1, password) {
   $("<option>").val(user.id).text(user.name).appendTo("#usersgroup");
-  $.get(`/storage/${key1}/${user.id}`).done((data) => {
-    $("#username").empty();
-    $('#profileimage').empty();
-    data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
-    let img1 = new Image();
-    img1.src = data;
-    Object.assign(nodes[user.id], {
-      name: user.name,
-      img: img1,
+  $("#username").empty();
+  $('#profileimage').empty();
+  $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
+  let img1 = new Image();
+  Object.assign(nodes[user.id], { name: user.name, img: img1 });
+  if (! localStorage[`explorer_img_${user.id}`]) {
+    $.get(`/storage/${key1}/${user.id}`).done((data) => {
+      data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+      localStorage[`explorer_img_${user.id}`] = data;
+      img1.src = data;
+      $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
+      select_node(nodes[user.id], true);
     });
-    $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
+  } else {
+    let data = localStorage[`explorer_img_${user.id}`];
+    localStorage[`explorer_img_${user.id}`] = data;
+    img1.src = data;
     $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
     select_node(nodes[user.id], true);
-  });
+  }
   for (const c of user.connections || []) {
     // skip c.id === user.id to solve bugs related to users connected to themselves!
     if (!nodes[c.id] || c.id === user.id) {
@@ -40,12 +48,20 @@ function load_users(user, key1, password) {
     }
     $("<option>").val(c.id).text(c.name).appendTo("#usersgroup");
     Object.assign(nodes[c.id], { name: c.name });
-    $.get(`/storage/${key1}/${c.id}`).done((data) => {
-      data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+    if (! localStorage[`explorer_img_${c.id}`]) {
+      $.get(`/storage/${key1}/${c.id}`).done((data) => {
+        data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+        localStorage[`explorer_img_${c.id}`] = data;
+        let img2 = new Image();
+        img2.src = data;
+        Object.assign(nodes[c.id], { img: img2 });
+      });
+    } else {
+      let data = localStorage[`explorer_img_${c.id}`];
       let img2 = new Image();
       img2.src = data;
       Object.assign(nodes[c.id], { img: img2 });
-    });
+    }
   }
   $("#searchfield").select2({ tags: true });
 }
@@ -63,47 +79,65 @@ function load_groups(user, key1, password) {
       continue;
     }
     const url = "/storage/immutable" + g.url.split("immutable")[1];
-    $.get(url).done((data) => {
-      if (!g.aesKey || !data) {
-        return;
-      }
-      data = CryptoJS.AES.decrypt(data, g.aesKey).toString(CryptoJS.enc.Utf8);
+    if (! localStorage[`explorer_img_${g.id}`]) {
+      $.get(url).done((data) => {
+        if (!g.aesKey || !data) {
+          return;
+        }
+        data = CryptoJS.AES.decrypt(data, g.aesKey).toString(CryptoJS.enc.Utf8);
+        localStorage[`explorer_img_${g.id}`] = data;
+        let img = new Image();
+        img.src = JSON.parse(data).img;
+        Object.assign(groups[g.id], { img });
+      });
+    } else {
+      let data = localStorage[`explorer_img_${g.id}`];
       let img = new Image();
       img.src = JSON.parse(data).img;
       Object.assign(groups[g.id], { img });
-    });
+    }
   }
   $("#searchfield").select2({ tags: true });
 }
 
 async function load_info() {
-  const code = $("#code").val();
-  const password = $("#password").val();
-  if (code.indexOf("==") > -1) {
-    const brightid = CryptoJS.AES.decrypt(code, password).toString(
+  let password;
+  if (! localStorage['explorer_backup_data']) {
+    const code = $("#code").val();
+    password = $("#password").val();
+    if (code.indexOf("==") > -1) {
+      const brightid = CryptoJS.AES.decrypt(code, password).toString(
+        CryptoJS.enc.Utf8
+      );
+      user = { id: brightid };
+    } else {
+      user = { id: code };
+    }
+    try {
+      const api_data = await $.get(`/api/v5/users/${user.id}`);
+      key1 = hash(user.id + password);
+      localStorage['explorer_key1'] = key1;
+      backup_data = await $.get(`/storage/${key1}/data`);
+    } catch {
+      return alert("Invalid explorer code or password or backup not available");
+    }
+    backup_data = CryptoJS.AES.decrypt(backup_data, password).toString(
       CryptoJS.enc.Utf8
     );
-    user = { id: brightid };
+    localStorage.explorer_code = code;
+    if (!backup_data) {
+      return alert("no backup found");
+    }
+    localStorage['explorer_backup_data'] = backup_data;
+    backup_data = JSON.parse(backup_data);
   } else {
-    user = { id: code };
+    backup_data = JSON.parse(localStorage['explorer_backup_data']);
+    user = { id: backup_data.id };
+    key1 = localStorage['explorer_key1'];
   }
-  try {
-    const api_data = await $.get(`/api/v5/users/${user.id}`);
-    key1 = hash(user.id + password);
-    backup_data = await $.get(`/storage/${key1}/data`);
-  } catch {
-    return alert("Invalid explorer code or password or backup not available");
-  }
-  backup_data = CryptoJS.AES.decrypt(backup_data, password).toString(
-    CryptoJS.enc.Utf8
-  );
   $("#loginform").hide();
   $("#logoutbtnform").show();
-  localStorage.explorer_code = code;
-  if (!backup_data) {
-    return alert("no backup found");
-  }
-  backup_data = JSON.parse(backup_data);
+
   Object.assign(user, {
     ...backup_data.userData,
     connections: backup_data.connections,
@@ -352,6 +386,7 @@ function select_node(node, show_details) {
   Object.values(nodes).forEach(node => {
     node.selected = false
   });
+  selected_node = node;
   node.selected = true;
   if (node.node_type == "Seed") {
     $("#quotaValue").html(node.quota);
@@ -477,13 +512,18 @@ function draw_graph(data) {
     .onNodeClick((node) => {
       if (!node.selected) {
         select_node(node, true);
-      } else {
-        node.selected = false;
-        Graph.linkWidth(link_width)
-          .nodeColor(reset_node_colors)
-          .linkColor(reset_link_colors)
-          .linkDirectionalArrowLength(6);
       }
+    })
+    .onBackgroundClick(() => {
+      if (! selected_node) {
+        return;
+      }
+      selected_node.selected = false;
+      selected_node = undefined;
+      Graph.linkWidth(link_width)
+        .nodeColor(reset_node_colors)
+        .linkColor(reset_link_colors)
+        .linkDirectionalArrowLength(6);
     })
     .nodeCanvasObjectMode(() => "after")
     .linkDirectionalArrowLength(6)
@@ -503,6 +543,12 @@ function draw_graph(data) {
         }
         ctx.stroke();
         ctx.restore();
+      }
+    })
+    .onEngineStop(() => {
+      if (localStorage['explorer_backup_data'] && !auto_login_done) {
+        auto_login_done = true;
+        load_info();
       }
     });
 }
@@ -605,6 +651,11 @@ $(document).ready(function () {
   });
   $("#statisticsbtn").click(update_statistics);
   $("#logoutbtn").click(() => {
+    for (let k of Object.keys(localStorage)) {
+      if (k.startsWith('explorer_')) {
+        delete localStorage[k];
+      }
+    }
     location.reload();
   });
   $("#load").click(load_info);
