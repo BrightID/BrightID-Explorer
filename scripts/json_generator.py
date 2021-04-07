@@ -100,14 +100,14 @@ def load_from_backup():
             users[u]['node_type'] = 'Seed'
             users[u]['quota'] += groupsQuota[g]
     for c in connections.values():
-        if c['level'] == 'just met':
+        if c['level'] in ('just met', 'suspicious'):
             continue
         _from = c['_from'].replace('users/', '')
         _to = c['_to'].replace('users/', '')
         if _from not in graph or _to not in graph:
             continue
         otherSideLevel = connections.get((_to, _from), {}).get('level')
-        if c['level'] == 'already known' and otherSideLevel == 'just met':
+        if c['level'] == 'already known' and otherSideLevel in ('just met', 'suspicious'):
             continue
         ret['links'].append({
             'source': _from,
