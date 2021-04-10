@@ -19,24 +19,25 @@ function hash(data) {
   return b64ToUrlSafeB64(b);
 }
 
-function load_users(user, key1, password) {
+async function load_users(user, key1, password) {
   $("<option>").val(user.id).text(user.name).appendTo("#usersgroup");
   $("#username").empty();
   $('#profileimage').empty();
   $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
   let img1 = new Image();
+  let data;
   Object.assign(nodes[user.id], { name: user.name, img: img1 });
-  if (! localStorage[`explorer_img_${user.id}`]) {
+  if (! (await localforage.getItem(`explorer_img_${user.id}`))) {
+    console.log('loading', user.id);
     $.get(`/storage/${key1}/${user.id}`).done((data) => {
       data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
-      localStorage[`explorer_img_${user.id}`] = data;
+      localforage.setItem(`explorer_img_${user.id}`, data);
       img1.src = data;
       $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
       select_node(nodes[user.id], true);
     });
   } else {
-    let data = localStorage[`explorer_img_${user.id}`];
-    localStorage[`explorer_img_${user.id}`] = data;
+    data = await localforage.getItem(`explorer_img_${user.id}`);
     img1.src = data;
     $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
     select_node(nodes[user.id], true);
@@ -48,16 +49,21 @@ function load_users(user, key1, password) {
     }
     $("<option>").val(c.id).text(c.name).appendTo("#usersgroup");
     Object.assign(nodes[c.id], { name: c.name });
-    if (! localStorage[`explorer_img_${c.id}`]) {
-      $.get(`/storage/${key1}/${c.id}`).done((data) => {
-        data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
-        localStorage[`explorer_img_${c.id}`] = data;
-        let img2 = new Image();
-        img2.src = data;
-        Object.assign(nodes[c.id], { img: img2 });
-      });
+    data = await localforage.getItem(`explorer_img_${c.id}`);
+    if (!data) {
+      console.log('loading from web');
+      try {
+        data = await $.get(`/storage/${key1}/${c.id}`);
+      } catch (e) {
+        continue;
+      }
+      data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+      localforage.setItem(`explorer_img_${c.id}`, data);
+      let img2 = new Image();
+      img2.src = data;
+      Object.assign(nodes[c.id], { img: img2 });
     } else {
-      let data = localStorage[`explorer_img_${c.id}`];
+      console.log('loading from localforage');
       let img2 = new Image();
       img2.src = data;
       Object.assign(nodes[c.id], { img: img2 });
@@ -66,7 +72,7 @@ function load_users(user, key1, password) {
   $("#searchfield").select2({ tags: true });
 }
 
-function load_groups(user, key1, password) {
+async function load_groups(user, key1, password) {
   for (const g of user.groups || []) {
     if (!groups[g.id]) {
       continue;
@@ -79,19 +85,19 @@ function load_groups(user, key1, password) {
       continue;
     }
     const url = "/storage/immutable" + g.url.split("immutable")[1];
-    if (! localStorage[`explorer_img_${g.id}`]) {
+    if (! (await localforage.getItem(`explorer_img_${g.id}`))) {
       $.get(url).done((data) => {
         if (!g.aesKey || !data) {
           return;
         }
         data = CryptoJS.AES.decrypt(data, g.aesKey).toString(CryptoJS.enc.Utf8);
-        localStorage[`explorer_img_${g.id}`] = data;
+        localforage.setItem(`explorer_img_${g.id}`, data);
         let img = new Image();
         img.src = JSON.parse(data).img;
         Object.assign(groups[g.id], { img });
       });
     } else {
-      let data = localStorage[`explorer_img_${g.id}`];
+      let data = await localforage.getItem(`explorer_img_${g.id}`);
       let img = new Image();
       img.src = JSON.parse(data).img;
       Object.assign(groups[g.id], { img });
@@ -103,7 +109,7 @@ function load_groups(user, key1, password) {
 async function load_info() {
   auto_login_done = true;
   let password;
-  if (! localStorage['explorer_backup_data']) {
+  if (! (await localforage.getItem('explorer_backup_data'))) {
     const code = $("#code").val();
     password = $("#password").val();
     if (code.indexOf("==") > -1) {
@@ -117,7 +123,7 @@ async function load_info() {
     try {
       const api_data = await $.get(`/api/v5/users/${user.id}`);
       key1 = hash(user.id + password);
-      localStorage['explorer_key1'] = key1;
+      localforage.setItem('explorer_key1', key1);
       backup_data = await $.get(`/storage/${key1}/data`);
     } catch {
       return alert("Invalid explorer code or password or backup not available");
@@ -125,16 +131,15 @@ async function load_info() {
     backup_data = CryptoJS.AES.decrypt(backup_data, password).toString(
       CryptoJS.enc.Utf8
     );
-    localStorage.explorer_code = code;
     if (!backup_data) {
       return alert("no backup found");
     }
-    localStorage['explorer_backup_data'] = backup_data;
+    localforage.setItem('explorer_backup_data', backup_data);
     backup_data = JSON.parse(backup_data);
   } else {
-    backup_data = JSON.parse(localStorage['explorer_backup_data']);
+    backup_data = JSON.parse((await localforage.getItem('explorer_backup_data')));
     user = { id: backup_data.id };
-    key1 = localStorage['explorer_key1'];
+    key1 = await localforage.getItem('explorer_key1');
   }
   $("#loginform").hide();
   $("#logoutbtnform").show();
@@ -546,8 +551,8 @@ function draw_graph(data) {
         ctx.restore();
       }
     })
-    .onEngineStop(() => {
-      if (localStorage['explorer_backup_data'] && !auto_login_done) {
+    .onEngineStop(async () => {
+      if ((await localforage.getItem('explorer_backup_data')) && !auto_login_done) {
         load_info();
       }
     });
@@ -651,12 +656,9 @@ $(document).ready(function () {
   });
   $("#statisticsbtn").click(update_statistics);
   $("#logoutbtn").click(() => {
-    for (let k of Object.keys(localStorage)) {
-      if (k.startsWith('explorer_')) {
-        delete localStorage[k];
-      }
-    }
-    location.reload();
+    localforage.clear().then(() => {
+      location.reload();
+    });
   });
   $("#load").click(load_info);
   $("#showGroup").click(show_group);
@@ -673,9 +675,5 @@ $(document).ready(function () {
   $("#daterange").change(set_date_range);
   $("#fromdate").change(highlight_edges);
   $("#todate").change(highlight_edges);
-
-  if (localStorage.explorer_code) {
-    $("#code").val(localStorage.explorer_code);
-  }
   update_statistics();
 });
