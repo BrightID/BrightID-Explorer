@@ -396,7 +396,7 @@ function select_node(node, show_details) {
   node.selected = true;
   if (node.node_type == "Seed") {
     $("#quotaValue").html(node.quota);
-    $("#noSeedGroups").html(node.seed_groups);
+    $("#noSeedGroups").html(node.seed_groups.length);
     $("#seedData").show();
   } else {
     $("#seedData").hide();

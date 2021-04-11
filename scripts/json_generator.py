@@ -6,7 +6,7 @@ import tarfile
 import requests
 import networkx as nx
 
-BACKUP_URL = 'https://storage.googleapis.com/brightid-backups/brightid.tar.gz'
+BACKUP_URL = 'https://explorer.brightid.org/backups/brightid.tar.gz'
 DEFAULT_QUOTA = 50
 
 
@@ -57,7 +57,7 @@ def load_from_backup():
         if u not in graph:
             continue
         users[u] = {'id': u, 'groups': [], 'verifications': {
-        }, 'seed_groups': 0, 'quota': 0, 'trusted': users[u].get('trusted', list())}
+        }, 'seed_groups': [], 'quota': 0, 'trusted': users[u].get('trusted', list())}
     for v in verifications.values():
         if v['block'] != v_block:
             continue
@@ -89,6 +89,7 @@ def load_from_backup():
             groupsQuota[g] = quota
         ret['groups'].append(groupDic)
 
+    group_sorter = lambda g: groupsQuota[g] if groupsQuota[g] > 0 else 1000000
     for user_group in user_groups.values():
         u = user_group['_from'].replace('users/', '')
         if u not in graph:
@@ -96,9 +97,11 @@ def load_from_backup():
         g = user_group['_to'].replace('groups/', '')
         users[u]['groups'].append(g)
         if groups[g].get('seed', False):
-            users[u]['seed_groups'] += 1
+            users[u]['seed_groups'].append(g)
             users[u]['node_type'] = 'Seed'
             users[u]['quota'] += groupsQuota[g]
+            users[u]['seed_groups'].sort(key = group_sorter)
+
     for c in connections.values():
         if c['level'] in ('just met', 'suspicious'):
             continue
@@ -116,6 +119,43 @@ def load_from_backup():
             'timestamp': c['timestamp']
         })
     ret['nodes'] = list(users.values())
+
+    seed_connnections = {}
+    for c in connections.values():
+        if c['level'] not in ('just met', 'already known', 'recovery'):
+            continue
+        f = c['_from'].replace('users/', '')
+        if f not in users or users[f].get('node_type') != 'Seed':
+            continue
+        t = c['_to'].replace('users/', '')
+        if t not in seed_connnections:
+            seed_connnections[t] = {}
+        g = users[f]['seed_groups'][0]
+        if g not in seed_connnections[t]:
+            seed_connnections[t][g] = c['timestamp']
+    now = time.time()
+    one_year_ago = int(now - 365*24*3600) * 1000
+    one_year_ago -= one_year_ago%(24*3600*1000)
+    one_week_ago = int(now - 7*24*3600) * 1000
+    one_week_ago -= one_week_ago%(3600*1000)
+    hourly = {}
+    daily = {}
+    for u in seed_connnections:
+        for g in seed_connnections[u]:
+            t = seed_connnections[u][g]
+            ht = t - t%(3600*1000)
+            dt = t - t%(24*3600*1000)
+            if g not in hourly:
+                hourly[g] = {one_week_ago+i*3600*1000: 0 for i in range(7*24+1)}
+            if g not in daily:
+                daily[g] = {one_year_ago+i*24*3600*1000: 0 for i in range(365+1)}
+            if t > one_week_ago:
+                hourly[g][ht] += 1
+            if t > one_year_ago:
+                daily[g][dt] += 1
+    ret['hourly'] = {groups[g].get('region', g): [(t, hourly[g][t]) for t in sorted(hourly[g])] for g in hourly}
+    ret['daily'] = {groups[g].get('region', g): [(t, daily[g][t]) for t in sorted(daily[g])] for g in daily}
+
     return ret
 
 
