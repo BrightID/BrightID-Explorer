@@ -19,7 +19,7 @@ function draw(data) {
       zoomType: 'x'
     },
     title: {
-      text: 'Seed groups connections - ' + period
+      text: 'Seeds connections - ' + period
     },
     subtitle: {
       text: document.ontouchstart === undefined ?
