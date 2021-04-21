@@ -1,6 +1,7 @@
 .highcharts-figure, .highcharts-data-table table {
-    min-width: 360px; 
-    margin: 1em auto;
+    min-width: 360px;
+    height: 90%;
+    /*margin: 1em auto;*/
 }
 
 .highcharts-data-table table {
@@ -29,4 +30,12 @@
 }
 .highcharts-data-table tr:hover {
     background: #f1f7ff;
+}
+
+#container {
+    height: 100%;
+}
+
+#legend-bottoms {
+    padding: 10px;
 }

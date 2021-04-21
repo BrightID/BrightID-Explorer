@@ -21,9 +21,9 @@ def load_from_backup():
     # read data from the backup
     rar_addr = '/tmp/brightid.tar.gz'
     zip_addr = '/tmp/brightid.zip'
-    backup = requests.get(BACKUP_URL)
-    with open(rar_addr, 'wb') as f:
-        f.write(backup.content)
+    # backup = requests.get(BACKUP_URL)
+    # with open(rar_addr, 'wb') as f:
+    #     f.write(backup.content)
     tar_to_zip(rar_addr, zip_addr)
     user_groups = records(zip_addr, 'usersInGroups')
     users = records(zip_addr, 'users')
@@ -120,7 +120,8 @@ def load_from_backup():
         })
     ret['nodes'] = list(users.values())
 
-    seed_connnections = {}
+    seed_connections = {}
+    seed_group_connections = {}
     for c in connections.values():
         if c['level'] not in ('just met', 'already known', 'recovery'):
             continue
@@ -128,11 +129,15 @@ def load_from_backup():
         if f not in users or users[f].get('node_type') != 'Seed':
             continue
         t = c['_to'].replace('users/', '')
-        if t not in seed_connnections:
-            seed_connnections[t] = {}
+        if t not in seed_group_connections:
+            seed_group_connections[t] = {}
+        if t not in seed_connections:
+            seed_connections[t] = {}
         g = users[f]['seed_groups'][0]
-        if g not in seed_connnections[t]:
-            seed_connnections[t][g] = c['timestamp']
+        if g not in seed_group_connections[t]:
+            seed_group_connections[t][g] = c['timestamp']
+        if f not in seed_connections[t]:
+            seed_connections[t][f] = c['timestamp']
     now = time.time()
     one_year_ago = int(now - 365*24*3600) * 1000
     one_year_ago -= one_year_ago%(24*3600*1000)
@@ -140,9 +145,9 @@ def load_from_backup():
     one_week_ago -= one_week_ago%(3600*1000)
     hourly = {}
     daily = {}
-    for u in seed_connnections:
-        for g in seed_connnections[u]:
-            t = seed_connnections[u][g]
+    for u in seed_group_connections:
+        for g in seed_group_connections[u]:
+            t = seed_group_connections[u][g]
             ht = t - t%(3600*1000)
             dt = t - t%(24*3600*1000)
             if g not in hourly:
@@ -153,8 +158,27 @@ def load_from_backup():
                 hourly[g][ht] += 1
             if t > one_year_ago:
                 daily[g][dt] += 1
-    ret['hourly'] = {groups[g].get('region', g): [(t, hourly[g][t]) for t in sorted(hourly[g])] for g in hourly}
-    ret['daily'] = {groups[g].get('region', g): [(t, daily[g][t]) for t in sorted(daily[g])] for g in daily}
+    ret['seed_groups_hourly'] = {groups[g].get('region', g): [(t, hourly[g][t]) for t in sorted(hourly[g])] for g in hourly}
+    ret['seed_groups_daily'] = {groups[g].get('region', g): [(t, daily[g][t]) for t in sorted(daily[g])] for g in daily}
+
+    hourly = {}
+    daily = {}
+    for u in seed_connections:
+        for seed in seed_connections[u]:
+            t = seed_connections[u][seed]
+            ht = t - t%(3600*1000)
+            dt = t - t%(24*3600*1000)
+            if seed not in hourly:
+                hourly[seed] = {one_week_ago+i*3600*1000: 0 for i in range(7*24+1)}
+            if seed not in daily:
+                daily[seed] = {one_year_ago+i*24*3600*1000: 0 for i in range(365+1)}
+            if t > one_week_ago:
+                hourly[seed][ht] += 1
+            if t > one_year_ago:
+                daily[seed][dt] += 1
+    ret['seeds_hourly'] = {seed: [(t, hourly[seed][t]) for t in sorted(hourly[seed])] for seed in hourly}
+    ret['seeds_daily'] = {seed: [(t, daily[seed][t]) for t in sorted(daily[seed])] for seed in daily}
+
 
     return ret
 

@@ -1,17 +1,31 @@
 <html>
   <head>
-    <title>Seed Connections - Hourly</title>
+    <title>Seed Connections</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/data.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.9.0/localforage.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.production.min.js"></script>
     <script src="app.js"></script>
   </head>
   <body>
     <figure class="highcharts-figure">
+      <a href="./?hourly" id="seeds-hourly">Seeds Hourly</a> |
+      <a href="./" id="seeds-daily">Seeds Daily</a> | 
+      <a href="./?groups&hourly" id="seed-groups-hourly">Seed Groups Hourly</a> |
+      <a href="./?groups" id="seed-groups-daily">Seeds Groups Daily</a>
       <div id="container"></div>
     </figure>
+    <div id="legend-bottoms">
+      <button id="show-all">Show All</button>
+      <button id="hide-all">Hide All</button>
+      <button id="show-known">Show Known Only</button>
+    </div>
+    <div id="wrapper"></div>
   </body>
 </html>
