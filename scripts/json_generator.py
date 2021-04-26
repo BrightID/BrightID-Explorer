@@ -21,9 +21,9 @@ def load_from_backup():
     # read data from the backup
     rar_addr = '/tmp/brightid.tar.gz'
     zip_addr = '/tmp/brightid.zip'
-    # backup = requests.get(BACKUP_URL)
-    # with open(rar_addr, 'wb') as f:
-    #     f.write(backup.content)
+    backup = requests.get(BACKUP_URL)
+    with open(rar_addr, 'wb') as f:
+        f.write(backup.content)
     tar_to_zip(rar_addr, zip_addr)
     user_groups = records(zip_addr, 'usersInGroups')
     users = records(zip_addr, 'users')
