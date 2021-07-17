@@ -254,6 +254,7 @@ function highlight_edges() {
     }
   });
   Graph.nodeColor(n => highlightNodes.has(n.id) ? reset_node_colors(n) : faded_color);
+  Graph.linkVisibility((link) => (highlightLinks.has(link) ? true : false));
   Graph.linkWidth((link) => (highlightLinks.has(link) ? selected_link_width : link_width))
     .linkColor((link) => (highlightLinks.has(link) ? reset_link_colors(link) : faded_color))
     .linkDirectionalArrowLength((link) => highlightLinks.has(link) ? 16 : 6);
@@ -471,6 +472,7 @@ function select_node(node, show_details) {
       highlightLinks.add(link);
     }
   });
+  Graph.linkVisibility((link) => (highlightLinks.has(link) ? true : false));
   Graph.nodeColor((n) => node.connections.includes(n.id) || n == node ? reset_node_colors(n) : faded_color)
     .linkDirectionalArrowLength((link) => highlightLinks.has(link) ? 16 : 6)
     .linkWidth((link) => highlightLinks.has(link) ? selected_link_width : link_width)
@@ -520,6 +522,7 @@ function draw_graph(data) {
         select_node(node, true);
       }
     })
+    .linkVisibility((link) => false)
     .onBackgroundClick(() => {
       if (! selected_node) {
         return;
@@ -601,6 +604,7 @@ $(document).ready(function () {
     });
     draw_graph(data);
   });
+
   $("#searchfield").change(function () {
     const val = $("#searchfield").val();
     if (!val) {
