@@ -1,5 +1,6 @@
 import os
 import json
+import gzip
 import time
 import shutil
 import tarfile
@@ -251,8 +252,8 @@ def main():
     print('Updating the graph explorer data. ', time.ctime())
     read_backup()
     json_graph = load_from_backup()
-    with open('../brightid.json', 'w') as f:
-        f.write(json.dumps(json_graph))
+    with gzip.open('../brightid.json.gz', 'w') as f:
+        f.write(json.dumps(json_graph).encode('utf-8'))
 
 
 if __name__ == '__main__':
