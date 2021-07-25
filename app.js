@@ -27,7 +27,7 @@ async function load_users(user, key1, password) {
   let img1 = new Image();
   let data;
   Object.assign(nodes[user.id], { name: user.name, img: img1 });
-  if (! (await localforage.getItem(`explorer_img_${user.id}`))) {
+  if (!(await localforage.getItem(`explorer_img_${user.id}`))) {
     console.log('loading', user.id);
     $.get(`/storage/${key1}/${user.id}`).done((data) => {
       data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
@@ -85,7 +85,7 @@ async function load_groups(user, key1, password) {
       continue;
     }
     const url = "/storage/immutable" + g.url.split("immutable")[1];
-    if (! (await localforage.getItem(`explorer_img_${g.id}`))) {
+    if (!(await localforage.getItem(`explorer_img_${g.id}`))) {
       $.get(url).done((data) => {
         if (!g.aesKey || !data) {
           return;
@@ -109,7 +109,7 @@ async function load_groups(user, key1, password) {
 async function load_info() {
   auto_login_done = true;
   let password;
-  if (! (await localforage.getItem('explorer_backup_data'))) {
+  if (!(await localforage.getItem('explorer_backup_data'))) {
     const code = $("#code").val();
     password = $("#password").val();
     if (code.indexOf("==") > -1) {
@@ -162,7 +162,7 @@ function reset_link_colors(link) {
 }
 
 function reset_node_colors(n) {
-  if (n.node_type == "Seed") return  "blue";
+  if (n.node_type == "Seed") return "blue";
   else if (n.verifications && "BrightID" in n.verifications) return "green";
   else return "yellow";
 }
@@ -217,7 +217,7 @@ function read_regions(e) {
     return;
   }
   var reader = new FileReader();
-  reader.onload = function (e) {
+  reader.onload = function(e) {
     parse_regions(e.target.result);
   };
   reader.readAsText(file);
@@ -389,7 +389,17 @@ function get_group_name(g) {
 }
 
 function select_node(node, show_details) {
-  $("#noConnections").html(node.connections.length);
+  $("#recoveryIn").html(node.statistics['inbound']['recovery']);
+  $("#recoveryOut").html(node.statistics['outbound']['recovery']);
+  $("#alreadyKnownIn").html(node.statistics['inbound']['already known']);
+  $("#alreadyKnownOut").html(node.statistics['outbound']['already known']);
+  $("#justMetIn").html(node.statistics['inbound']['just met']);
+  $("#justMetOut").html(node.statistics['outbound']['just met']);
+  $("#suspiciousIn").html(node.statistics['inbound']['suspicious']);
+  $("#suspiciousOut").html(node.statistics['outbound']['suspicious']);
+  $("#reportedIn").html(node.statistics['inbound']['reported']);
+  $("#reportedOut").html(node.statistics['outbound']['reported']);
+
   Object.values(nodes).forEach(node => {
     node.selected = false
   });
@@ -419,7 +429,7 @@ function select_node(node, show_details) {
     $("#userRecoveryContainer").show();
     $("#userRecoveries").empty();
     node.trusted.forEach((tid) => {
-      let text = nodes[tid]?.name || tid;
+      let text = nodes[tid] ? .name || tid;
       $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
     });
   } else {
@@ -473,7 +483,7 @@ function select_node(node, show_details) {
     }
   });
   Graph.linkVisibility((link) => (highlightLinks.has(link) ? true : false));
-  Graph.nodeColor((n) => node.connections.includes(n.id) || n == node ? reset_node_colors(n) : faded_color)
+  Graph.nodeColor((n) => node.neighbors.has(n.id) || n == node ? reset_node_colors(n) : faded_color)
     .linkDirectionalArrowLength((link) => highlightLinks.has(link) ? 16 : 6)
     .linkWidth((link) => highlightLinks.has(link) ? selected_link_width : link_width)
     .linkColor((link) => highlightLinks.has(link) ? reset_link_colors(link) : faded_color);
@@ -496,7 +506,7 @@ function count_statistics() {
     let node = nodes[id];
     if (node.verifications && "BrightID" in node.verifications) {
       num_verified++;
-      sum_neighbors += node.connections.length;
+      sum_neighbors += node.neighbors.size;
     }
     if (node.node_type == "Seed") {
       num_seeds++;
@@ -524,7 +534,7 @@ function draw_graph(data) {
     })
     .linkVisibility((link) => false)
     .onBackgroundClick(() => {
-      if (! selected_node) {
+      if (!selected_node) {
         return;
       }
       selected_node.selected = false;
@@ -547,7 +557,7 @@ function draw_graph(data) {
         ctx.strokeStyle = color;
         try {
           ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
-        } catch(err) {
+        } catch (err) {
           console.log('Error in drawImage: ', err)
         }
         ctx.stroke();
@@ -561,14 +571,31 @@ function draw_graph(data) {
     });
 }
 
-$(document).ready(function () {
+function log_positions() {
+  const pos = {};
+  Object.values(nodes).forEach(node => {
+    pos[node.id] = { x: node.x, y: node.y }
+  });
+  console.log(pos);
+}
+
+$(document).ready(function() {
   nodes = {};
-  $.get("brightid.json", function (data) {
+  let fixed_positions;
+  $.get("positions.json", function(data) {
+    fixed_positions = data;
+  });
+  $.get("brightid.json", function(data) {
     // data = JSON.parse(data);
     data.links = data.links.filter(link => link.level != 'just met');
     links = data.links;
     data.nodes.forEach((node) => {
-      node.connections = [];
+      if (node.id in fixed_positions) {
+        node.fx = fixed_positions[node.id].x;
+        node.fy = fixed_positions[node.id].y;
+      }
+      node.neighbors = new Set();
+      node.statistics = data.users_statistics[node.id];
       nodes[node.id] = node;
       node.groups.forEach((group) => {
         if (!groups[group]) {
@@ -585,6 +612,7 @@ $(document).ready(function () {
         }
       }
     });
+
     data.groups.forEach((group) => {
       groups[group.id] = Object.assign(groups[group.id] || {}, group);
       if (group.region) {
@@ -599,13 +627,13 @@ $(document).ready(function () {
       }
     });
     data.links.forEach((edge) => {
-      nodes[edge.source].connections.push(edge.target);
-      nodes[edge.target].connections.push(edge.source);
+      nodes[edge.target].neighbors.add(edge.source);
+      nodes[edge.source].neighbors.add(edge.target)
     });
     draw_graph(data);
   });
 
-  $("#searchfield").change(function () {
+  $("#searchfield").change(function() {
     const val = $("#searchfield").val();
     if (!val) {
       return;
@@ -628,7 +656,7 @@ $(document).ready(function () {
       return;
     }
   });
-  $("#groups").change(function () {
+  $("#groups").change(function() {
     const id = $(this).val();
     if (groups[id].photo) {
       $("#usergroupphoto").show();
@@ -638,7 +666,7 @@ $(document).ready(function () {
     }
     select_group(id, false);
   });
-  $("#members").change(function () {
+  $("#members").change(function() {
     const id = $(this).val();
     if (nodes[id].photo) {
       $("#groupuserphoto").show();
@@ -648,7 +676,7 @@ $(document).ready(function () {
     }
     select_node(nodes[id], false);
   });
-  $("#seedConnected").change(function () {
+  $("#seedConnected").change(function() {
     const id = $(this).val();
     if (nodes[id].photo) {
       $("#groupuserphoto").show();
@@ -670,7 +698,7 @@ $(document).ready(function () {
   $("#showMemeber").click(show_member);
   $("#showUser").click(show_user);
   $("#copygroupid").click(copy_groupid);
-  $("#uploadregionbtn").click(function (e) {
+  $("#uploadregionbtn").click(function(e) {
     e.preventDefault();
     $("#regionfile").click();
   });

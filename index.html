@@ -11,10 +11,8 @@
   <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet" />
   <link rel="stylesheet" href="vendor/scss/custom.css?v=1603888401" />
   <link rel="stylesheet" href="vendor/scss/myStyle.css?v=1603888401" />
-
   <!-- Custom styles for this template -->
   <link href="css/simple-sidebar.css" rel="stylesheet" />
-
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous" />
   <link href="css/all.css" rel="stylesheet" />
   <script src="vendor/jquery/jquery.min.js"></script>
@@ -60,7 +58,6 @@
             </div>
           </div>
         </div>
-
         <a id="userbtntitle" onclick="openCollapsible('userDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
           <i style='font-size:16px' class='fas'>&#xf105; </i>
           User
@@ -83,8 +80,43 @@
             <ul id="userRecoveries"></ul>
           </div>
           <div class="row px-4">
-            <h6 class="text-white mt-3">No. Connections: </h6>
-            <h6 class="text-white mt-3 ml-2" id="noConnections"></h6>
+            <h6 class="text-white mt-3">Connections: </h6>
+          </div>
+          <div class="row px-4 text-white mt-3">
+            <table cellpadding="10">
+              <tbody>
+                <tr>
+                  <td>Level</td>
+                  <td>In</td>
+                  <td>Out</td>
+                </tr>
+                <tr>
+                  <td>recovery</td>
+                  <td id="recoveryIn"></td>
+                  <td id="recoveryOut"></td>
+                </tr>
+                <tr>
+                  <td>already known</td>
+                  <td id="alreadyKnownIn"></td>
+                  <td id="alreadyKnownOut"></td>
+                </tr>
+                <tr>
+                  <td>just met</td>
+                  <td id="justMetIn"></td>
+                  <td id="justMetOut"></td>
+                </tr>
+                <tr>
+                  <td>suspicious</td>
+                  <td id="suspiciousIn"></td>
+                  <td id="suspiciousOut"></td>
+                </tr>
+                <tr>
+                  <td>reported</td>
+                  <td id="reportedIn"></td>
+                  <td id="reportedOut"></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <div id="seedData">
             <div class="row px-4">
@@ -100,7 +132,7 @@
             <h6 class="text-white ml-4 mt-3">Groups:</h6>
           </div>
           <div class="input-group px-2">
-            <select class="custom-select mt-3"  id="groups" name="groups">
+            <select class="custom-select mt-3" id="groups" name="groups">
               <option value="none" selected="">None</option>
             </select>
           </div>
@@ -112,7 +144,6 @@
           </div>
           <div class="text-white px-4" id="verifications"></div>
         </div>
-
         <a id="groupbtntitle" onclick="openCollapsible('groupDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
           <i style='font-size:16px' class='fas'>&#xf105; </i>
           Group
@@ -138,7 +169,7 @@
             <h6 class="text-white mt-3 ml-2" id="groupmemberscount"></h6>
           </div>
           <div class="input-group mb-3 px-2">
-            <select class="custom-select"  id="members" name="members">
+            <select class="custom-select" id="members" name="members">
               <option value="none" selected="">None</option>
             </select>
           </div>
@@ -151,7 +182,7 @@
               <h6 class="text-white mt-3 ml-2" id="groupseedconectedcount"></h6>
             </div>
             <div class="input-group mb-3 px-2">
-              <select class="custom-select"  id="seedConnected" name="seedConnected">
+              <select class="custom-select" id="seedConnected" name="seedConnected">
                 <option value="none" selected="">None</option>
               </select>
             </div>
@@ -161,7 +192,6 @@
           </div>
           <input style="opacity: 0;" type="text" id="groupidfield" value="">
         </div>
-
         <a href="#" onclick="openCollapsible('statisticsDitail')" class="list-group-item list-group-item-action bg-primary">
           <i style='font-size:16px' class='fas'>&#xf105; </i>
           Statistics
@@ -202,7 +232,6 @@
             </div>
           </div>
         </div>
-
         <a href="#" onclick="openCollapsible('linkDetail')" class="list-group-item list-group-item-action bg-primary">
           <i style='font-size:16px' class='fas'>&#xf105; </i>
           Links
@@ -267,11 +296,9 @@
             </select>
           </div>
         </form>
-
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
             <li class="nav-item active">
@@ -280,7 +307,6 @@
               </a>
         </div>
       </nav>
-
       <div style="height: 90vh;" class="container-fluid mx-0 px-0">
         <div style="height: 100%;" id="graph_div"></div>
         <!-- graph place -->
@@ -308,13 +334,12 @@
     <!-- /#page-content-wrapper -->
   </div>
   <!-- /#wrapper -->
-
   <!-- Bootstrap core JavaScript -->
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="vendor/script/script.js"></script>
   <!-- Menu Toggle Script -->
   <script>
-  $('#menu-toggle').click(function (e) {
+  $('#menu-toggle').click(function(e) {
     e.preventDefault();
     $('#wrapper').toggleClass('toggled');
   });
