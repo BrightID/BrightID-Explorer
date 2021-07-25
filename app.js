@@ -429,7 +429,7 @@ function select_node(node, show_details) {
     $("#userRecoveryContainer").show();
     $("#userRecoveries").empty();
     node.trusted.forEach((tid) => {
-      let text = nodes[tid] ? .name || tid;
+      let text = nodes[tid]?.name || tid;
       $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
     });
   } else {
