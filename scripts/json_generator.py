@@ -36,15 +36,20 @@ def get_links(main_component):
         if ft[0] not in users_statistics:
             users_statistics[ft[0]] = {
                 'outbound': {k: 0 for k in connection_levels},
-                'inbound': {k: 0 for k in connection_levels}
+                'inbound': {k: 0 for k in connection_levels},
+                'recoveries': []
             }
         if ft[1] not in users_statistics:
             users_statistics[ft[1]] = {
                 'outbound': {k: 0 for k in connection_levels},
-                'inbound': {k: 0 for k in connection_levels}
+                'inbound': {k: 0 for k in connection_levels},
+                'recoveries': []
             }
         users_statistics[ft[0]]['outbound'][connections[ft]['level']] += 1
         users_statistics[ft[1]]['inbound'][connections[ft]['level']] += 1
+
+        if connections[ft]['level'] == 'recovery':
+            users_statistics[ft[0]]['recoveries'].append(ft[1])
 
         if connections[ft]['level'] in ('just met', 'suspicious'):
             continue
@@ -201,8 +206,8 @@ def get_users(main_component):
         u = r['_id'].replace('users/', '')
         if u not in main_component:
             continue
-        users[u] = {'id': u, 'groups': [], 'verifications': {}, 'seed_groups': [
-        ], 'quota': 0, 'trusted': r.get('trusted', list())}
+        users[u] = {'id': u, 'groups': [], 'verifications': {},
+                    'seed_groups': [], 'quota': 0, 'trusted': []}
     return users
 
 

@@ -425,10 +425,10 @@ function select_node(node, show_details) {
   } else {
     $("#userimage").hide();
   }
-  if (node.trusted) {
-    $("#userRecoveryContainer").show();
+  if (node.statistics.recoveries) {
     $("#userRecoveries").empty();
-    node.trusted.forEach((tid) => {
+    $("#userRecoveryContainer").show();
+    node.statistics.recoveries.forEach((tid) => {
       let text = nodes[tid]?.name || tid;
       $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
     });
@@ -595,6 +595,7 @@ $(document).ready(function() {
         node.fy = fixed_positions[node.id].y;
       }
       node.neighbors = new Set();
+      node.trusted = new Set();
       node.statistics = data.users_statistics[node.id];
       nodes[node.id] = node;
       node.groups.forEach((group) => {
@@ -628,7 +629,7 @@ $(document).ready(function() {
     });
     data.links.forEach((edge) => {
       nodes[edge.target].neighbors.add(edge.source);
-      nodes[edge.source].neighbors.add(edge.target)
+      nodes[edge.source].neighbors.add(edge.target);
     });
     draw_graph(data);
   });
