@@ -98,9 +98,11 @@ async function load_groups(user, key1, password) {
       });
     } else {
       let data = await localforage.getItem(`explorer_img_${g.id}`);
-      let img = new Image();
-      img.src = JSON.parse(data).img;
-      Object.assign(groups[g.id], { img });
+      if (data.img) {
+        let img = new Image();
+        img.src = JSON.parse(data).img;
+        Object.assign(groups[g.id], { img });
+      }
     }
   }
   $("#searchfield").select2({ tags: true });
@@ -501,7 +503,7 @@ function update_statistics() {
 }
 
 function count_statistics() {
-  let num_verified = (num_seeds = sum_neighbors = 0);
+  let num_verified = num_seeds = sum_neighbors = 0;
   Object.keys(nodes).forEach((id) => {
     let node = nodes[id];
     if (node.verifications && "BrightID" in node.verifications) {
