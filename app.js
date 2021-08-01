@@ -576,20 +576,22 @@ function draw_graph(data) {
 function log_positions() {
   const pos = {};
   Object.values(nodes).forEach(node => {
-    pos[node.id] = { x: node.x, y: node.y }
+    if (Date.now() - 30 * 24 * 60 * 60 * 1000 > node.createdAt) {
+      pos[node.id] = { x: node.x, y: node.y };
+    }
   });
   console.log(pos);
 }
 
 $(document).ready(function() {
   nodes = {};
-  let fixed_positions;
+  let fixed_positions = {};
   $.get("positions.json", function(data) {
     fixed_positions = data;
   });
+
   $.get("brightid.json", function(data) {
     // data = JSON.parse(data);
-    data.links = data.links.filter(link => link.level != 'just met');
     links = data.links;
     data.nodes.forEach((node) => {
       if (node.id in fixed_positions) {
@@ -597,7 +599,6 @@ $(document).ready(function() {
         node.fy = fixed_positions[node.id].y;
       }
       node.neighbors = new Set();
-      node.trusted = new Set();
       node.statistics = data.users_statistics[node.id];
       nodes[node.id] = node;
       node.groups.forEach((group) => {
@@ -629,11 +630,14 @@ $(document).ready(function() {
         }
       }
     });
+
     data.links.forEach((edge) => {
       nodes[edge.target].neighbors.add(edge.source);
       nodes[edge.source].neighbors.add(edge.target);
     });
+
     draw_graph(data);
+    update_statistics();
   });
 
   $("#searchfield").change(function() {
@@ -659,6 +663,7 @@ $(document).ready(function() {
       return;
     }
   });
+
   $("#groups").change(function() {
     const id = $(this).val();
     if (groups[id].photo) {
@@ -669,6 +674,7 @@ $(document).ready(function() {
     }
     select_group(id, false);
   });
+
   $("#members").change(function() {
     const id = $(this).val();
     if (nodes[id].photo) {
@@ -679,6 +685,7 @@ $(document).ready(function() {
     }
     select_node(nodes[id], false);
   });
+
   $("#seedConnected").change(function() {
     const id = $(this).val();
     if (nodes[id].photo) {
@@ -689,12 +696,13 @@ $(document).ready(function() {
     }
     select_node(nodes[id], false);
   });
-  $("#statisticsbtn").click(update_statistics);
+
   $("#logoutbtn").click(() => {
     localforage.clear().then(() => {
       location.reload();
     });
   });
+
   $("#load").click(load_info);
   $("#showGroup").click(show_group);
   $("#copybrightid").click(copy_brightid);
@@ -710,5 +718,4 @@ $(document).ready(function() {
   $("#daterange").change(set_date_range);
   $("#fromdate").change(highlight_edges);
   $("#todate").change(highlight_edges);
-  update_statistics();
 });
