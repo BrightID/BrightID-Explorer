@@ -206,8 +206,8 @@ def get_users(main_component):
         u = r['_id'].replace('users/', '')
         if u not in main_component:
             continue
-        users[u] = {'id': u, 'groups': [], 'verifications': {},
-                    'seed_groups': [], 'quota': 0, 'trusted': []}
+        users[u] = {'id': u, 'createdAt': r['createdAt'], 'groups': [
+        ], 'verifications': {}, 'seed_groups': [], 'quota': 0}
     return users
 
 
