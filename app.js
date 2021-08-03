@@ -34,13 +34,11 @@ async function load_users(user, key1, password) {
       localforage.setItem(`explorer_img_${user.id}`, data);
       img1.src = data;
       $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
-      select_node(nodes[user.id], true);
     });
   } else {
     data = await localforage.getItem(`explorer_img_${user.id}`);
     img1.src = data;
     $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
-    select_node(nodes[user.id], true);
   }
   for (const c of user.connections || []) {
     // skip c.id === user.id to solve bugs related to users connected to themselves!
@@ -69,6 +67,7 @@ async function load_users(user, key1, password) {
       Object.assign(nodes[c.id], { img: img2 });
     }
   }
+  select_node(nodes[user.id], true);
   $("#searchfield").select2({ tags: true });
 }
 
@@ -145,14 +144,13 @@ async function load_info() {
   }
   $("#loginform").hide();
   $("#logoutbtnform").show();
-
   Object.assign(user, {
     ...backup_data.userData,
     connections: backup_data.connections,
     groups: backup_data.groups,
   });
-  load_users(user, key1, password);
-  load_groups(user, key1, password);
+  await load_users(user, key1, password);
+  await load_groups(user, key1, password);
 }
 
 function reset_link_colors(link) {
@@ -421,8 +419,8 @@ function select_node(node, show_details) {
     $("#nameContainer").hide();
   }
   if (node.img) {
-    $("#userimage").show();
     $("#userimage").empty();
+    $("#userimage").show();
     $('#userimage').prepend('<img src="' + node.img.src + '" class="user-image"/>');
   } else {
     $("#userimage").hide();
@@ -431,7 +429,7 @@ function select_node(node, show_details) {
     $("#userRecoveries").empty();
     $("#userRecoveryContainer").show();
     node.statistics.recoveries.forEach((tid) => {
-      let text = nodes[tid]?.name || tid;
+      const text = nodes[tid]?.name || tid;
       $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
     });
   } else {
@@ -495,14 +493,6 @@ function select_node(node, show_details) {
 }
 
 function update_statistics() {
-  const [num_verified, num_seeds, average_connection] = count_statistics();
-  $("#num_nodes").html(Object.keys(nodes).length);
-  $("#num_verified").html(num_verified);
-  $("#num_seeds").html(num_seeds);
-  $("#average_connection").html(average_connection);
-}
-
-function count_statistics() {
   let num_verified = num_seeds = sum_neighbors = 0;
   Object.keys(nodes).forEach((id) => {
     let node = nodes[id];
@@ -514,7 +504,10 @@ function count_statistics() {
       num_seeds++;
     }
   });
-  return [num_verified, num_seeds, Math.ceil(sum_neighbors / num_verified)];
+  $("#num_nodes").html(Object.keys(nodes).length);
+  $("#num_verified").html(num_verified);
+  $("#num_seeds").html(num_seeds);
+  $("#average_connection").html(Math.ceil(sum_neighbors / num_verified));
 }
 
 function draw_graph(data) {
@@ -601,6 +594,7 @@ $(document).ready(function() {
       node.neighbors = new Set();
       node.statistics = data.users_statistics[node.id];
       nodes[node.id] = node;
+
       node.groups.forEach((group) => {
         if (!groups[group]) {
           groups[group] = { members: [], seedConnected: [] };
@@ -631,7 +625,7 @@ $(document).ready(function() {
       }
     });
 
-    data.links.forEach((edge) => {
+    links.forEach((edge) => {
       nodes[edge.target].neighbors.add(edge.source);
       nodes[edge.source].neighbors.add(edge.target);
     });
@@ -703,7 +697,7 @@ $(document).ready(function() {
     });
   });
 
-  $("#load").click(load_info);
+  $("#login").click(load_info);
   $("#showGroup").click(show_group);
   $("#copybrightid").click(copy_brightid);
   $("#showMemeber").click(show_member);
