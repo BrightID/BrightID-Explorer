@@ -541,17 +541,17 @@ function draw_graph(data) {
     })
     .nodeCanvasObjectMode(() => "after")
     .linkDirectionalArrowLength(6)
-    .nodeCanvasObject(({ img, x, y, color }, ctx) => {
+    .nodeCanvasObject((n, ctx) => {
       let size = 30;
-      if (img) {
+      if (n.img) {
         ctx.lineWidth = 5;
         ctx.save();
         ctx.beginPath();
-        ctx.arc(x, y, size / 2, 0, Math.PI * 2, true);
+        ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, true);
         ctx.clip();
-        ctx.strokeStyle = color;
+        ctx.strokeStyle = reset_node_colors(n);
         try {
-          ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+          ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
         } catch (err) {
           console.log('Error in drawImage: ', err)
         }
