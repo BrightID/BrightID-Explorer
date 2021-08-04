@@ -19,4 +19,4 @@ function openCollapsible(selectedId, reopen) {
   }
 }
 
-$('#logoutbtnform').hide();
+$('#logoutForm').hide();

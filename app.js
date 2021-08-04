@@ -1,15 +1,15 @@
-selected_link_width = 1.0;
-link_width = 0.3;
-faded_color = "rgba(204, 204, 204, 1)";
-selected_node = undefined;
-auto_login_done = false;
+selectedLinkWidth = 1.0;
+linkWidth = 0.3;
+fadedColor = "rgba(204, 204, 204, 1)";
+selectedNode = undefined;
+autoLoginDone = false;
+nodes = {};
+links = {};
+groups = {};
+regions = {};
 
 function b64ToUrlSafeB64(s) {
-  const alts = {
-    "/": "_",
-    "+": "-",
-    "=": "",
-  };
+  const alts = { "/": "_", "+": "-", "=": "" };
   return s.replace(/[/+=]/g, (c) => alts[c]);
 }
 
@@ -19,141 +19,121 @@ function hash(data) {
   return b64ToUrlSafeB64(b);
 }
 
-async function load_users(user, key1, password) {
-  $("<option>").val(user.id).text(user.name).appendTo("#usersgroup");
+async function loadUsers(user, key1, password) {
+  $('#profileImage').empty();
   $("#username").empty();
-  $('#profileimage').empty();
   $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
-  let img1 = new Image();
-  let data;
-  Object.assign(nodes[user.id], { name: user.name, img: img1 });
-  if (!(await localforage.getItem(`explorer_img_${user.id}`))) {
-    console.log('loading', user.id);
+
+  // set the user's name and image
+  Object.assign(nodes[user.id], { name: user.name, img: new Image() });
+  let imgData = await localforage.getItem(`explorer_img_${user.id}`);
+  if (!imgData) {
     $.get(`/storage/${key1}/${user.id}`).done((data) => {
-      data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
-      localforage.setItem(`explorer_img_${user.id}`, data);
-      img1.src = data;
-      $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
+      imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+      localforage.setItem(`explorer_img_${user.id}`, imgData);
     });
-  } else {
-    data = await localforage.getItem(`explorer_img_${user.id}`);
-    img1.src = data;
-    $('#profileimage').prepend('<img src="' + data + '" class="profile-image"/>');
   }
-  for (const c of user.connections || []) {
-    // skip c.id === user.id to solve bugs related to users connected to themselves!
-    if (!nodes[c.id] || c.id === user.id) {
+  nodes[user.id].img.src = imgData || '';
+  $('#profileImage').prepend('<img src="' + imgData + '" class="profile-image"/>');
+
+  // set the connections' name and image
+  for (const conn of user.connections || []) {
+    // skip conn.id === user.id to solve bugs related to users connected to themselves!
+    if (!nodes[conn.id] || conn.id === user.id) {
       continue;
     }
-    $("<option>").val(c.id).text(c.name).appendTo("#usersgroup");
-    Object.assign(nodes[c.id], { name: c.name });
-    data = await localforage.getItem(`explorer_img_${c.id}`);
-    if (!data) {
-      console.log('loading from web');
+    $("<option>").val(conn.id).text(conn.name).appendTo("#connections");
+    Object.assign(nodes[conn.id], { name: conn.name, img: new Image() });
+    let imgData = await localforage.getItem(`explorer_img_${conn.id}`);
+    if (!imgData) {
       try {
-        data = await $.get(`/storage/${key1}/${c.id}`);
+        $.get(`/storage/${key1}/${conn.id}`).done((data) => {
+          imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+          localforage.setItem(`explorer_img_${conn.id}`, imgData);
+        });
       } catch (e) {
         continue;
       }
-      data = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
-      localforage.setItem(`explorer_img_${c.id}`, data);
-      let img2 = new Image();
-      img2.src = data;
-      Object.assign(nodes[c.id], { img: img2 });
-    } else {
-      console.log('loading from localforage');
-      let img2 = new Image();
-      img2.src = data;
-      Object.assign(nodes[c.id], { img: img2 });
     }
+    nodes[conn.id].img.src = imgData || '';
   }
-  select_node(nodes[user.id], true);
-  $("#searchfield").select2({ tags: true });
+  selectNode(nodes[user.id], true);
 }
 
-async function load_groups(user, key1, password) {
-  for (const g of user.groups || []) {
-    if (!groups[g.id]) {
+async function loadGroups(user, key1, password) {
+  for (const group of user.groups || []) {
+    if (!(group.id in groups)) {
       continue;
     }
-    Object.assign(groups[g.id], { name: g.name });
-    if (g.name) {
-      $("<option>").val(g.id).text(g.name).appendTo("#groupsgroup");
+
+    if (group.name) {
+      $("<option>").val(group.id).text(group.name).appendTo("#userGroups");
     }
-    if (!g.url) {
+
+    if (!group.url || !group.aesKey) {
       continue;
     }
-    const url = "/storage/immutable" + g.url.split("immutable")[1];
-    if (!(await localforage.getItem(`explorer_img_${g.id}`))) {
+
+    Object.assign(groups[group.id], { name: group.name, img: new Image() });
+    let imgData = await localforage.getItem(`explorer_img_${group.id}`);
+    if (!imgData) {
+      const url = "/storage/immutable" + group.url.split("immutable")[1];
       $.get(url).done((data) => {
-        if (!g.aesKey || !data) {
+        if (!data) {
+          groups[group.id].img.src = '';
           return;
         }
-        data = CryptoJS.AES.decrypt(data, g.aesKey).toString(CryptoJS.enc.Utf8);
-        localforage.setItem(`explorer_img_${g.id}`, data);
-        let img = new Image();
-        img.src = JSON.parse(data).img;
-        Object.assign(groups[g.id], { img });
+        imgData = CryptoJS.AES.decrypt(data, group.aesKey).toString(CryptoJS.enc.Utf8);
+        localforage.setItem(`explorer_img_${group.id}`, imgData);
       });
-    } else {
-      let data = await localforage.getItem(`explorer_img_${g.id}`);
-      if (data.img) {
-        let img = new Image();
-        img.src = JSON.parse(data).img;
-        Object.assign(groups[g.id], { img });
-      }
     }
+    groups[group.id].img.src = JSON.parse(imgData).photo;
   }
-  $("#searchfield").select2({ tags: true });
 }
 
-async function load_info() {
-  auto_login_done = true;
-  let password;
-  if (!(await localforage.getItem('explorer_backup_data'))) {
-    const code = $("#code").val();
-    password = $("#password").val();
+async function loadInfo() {
+  autoLoginDone = true;
+  let user;
+  let key1;
+  const code = $("#code").val();
+  const password = $("#password").val();;
+  let backupData = await localforage.getItem('explorer_backup_data');
+  if (!backupData) {
     if (code.indexOf("==") > -1) {
-      const brightid = CryptoJS.AES.decrypt(code, password).toString(
-        CryptoJS.enc.Utf8
-      );
+      const brightid = CryptoJS.AES.decrypt(code, password).toString(CryptoJS.enc.Utf8);
       user = { id: brightid };
     } else {
       user = { id: code };
     }
     try {
-      const api_data = await $.get(`/api/v5/users/${user.id}`);
       key1 = hash(user.id + password);
       localforage.setItem('explorer_key1', key1);
-      backup_data = await $.get(`/storage/${key1}/data`);
+      backupData = await $.get(`/storage/${key1}/data`);
     } catch {
       return alert("Invalid explorer code or password or backup not available");
     }
-    backup_data = CryptoJS.AES.decrypt(backup_data, password).toString(
-      CryptoJS.enc.Utf8
-    );
-    if (!backup_data) {
-      return alert("no backup found");
+    backupData = CryptoJS.AES.decrypt(backupData, password).toString(CryptoJS.enc.Utf8);
+    if (!backupData) {
+      return alert("No backup found");
     }
-    localforage.setItem('explorer_backup_data', backup_data);
-    backup_data = JSON.parse(backup_data);
+    localforage.setItem('explorer_backup_data', backupData);
   } else {
-    backup_data = JSON.parse((await localforage.getItem('explorer_backup_data')));
-    user = { id: backup_data.id };
+    user = { id: backupData.id };
     key1 = await localforage.getItem('explorer_key1');
   }
-  $("#loginform").hide();
-  $("#logoutbtnform").show();
+  $("#loginForm").hide();
+  $("#logoutForm").show();
+  backupData = JSON.parse(backupData);
   Object.assign(user, {
-    ...backup_data.userData,
-    connections: backup_data.connections,
-    groups: backup_data.groups,
+    ...backupData.userData,
+    connections: backupData.connections,
+    groups: backupData.groups,
   });
-  await load_users(user, key1, password);
-  await load_groups(user, key1, password);
+  await loadGroups(user, key1, password);
+  await loadUsers(user, key1, password);
 }
 
-function reset_link_colors(link) {
+function resetLinksColor(link) {
   if (link.level == 'recovery') return 'blue';
   else if (link.level == 'already known') return 'green';
   else if (link.level == 'suspicious') return 'orange';
@@ -161,103 +141,101 @@ function reset_link_colors(link) {
   else return 'black';
 }
 
-function reset_node_colors(n) {
+function resetNodesColor(n) {
   if (n.node_type == "Seed") return "blue";
   else if (n.verifications && "BrightID" in n.verifications) return "green";
   else return "yellow";
 }
 
-function copy_brightid() {
-  $("#brightidfield").select();
+function copyBrightid() {
+  $("#brightidField").select();
   document.execCommand("copy");
 }
 
-function show_user() {
+function showUser() {
   const node = nodes[$("#seedConnected").val()];
-  select_node(node, true);
+  selectNode(node, true);
 }
 
-function show_member() {
+function showMember() {
   const node = nodes[$("#members").val()];
-  select_node(node, true);
+  selectNode(node, true);
 }
 
-function copy_groupid() {
-  $("#groupidfield").select();
+function copyGroupId() {
+  $("#groupIdField").select();
   document.execCommand("copy");
 }
 
-function show_group() {
-  select_group($("#groups").val(), true);
+function showGroup() {
+  selectGroup($("#groups").val(), true);
 }
 
-function set_date_range() {
-  const v = $("#daterange").val();
+function setDateRange() {
+  const v = $("#dateRange").val();
   const today = Date.now();
-  let days;
+  let fromDate;
   if (v == "none") {
-    fromdate = new Date(today + 2 * 24 * 60 * 60 * 1000);
+    fromDate = new Date(today + 2 * 24 * 60 * 60 * 1000);
   } else if (v == "all") {
-    fromdate = new Date(today - 10000 * 24 * 60 * 60 * 1000);
+    fromDate = new Date(today - 10000 * 24 * 60 * 60 * 1000);
   } else if (v == "day") {
-    fromdate = new Date(today - 1 * 24 * 60 * 60 * 1000);
+    fromDate = new Date(today - 1 * 24 * 60 * 60 * 1000);
   } else if (v == "week") {
-    fromdate = new Date(today - 7 * 24 * 60 * 60 * 1000);
+    fromDate = new Date(today - 7 * 24 * 60 * 60 * 1000);
   } else if (v == "month") {
-    fromdate = new Date(today - 30 * 24 * 60 * 60 * 1000);
+    fromDate = new Date(today - 30 * 24 * 60 * 60 * 1000);
   }
-  $("#fromdate").val(fromdate.toISOString().split("T")[0]);
-  $("#todate").val(new Date(today).toISOString().split("T")[0]);
-  highlight_edges();
+  $("#fromDate").val(fromDate.toISOString().split("T")[0]);
+  $("#toDate").val(new Date(today).toISOString().split("T")[0]);
+  highlightLinks();
 }
 
-function read_regions(e) {
-  var file = e.target.files[0];
-  if (!file) {
-    return;
-  }
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    parse_regions(e.target.result);
-  };
-  reader.readAsText(file);
-}
-const regions = {};
+// function readRegions(e) {
+//   var file = e.target.files[0];
+//   if (!file) {
+//     return;
+//   }
+//   var reader = new FileReader();
+//   reader.onload = function(e) {
+//     parseRegions(e.target.result);
+//   };
+//   reader.readAsText(file);
+// }
 
-function parse_regions(s) {
-  const lines = s.split("\n");
-  for (let line of lines) {
-    line = line.trim();
-    const [region, id] = line.split("\t");
-    let type;
-    if (!regions[region]) {
-      regions[region] = [];
-      $("<option>").val(region).text(region).appendTo("#regionsgroup");
-    }
-    if (!regions[region].includes(id)) {
-      regions[region].push(id);
-    }
-  }
-  $("#searchfield").select2({ tags: true });
-}
+// function parseRegions(s) {
+//   const lines = s.split("\n");
+//   for (let line of lines) {
+//     line = line.trim();
+//     const [region, id] = line.split("\t");
+//     let type;
+//     if (!(region in regions)) {
+//       regions[region] = [];
+//     }
+//     if (!regions[region].includes(id)) {
+//       regions[region].push(id);
+//       $("<option>").val(region).text(region).appendTo("#regions");
+//     }
+//   }
+// }
 
-function highlight_edges() {
-  const highlightLinks = new Set();
-  const highlightNodes = new Set();
-  const fromdate = new Date($("#fromdate").val()).getTime();
-  const todate = new Date($("#todate").val()).getTime() + 24 * 60 * 60 * 1000;
+function highlightLinks() {
+  const selectedLinks = new Set();
+  const selectedNodes = new Set();
+  const fromDate = new Date($("#fromDate").val()).getTime();
+  const toDate = new Date($("#toDate").val()).getTime() + 24 * 60 * 60 * 1000;
   links.forEach((link) => {
-    if (fromdate <= link.timestamp && link.timestamp <= todate) {
-      highlightLinks.add(link);
-      highlightNodes.add(link.source.id);
-      highlightNodes.add(link.target.id);
+    if (fromDate <= link.timestamp && link.timestamp <= toDate) {
+      selectedLinks.add(link);
+      selectedNodes.add(link.source.id);
+      selectedNodes.add(link.target.id);
     }
   });
-  Graph.nodeColor(n => highlightNodes.has(n.id) ? reset_node_colors(n) : faded_color);
-  Graph.linkVisibility((link) => (highlightLinks.has(link) ? true : false));
-  Graph.linkWidth((link) => (highlightLinks.has(link) ? selected_link_width : link_width))
-    .linkColor((link) => (highlightLinks.has(link) ? reset_link_colors(link) : faded_color))
-    .linkDirectionalArrowLength((link) => highlightLinks.has(link) ? 16 : 6);
+  Graph.nodeColor(n => selectedNodes.has(n.id) ? resetNodesColor(n) : fadedColor);
+  Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
+  Graph.linkWidth((link) => (selectedLinks.has(link) ? selectedLinkWidth : linkWidth))
+    .linkColor((link) => (selectedLinks.has(link) ? resetLinksColor(link) : fadedColor))
+    .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6);
 }
 
 function move(x, y, z) {
@@ -265,130 +243,142 @@ function move(x, y, z) {
   Graph.zoom(z, 2000);
 }
 
-function select_group(id, show_details) {
-  let sum_x = 0;
-  let sum_y = 0;
+function selectGroup(id, showDetails) {
+  $("#groupQuotaContainer").hide();
+  $("#groupNameContainer").hide();
+  $("#seedConnectedDiv").hide();
+  $('#groupImg').empty();
+  Graph.linkColor(fadedColor);
+
+  $("#groupIdText").html(id);
+  $("#groupIdField").val(id);
+
   const group = groups[id];
-  for (member of group.members) {
-    sum_x += nodes[member].x;
-    sum_y += nodes[member].y;
-  }
-  const n = group.members.length;
-  move(sum_x / n, sum_y / n, 1.2);
   if (group.seed) {
-    Graph.nodeColor(n => group.members.includes(n.id) || group.seedConnected.includes(n.id) ? reset_node_colors(n) : faded_color);
+    Graph.nodeColor(n => group.members.includes(n.id) || group.seedConnected.includes(n.id) ? resetNodesColor(n) : fadedColor);
   } else {
-    Graph.nodeColor(n => group.members.includes(n.id) ? reset_node_colors(n) : faded_color);
+    Graph.nodeColor(n => group.members.includes(n.id) ? resetNodesColor(n) : fadedColor);
   }
 
-  Graph.linkColor(faded_color);
-  // group details
-  if (group.name) {
-    $("#groupnamecontainer").show();
-    $("#groupname").html(group.name);
-  } else if (group.region) {
-    $("#groupnamecontainer").show();
-    $("#groupname").html(group.region);
-  } else {
-    $("#groupnamecontainer").hide();
+  if (group.region || group.name) {
+    $("#groupName").html(group.region || group.name);
+    $("#groupNameContainer").show();
   }
+
   if ('quota' in group) {
-    $("#groupquotacontainer").show();
-    $("#groupquota").html(group.quota);
-  } else {
-    $("#groupquotacontainer").hide();
+    $("#groupQuota").html(group.quota);
+    $("#groupQuotaContainer").show();
   }
-  if (group.photo) {
-    $("#groupphotocontainer").show();
-    $("#groupphoto").attr("src", group.photo);
-  } else {
-    $("#groupphoto").hide();
+
+  if (group.img && group.img.src.includes("base64")) {
+    $('#groupImg').prepend('<img src="' + group.img.src + '" class="profile-image"/>');
   }
+
   if (group.seedConnected.length > 0) {
-    $("#groupseedconectedcount").html(group.seedConnected.length);
+    $("#seedConectedCount").html(group.seedConnected.length);
     $("#seedConnected").empty().append(new Option("", "none"));
     for (const u of group.seedConnected) {
       $("#seedConnected").append(new Option(nodes[u].name || u, u));
     }
     $("#seedConnectedDiv").show();
-  } else {
-    $("#seedConnectedDiv").hide();
   }
-  $("#groupidtext").html(id);
-  $("#groupidfield").val(id);
-  $("#groupmemberscount").html(group.members.length);
-  $("#groupuserphoto").hide();
+
+  $("#groupMembersCount").html(group.members.length);
   $("#members").empty().append(new Option("", "none"));
   for (const member of group.members) {
     $("#members").append(new Option(nodes[member].name || member, member));
   }
-  if (show_details) {
+
+  if (showDetails) {
     openCollapsible("groupDitail", true);
   }
+
+  let sumX = 0;
+  let sumY = 0;
+  for (const member of group.members) {
+    sumX += nodes[member].x;
+    sumY += nodes[member].y;
+  }
+  const n = group.members.length;
+  move(sumX / n, sumY / n, 1.2);
 }
 
-function select_verification(v) {
-  const members = [];
-  if (v.startsWith("Rank ")) {
-    const _rank = parseInt(v.replace("Rank ", "").replace("+", ""));
-    for (let id in nodes) {
+function selectVerification(verification) {
+  const verifieds = [];
+  if (verification.startsWith("Rank ")) {
+    const rank = parseInt(verification.replace("Rank ", "").replace("+", ""));
+    for (const id in nodes) {
       if (
         "Yekta" in nodes[id].verifications &&
-        nodes[id].verifications.Yekta.rank >= _rank
+        nodes[id].verifications.Yekta.rank >= rank
       ) {
-        members.push(id);
+        verifieds.push(id);
       }
     }
   } else {
-    for (let id in nodes) {
-      if (v in nodes[id].verifications) {
-        members.push(id);
+    for (const id in nodes) {
+      if (verification in nodes[id].verifications) {
+        verifieds.push(id);
       }
     }
   }
-  Graph.nodeColor(n => members.includes(n.id) ? reset_node_colors(n) : faded_color);
-  Graph.linkColor(faded_color);
+  Graph.nodeColor(n => verifieds.includes(n.id) ? resetNodesColor(n) : fadedColor);
+  Graph.linkColor(fadedColor);
 }
 
-function select_region(name) {
+function selectRegion(name) {
   if (name == "Complete Graph") {
     const centerNode = nodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"];
-    Graph.nodeColor(reset_node_colors);
-    Graph.linkColor(reset_link_colors);
+    Graph.nodeColor(resetNodesColor);
+    Graph.linkColor(resetLinksColor);
     return move(centerNode.x, centerNode.y, 0.7);
   }
   if (regions[name].length == 1 && groups[regions[name][0]]) {
-    select_group(regions[name][0], true);
+    selectGroup(regions[name][0], true);
   } else {
-    let sum_x = 0;
-    let sum_y = 0;
+    let sumX = 0;
+    let sumY = 0;
     let count = 0;
     const members = [];
-    for (let id of regions[name]) {
+    for (const id of regions[name]) {
       if (nodes[id]) {
         members.push(id);
       } else if (groups[id]) {
-        for (member of groups[id].members) {
+        for (const member of groups[id].members) {
           members.push(member);
         }
       }
     }
     for (const id of members) {
-      sum_x += nodes[id].x;
-      sum_y += nodes[id].y;
+      sumX += nodes[id].x;
+      sumY += nodes[id].y;
     }
-    Graph.nodeColor(n => members.includes(n.id) ? reset_node_colors(n) : faded_color);
-    Graph.linkColor(faded_color);
+    Graph.nodeColor(n => members.includes(n.id) ? resetNodesColor(n) : fadedColor);
+    Graph.linkColor(fadedColor);
     const n = members.length;
-    move(sum_x / n, sum_y / n, 1.2);
+    move(sumX / n, sumY / n, 1.2);
   }
 }
 
-function get_group_name(g) {
-  return (groups[g] && groups[g].name) || g;
+function getGroupName(group) {
+  return (groups[group] && groups[group].name) || group;
 }
 
-function select_node(node, show_details) {
+function selectNode(node, showDetails) {
+  $("#seedData").hide();
+  $("#userNameContainer").hide();
+  $("#userImage").hide();
+  $("#userRecoveryContainer").hide();
+
+  Object.values(nodes).forEach(node => {
+    node.selected = false
+  });
+  selectedNode = node;
+  node.selected = true;
+
+  $("#brightidText").html(node.id);
+  $("#brightidField").val(node.id);
+
   $("#recoveryIn").html(node.statistics['inbound']['recovery']);
   $("#recoveryOut").html(node.statistics['outbound']['recovery']);
   $("#alreadyKnownIn").html(node.statistics['inbound']['already known']);
@@ -400,47 +390,38 @@ function select_node(node, show_details) {
   $("#reportedIn").html(node.statistics['inbound']['reported']);
   $("#reportedOut").html(node.statistics['outbound']['reported']);
 
-  Object.values(nodes).forEach(node => {
-    node.selected = false
-  });
-  selected_node = node;
-  node.selected = true;
   if (node.node_type == "Seed") {
     $("#quotaValue").html(node.quota);
     $("#noSeedGroups").html(node.seed_groups.length);
     $("#seedData").show();
-  } else {
-    $("#seedData").hide();
   }
+
   if (node.name) {
-    $("#nameContainer").show();
-    $("#name").html(node.name);
-  } else {
-    $("#nameContainer").hide();
+    $("#userName").html(node.name);
+    $("#userNameContainer").show();
   }
+
   if (node.img) {
-    $("#userimage").empty();
-    $("#userimage").show();
-    $('#userimage').prepend('<img src="' + node.img.src + '" class="user-image"/>');
-  } else {
-    $("#userimage").hide();
+    $("#userImage").empty();
+    $('#userImage').prepend('<img src="' + node.img.src + '" class="user-image"/>');
+    $("#userImage").show();
   }
+
   if (node.statistics.recoveries) {
     $("#userRecoveries").empty();
-    $("#userRecoveryContainer").show();
     node.statistics.recoveries.forEach((tid) => {
       const text = nodes[tid]?.name || tid;
       $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
     });
-  } else {
-    $("#userRecoveryContainer").hide();
+    $("#userRecoveryContainer").show();
   }
-  var str_verifications = "";
+
+  let verificationsString = "";
   for (const name in node.verifications) {
     if (node.verifications[name].app) {
       continue;
     }
-    let details = [];
+    const details = [];
     for (let [key, value] of Object.entries(node.verifications[name])) {
       if (["timestamp", "hash", "block"].includes(key)) {
         continue;
@@ -449,94 +430,96 @@ function select_node(node, show_details) {
       } else if (["reported", "connected"].includes(key) && value.length == 0) {
         continue;
       } else if (key == "connected") {
-        let seedGroups = [];
-        for (let groupId of value) {
+        const seedGroups = [];
+        for (const groupId of value) {
           seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
         }
         value = seedGroups.join(', ');
       } else if (key == "reported") {
-        let seedGroups = [];
-        for (let groupId of value) {
+        const seedGroups = [];
+        for (const groupId of value) {
           seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
         }
         value = seedGroups.join(', ');
       } else if (key == "raw_rank") {
-        value = value.toFixed(2)
+        value = value.toFixed(2);
       }
       details.push(`${key}: ${value}`);
     }
-    str_verifications += `<b>${name}</b> ${details.join(', ')}<br/>`;
+    verificationsString += `<b>${name}</b> ${details.join(', ')}<br/>`;
   }
-  $("#verifications").html(str_verifications);
-  $("#brightidtext").html(node.id);
-  $("#brightidfield").val(node.id);
-  move(node.x, node.y, 1.2);
-  $("#usergroupphoto").hide();
+  $("#verifications").html(verificationsString);
+
   $("#groups").empty().append(new Option("", "none"));
-  for (const g of node.groups) {
-    $("#groups").append(new Option(get_group_name(g), g));
+  for (const group of node.groups) {
+    $("#groups").append(new Option(getGroupName(group), group));
   }
-  const highlightLinks = new Set();
+
+  const selectedLinks = new Set();
   links.forEach((link) => {
     if (link.source.id == node.id || link.target.id == node.id) {
-      highlightLinks.add(link);
+      selectedLinks.add(link);
     }
   });
-  Graph.linkVisibility((link) => (highlightLinks.has(link) ? true : false));
-  Graph.nodeColor((n) => node.neighbors.has(n.id) || n == node ? reset_node_colors(n) : faded_color)
-    .linkDirectionalArrowLength((link) => highlightLinks.has(link) ? 16 : 6)
-    .linkWidth((link) => highlightLinks.has(link) ? selected_link_width : link_width)
-    .linkColor((link) => highlightLinks.has(link) ? reset_link_colors(link) : faded_color);
-  if (show_details) {
+  Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
+
+  Graph.nodeColor((n) => node.neighbors.has(n.id) || n == node ? resetNodesColor(n) : fadedColor)
+    .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6)
+    .linkWidth((link) => selectedLinks.has(link) ? selectedLinkWidth : linkWidth)
+    .linkColor((link) => selectedLinks.has(link) ? resetLinksColor(link) : fadedColor);
+
+  if (showDetails) {
     openCollapsible("userDitail", true);
   }
+
+  move(node.x, node.y, 1.2);
 }
 
-function update_statistics() {
-  let num_verified = num_seeds = sum_neighbors = 0;
+function updateStatistics() {
+  let numVerifieds = numSeeds = numNeighbors = 0;
   Object.keys(nodes).forEach((id) => {
-    let node = nodes[id];
+    const node = nodes[id];
     if (node.verifications && "BrightID" in node.verifications) {
-      num_verified++;
-      sum_neighbors += node.neighbors.size;
+      numVerifieds++;
+      numNeighbors += node.neighbors.size;
     }
     if (node.node_type == "Seed") {
-      num_seeds++;
+      numSeeds++;
     }
   });
-  $("#num_nodes").html(Object.keys(nodes).length);
-  $("#num_verified").html(num_verified);
-  $("#num_seeds").html(num_seeds);
-  $("#average_connection").html(Math.ceil(sum_neighbors / num_verified));
+  $("#numNodes").html(Object.keys(nodes).length);
+  $("#numVerifieds").html(numVerifieds);
+  $("#numSeeds").html(numSeeds);
+  $("#averageConnection").html(Math.ceil(numNeighbors / numVerifieds));
 }
 
-function draw_graph(data) {
-  const elem = document.getElementById("graph_div");
+function drawGraph(data) {
+  const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem)
     .graphData(data)
-    .linkColor(reset_link_colors)
+    .linkColor(resetLinksColor)
     .nodeId("id")
     .nodeVal("size")
     .nodeLabel("id")
-    .linkWidth(link_width)
-    .nodeColor(reset_node_colors)
+    .linkWidth(linkWidth)
+    .nodeColor(resetNodesColor)
     .linkSource("source")
     .linkTarget("target")
     .onNodeClick((node) => {
       if (!node.selected) {
-        select_node(node, true);
+        selectNode(node, true);
       }
     })
     .linkVisibility((link) => false)
     .onBackgroundClick(() => {
-      if (!selected_node) {
+      if (!selectedNode) {
         return;
       }
-      selected_node.selected = false;
-      selected_node = undefined;
-      Graph.linkWidth(link_width)
-        .nodeColor(reset_node_colors)
-        .linkColor(reset_link_colors)
+      selectedNode.selected = false;
+      selectedNode = undefined;
+      Graph.linkWidth(linkWidth)
+        .nodeColor(resetNodesColor)
+        .linkColor(resetLinksColor)
         .linkDirectionalArrowLength(6);
     })
     .nodeCanvasObjectMode(() => "after")
@@ -549,7 +532,7 @@ function draw_graph(data) {
         ctx.beginPath();
         ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, true);
         ctx.clip();
-        ctx.strokeStyle = reset_node_colors(n);
+        ctx.strokeStyle = resetNodesColor(n);
         try {
           ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
         } catch (err) {
@@ -560,13 +543,13 @@ function draw_graph(data) {
       }
     })
     .onEngineStop(async () => {
-      if ((await localforage.getItem('explorer_backup_data')) && !auto_login_done) {
-        load_info();
+      if ((await localforage.getItem('explorer_backup_data')) && !autoLoginDone) {
+        loadInfo();
       }
     });
 }
 
-function log_positions() {
+function logPositions() {
   const pos = {};
   Object.values(nodes).forEach(node => {
     if (Date.now() - 30 * 24 * 60 * 60 * 1000 > node.createdAt) {
@@ -577,33 +560,35 @@ function log_positions() {
 }
 
 $(document).ready(function() {
-  nodes = {};
-  let fixed_positions = {};
+  let fixedPositions = {};
   $.get("positions.json", function(data) {
-    fixed_positions = data;
+    fixedPositions = data;
   });
 
   $.get("brightid.json", function(data) {
     // data = JSON.parse(data);
     links = data.links;
+
     data.nodes.forEach((node) => {
-      if (node.id in fixed_positions) {
-        node.fx = fixed_positions[node.id].x;
-        node.fy = fixed_positions[node.id].y;
+      if (node.id in fixedPositions) {
+        node.fx = fixedPositions[node.id].x;
+        node.fy = fixedPositions[node.id].y;
       }
+
       node.neighbors = new Set();
       node.statistics = data.users_statistics[node.id];
       nodes[node.id] = node;
 
       node.groups.forEach((group) => {
-        if (!groups[group]) {
+        if (!(group in groups)) {
           groups[group] = { members: [], seedConnected: [] };
         }
         groups[group].members.push(node.id);
       });
+
       if (node.verifications.SeedConnected) {
         for (const sg of node.verifications.SeedConnected.connected) {
-          if (!groups[sg]) {
+          if (!(sg in groups)) {
             groups[sg] = { members: [], seedConnected: [] };
           }
           groups[sg].seedConnected.push(node.id);
@@ -613,46 +598,44 @@ $(document).ready(function() {
 
     data.groups.forEach((group) => {
       groups[group.id] = Object.assign(groups[group.id] || {}, group);
-      if (group.region) {
-        const region = group.region;
-        if (!regions[region]) {
+      const region = group.region;
+      if (region) {
+        if (!(region in regions)) {
           regions[region] = [];
-          $("<option>").val(region).text(region).appendTo("#regionsgroup");
         }
         if (!regions[region].includes(group.id)) {
           regions[region].push(group.id);
+          $("<option>").val(region).text(region).appendTo("#regions");
         }
       }
     });
 
-    links.forEach((edge) => {
-      nodes[edge.target].neighbors.add(edge.source);
-      nodes[edge.source].neighbors.add(edge.target);
+    links.forEach((link) => {
+      nodes[link.target].neighbors.add(link.source);
+      nodes[link.source].neighbors.add(link.target);
     });
 
-    draw_graph(data);
-    update_statistics();
+    drawGraph(data);
+    updateStatistics();
   });
 
-  $("#searchfield").change(function() {
-    const val = $("#searchfield").val();
+  $("#searchField").change(function() {
+    const val = $("#searchField").val();
     if (!val) {
       return;
     }
     const id = val.trim();
     if (
-      ["BrightID", "SeedConnected", "CallJoined", "DollarForEveryone"].includes(
-        id
-      ) ||
+      ["BrightID", "SeedConnected", "DollarForEveryone"].includes(id) ||
       id.startsWith("Rank ")
     ) {
-      select_verification(id);
+      selectVerification(id);
     } else if (nodes[id]) {
-      select_node(nodes[id], true);
+      selectNode(nodes[id], true);
     } else if (groups[id]) {
-      select_group(id, true);
+      selectGroup(id, true);
     } else if (regions[id] || id == "Complete Graph") {
-      select_region(id);
+      selectRegion(id);
     } else {
       return;
     }
@@ -660,56 +643,38 @@ $(document).ready(function() {
 
   $("#groups").change(function() {
     const id = $(this).val();
-    if (groups[id].photo) {
-      $("#usergroupphoto").show();
-      $("#usergroupphoto").attr("src", groups[id].photo);
-    } else {
-      $("#usergroupphoto").hide();
-    }
-    select_group(id, false);
+    selectGroup(id, false);
   });
 
   $("#members").change(function() {
     const id = $(this).val();
-    if (nodes[id].photo) {
-      $("#groupuserphoto").show();
-      $("#groupuserphoto").attr("src", nodes[id].photo);
-    } else {
-      $("#groupuserphoto").hide();
-    }
-    select_node(nodes[id], false);
+    selectNode(nodes[id], false);
   });
 
   $("#seedConnected").change(function() {
     const id = $(this).val();
-    if (nodes[id].photo) {
-      $("#groupuserphoto").show();
-      $("#groupuserphoto").attr("src", nodes[id].photo);
-    } else {
-      $("#groupuserphoto").hide();
-    }
-    select_node(nodes[id], false);
+    selectNode(nodes[id], false);
   });
 
-  $("#logoutbtn").click(() => {
+  $("#logoutBtn").click(() => {
     localforage.clear().then(() => {
       location.reload();
     });
   });
 
-  $("#login").click(load_info);
-  $("#showGroup").click(show_group);
-  $("#copybrightid").click(copy_brightid);
-  $("#showMemeber").click(show_member);
-  $("#showUser").click(show_user);
-  $("#copygroupid").click(copy_groupid);
-  $("#uploadregionbtn").click(function(e) {
-    e.preventDefault();
-    $("#regionfile").click();
-  });
-  $("#regionfile").change(read_regions);
-  $("#searchfield").select2({ tags: true });
-  $("#daterange").change(set_date_range);
-  $("#fromdate").change(highlight_edges);
-  $("#todate").change(highlight_edges);
+  $("#login").click(loadInfo);
+  $("#showGroup").click(showGroup);
+  $("#copyBrightid").click(copyBrightid);
+  $("#showMemeber").click(showMember);
+  $("#showUser").click(showUser);
+  $("#copyGroupId").click(copyGroupId);
+  // $("#uploadRegionBtn").click(function(e) {
+  //   e.preventDefault();
+  //   $("#regionfile").click();
+  // });
+  // $("#regionfile").change(readRegions);
+  $("#searchField").select2({ tags: true });
+  $("#dateRange").change(setDateRange);
+  $("#fromDate").change(highlightLinks);
+  $("#toDate").change(highlightLinks);
 });
