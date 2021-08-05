@@ -47,8 +47,10 @@
             </div>
           </div>
           <div id="logoutForm">
-            <div id="profileImage" class="text-center"></div>
-            <div id="username" class="text-center mt-2"></div>
+            <div class="text-center">
+              <img id="logoutFormImage" class="profile-image"/>
+            </div>
+            <div id="logoutFormUserName" class="text-center text-white mt-2" style="font-size: 25px;"></div>
             <div class="row justify-content-md-center mt-3">
               <button id="logoutBtn" class="btn btn-primary align-center">Logout</button>
             </div>
@@ -59,7 +61,9 @@
           User
         </a>
         <div class="hiden menu-item-body" id="userDitail">
-          <div id="userImage" class="text-center"></div>
+          <div class="text-center">
+            <img id="userImage" class="user-image"/>
+          </div>
           <div class="row mt-2 px-4" id="userNameContainer">
             <div class="text-white text-center mt-3" style="font-size: 16px;" id="userName"></div>
           </div>
@@ -145,7 +149,9 @@
           Group
         </a>
         <div class="hiden menu-item-body" id="groupDitail">
-          <div id="groupImg" class="text-center"></div>
+          <div class="text-center">
+            <img id="groupImg" class="group-image"/>
+          </div>
           <div class="row px-4" id="groupNameContainer">
             <h6 class="text-white mt-3">Group Name:</h6>
             <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupName"></div>
@@ -272,7 +278,7 @@
         <form class="form-inline ml-3">
           <div id="searchbox">
             <select name="searchfield" id="searchField" class="searchfield">
-              <optgroup label="Verifications" id="verificationsgroup">
+              <optgroup label="Verifications" id="searchFieldVerifications">
                 <option value="BrightID">BrightID</option>
                 <option value="DollarForEveryone">DollarForEveryone</option>
                 <option value="SeedConnected">SeedConnected</option>
@@ -282,11 +288,11 @@
                 <option value="Rank 4+">Rank 4+</option>
                 <option value="Rank 5">Rank 5</option>
               </optgroup>
-              <optgroup label="Regions" id="regions">
+              <optgroup label="Regions" id="searchFieldRegions">
                 <option value="Complete Graph">Complete Graph</option>
               </optgroup>
-              <optgroup label="Connections" id="connections"></optgroup>
-              <optgroup label="Groups" id="userGroups"></optgroup>
+              <optgroup label="Connections" id="searchFieldConnections"></optgroup>
+              <optgroup label="Groups" id="searchFieldGroups"></optgroup>
             </select>
           </div>
         </form>

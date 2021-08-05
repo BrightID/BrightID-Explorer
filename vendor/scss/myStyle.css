@@ -104,6 +104,11 @@
   border-radius: 50%
 }
 
+.group-image {
+  width: 6vw;
+  border-radius: 50%
+}
+
 @media (min-width: 768px) {
   #wrapper.toggled #sidebar-wrapper {
     margin-left: -35vw !important;

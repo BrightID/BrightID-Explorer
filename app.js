@@ -20,21 +20,22 @@ function hash(data) {
 }
 
 async function loadUsers(user, key1, password) {
-  $('#profileImage').empty();
-  $("#username").empty();
-  $('<div class="text-white" style="font-size: 25px;">').text(user.name).appendTo("#username");
+  $("#logoutFormUserName").text(user.name || '');
 
   // set the user's name and image
   Object.assign(nodes[user.id], { name: user.name, img: new Image() });
   let imgData = await localforage.getItem(`explorer_img_${user.id}`);
-  if (!imgData) {
-    $.get(`/storage/${key1}/${user.id}`).done((data) => {
+  if (imgData) {
+    nodes[user.id].img.src = imgData;
+    $('#logoutFormImage').attr('src', imgData);
+  } else {
+    $.get(`/storage/${key1}/${user.id}`, (data) => {
       imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
       localforage.setItem(`explorer_img_${user.id}`, imgData);
+      nodes[user.id].img.src = imgData;
+      $('#logoutFormImage').attr('src', imgData);
     });
   }
-  nodes[user.id].img.src = imgData || '';
-  $('#profileImage').prepend('<img src="' + imgData + '" class="profile-image"/>');
 
   // set the connections' name and image
   for (const conn of user.connections || []) {
@@ -42,22 +43,19 @@ async function loadUsers(user, key1, password) {
     if (!nodes[conn.id] || conn.id === user.id) {
       continue;
     }
-    $("<option>").val(conn.id).text(conn.name).appendTo("#connections");
+    $("#searchFieldConnections").append(new Option(conn.name, conn.id));
     Object.assign(nodes[conn.id], { name: conn.name, img: new Image() });
     let imgData = await localforage.getItem(`explorer_img_${conn.id}`);
-    if (!imgData) {
-      try {
-        $.get(`/storage/${key1}/${conn.id}`).done((data) => {
-          imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
-          localforage.setItem(`explorer_img_${conn.id}`, imgData);
-        });
-      } catch (e) {
-        continue;
-      }
+    if (imgData) {
+      nodes[conn.id].img.src = imgData;
+    } else {
+      $.get(`/storage/${key1}/${conn.id}`, (data) => {
+        imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+        localforage.setItem(`explorer_img_${conn.id}`, imgData);
+        nodes[conn.id].img.src = imgData;
+      });
     }
-    nodes[conn.id].img.src = imgData || '';
   }
-  selectNode(nodes[user.id], true);
 }
 
 async function loadGroups(user, key1, password) {
@@ -67,7 +65,7 @@ async function loadGroups(user, key1, password) {
     }
 
     if (group.name) {
-      $("<option>").val(group.id).text(group.name).appendTo("#userGroups");
+      $("#searchFieldGroups").append(new Option(group.name, group.id));
     }
 
     if (!group.url || !group.aesKey) {
@@ -76,18 +74,16 @@ async function loadGroups(user, key1, password) {
 
     Object.assign(groups[group.id], { name: group.name, img: new Image() });
     let imgData = await localforage.getItem(`explorer_img_${group.id}`);
-    if (!imgData) {
+    if (imgData) {
+      groups[group.id].img.src = JSON.parse(imgData)?.photo || '';
+    } else {
       const url = "/storage/immutable" + group.url.split("immutable")[1];
-      $.get(url).done((data) => {
-        if (!data) {
-          groups[group.id].img.src = '';
-          return;
-        }
+      $.get(url, (data) => {
         imgData = CryptoJS.AES.decrypt(data, group.aesKey).toString(CryptoJS.enc.Utf8);
         localforage.setItem(`explorer_img_${group.id}`, imgData);
+        groups[group.id].img.src = JSON.parse(imgData)?.photo || '';
       });
     }
-    groups[group.id].img.src = JSON.parse(imgData).photo;
   }
 }
 
@@ -98,32 +94,34 @@ async function loadInfo() {
   const code = $("#code").val();
   const password = $("#password").val();;
   let backupData = await localforage.getItem('explorer_backup_data');
-  if (!backupData) {
+  if (backupData) {
+    backupData = JSON.parse(backupData);
+    user = { id: backupData.id };
+    key1 = await localforage.getItem('explorer_key1');
+  } else {
     if (code.indexOf("==") > -1) {
       const brightid = CryptoJS.AES.decrypt(code, password).toString(CryptoJS.enc.Utf8);
       user = { id: brightid };
     } else {
       user = { id: code };
     }
-    try {
-      key1 = hash(user.id + password);
-      localforage.setItem('explorer_key1', key1);
-      backupData = await $.get(`/storage/${key1}/data`);
-    } catch {
-      return alert("Invalid explorer code or password or backup not available");
-    }
-    backupData = CryptoJS.AES.decrypt(backupData, password).toString(CryptoJS.enc.Utf8);
-    if (!backupData) {
-      return alert("No backup found");
-    }
+    key1 = hash(user.id + password);
+    localforage.setItem('explorer_key1', key1);
+    await $.get(`/storage/${key1}/data`)
+      .done((data) => {
+        backupData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
+        if (!backupData) {
+          return alert("No backup found");
+        }
+      })
+      .fail(() => {
+        return alert("Invalid explorer code or password or backup not available");
+      })
     localforage.setItem('explorer_backup_data', backupData);
-  } else {
-    user = { id: backupData.id };
-    key1 = await localforage.getItem('explorer_key1');
+    backupData = JSON.parse(backupData);
   }
   $("#loginForm").hide();
   $("#logoutForm").show();
-  backupData = JSON.parse(backupData);
   Object.assign(user, {
     ...backupData.userData,
     connections: backupData.connections,
@@ -131,6 +129,7 @@ async function loadInfo() {
   });
   await loadGroups(user, key1, password);
   await loadUsers(user, key1, password);
+  selectNode(nodes[user.id], true);
 }
 
 function resetLinksColor(link) {
@@ -214,7 +213,7 @@ function setDateRange() {
 //     }
 //     if (!regions[region].includes(id)) {
 //       regions[region].push(id);
-//       $("<option>").val(region).text(region).appendTo("#regions");
+//       $("#searchFieldRegions").append(new Option(region, region));
 //     }
 //   }
 // }
@@ -247,7 +246,6 @@ function selectGroup(id, showDetails) {
   $("#groupQuotaContainer").hide();
   $("#groupNameContainer").hide();
   $("#seedConnectedDiv").hide();
-  $('#groupImg').empty();
   Graph.linkColor(fadedColor);
 
   $("#groupIdText").html(id);
@@ -270,8 +268,10 @@ function selectGroup(id, showDetails) {
     $("#groupQuotaContainer").show();
   }
 
-  if (group.img && group.img.src.includes("base64")) {
-    $('#groupImg').prepend('<img src="' + group.img.src + '" class="profile-image"/>');
+  if (group.img && group.img.src && group.img.src.includes("base64")) {
+    $('#groupImg').attr('src', group.img.src);
+  } else {
+    $('#groupImg').attr('src', '');
   }
 
   if (group.seedConnected.length > 0) {
@@ -367,7 +367,6 @@ function getGroupName(group) {
 function selectNode(node, showDetails) {
   $("#seedData").hide();
   $("#userNameContainer").hide();
-  $("#userImage").hide();
   $("#userRecoveryContainer").hide();
 
   Object.values(nodes).forEach(node => {
@@ -401,11 +400,7 @@ function selectNode(node, showDetails) {
     $("#userNameContainer").show();
   }
 
-  if (node.img) {
-    $("#userImage").empty();
-    $('#userImage').prepend('<img src="' + node.img.src + '" class="user-image"/>');
-    $("#userImage").show();
-  }
+  $('#userImage').attr('src', node?.img?.src || '');
 
   if (node.statistics.recoveries) {
     $("#userRecoveries").empty();
@@ -605,7 +600,7 @@ $(document).ready(function() {
         }
         if (!regions[region].includes(group.id)) {
           regions[region].push(group.id);
-          $("<option>").val(region).text(region).appendTo("#regions");
+          $("#searchFieldRegions").append(new Option(region, region));
         }
       }
     });
