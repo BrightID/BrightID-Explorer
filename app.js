@@ -7,6 +7,8 @@ nodes = {};
 links = {};
 groups = {};
 regions = {};
+mainGraph = true;
+
 
 function b64ToUrlSafeB64(s) {
   const alts = { "/": "_", "+": "-", "=": "" };
@@ -20,20 +22,20 @@ function hash(data) {
 }
 
 async function loadUsers(user, key1, password) {
-  $("#logoutFormUserName").text(user.name || '');
+  $("#logoutFormUserName").text(user.name || "");
 
   // set the user's name and image
   Object.assign(nodes[user.id], { name: user.name, img: new Image() });
   let imgData = await localforage.getItem(`explorer_img_${user.id}`);
   if (imgData) {
     nodes[user.id].img.src = imgData;
-    $('#logoutFormImage').attr('src', imgData);
+    $("#logoutFormImage").attr("src", imgData);
   } else {
     $.get(`/storage/${key1}/${user.id}`, (data) => {
       imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
       localforage.setItem(`explorer_img_${user.id}`, imgData);
       nodes[user.id].img.src = imgData;
-      $('#logoutFormImage').attr('src', imgData);
+      $("#logoutFormImage").attr("src", imgData);
     });
   }
 
@@ -75,13 +77,13 @@ async function loadGroups(user, key1, password) {
     Object.assign(groups[group.id], { name: group.name, img: new Image() });
     let imgData = await localforage.getItem(`explorer_img_${group.id}`);
     if (imgData) {
-      groups[group.id].img.src = JSON.parse(imgData)?.photo || '';
+      groups[group.id].img.src = JSON.parse(imgData)?.photo || "";
     } else {
       const url = "/storage/immutable" + group.url.split("immutable")[1];
       $.get(url, (data) => {
         imgData = CryptoJS.AES.decrypt(data, group.aesKey).toString(CryptoJS.enc.Utf8);
         localforage.setItem(`explorer_img_${group.id}`, imgData);
-        groups[group.id].img.src = JSON.parse(imgData)?.photo || '';
+        groups[group.id].img.src = JSON.parse(imgData)?.photo || "";
       });
     }
   }
@@ -93,11 +95,11 @@ async function loadInfo() {
   let key1;
   const code = $("#code").val();
   const password = $("#password").val();;
-  let backupData = await localforage.getItem('explorer_backup_data');
+  let backupData = await localforage.getItem("explorer_backup_data");
   if (backupData) {
     backupData = JSON.parse(backupData);
     user = { id: backupData.id };
-    key1 = await localforage.getItem('explorer_key1');
+    key1 = await localforage.getItem("explorer_key1");
   } else {
     if (code.indexOf("==") > -1) {
       const brightid = CryptoJS.AES.decrypt(code, password).toString(CryptoJS.enc.Utf8);
@@ -106,7 +108,7 @@ async function loadInfo() {
       user = { id: code };
     }
     key1 = hash(user.id + password);
-    localforage.setItem('explorer_key1', key1);
+    localforage.setItem("explorer_key1", key1);
     await $.get(`/storage/${key1}/data`)
       .done((data) => {
         backupData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
@@ -117,7 +119,7 @@ async function loadInfo() {
       .fail(() => {
         return alert("Invalid explorer code or password or backup not available");
       })
-    localforage.setItem('explorer_backup_data', backupData);
+    localforage.setItem("explorer_backup_data", backupData);
     backupData = JSON.parse(backupData);
   }
   $("#loginForm").hide();
@@ -133,11 +135,11 @@ async function loadInfo() {
 }
 
 function resetLinksColor(link) {
-  if (link.level == 'recovery') return 'blue';
-  else if (link.level == 'already known') return 'green';
-  else if (link.level == 'suspicious') return 'orange';
-  else if (link.level == 'reported') return 'red';
-  else return 'black';
+  if (link.level == "recovery") return "blue";
+  else if (link.level == "already known") return "green";
+  else if (link.level == "suspicious") return "orange";
+  else if (link.level == "reported") return "red";
+  else return "black";
 }
 
 function resetNodesColor(n) {
@@ -245,16 +247,22 @@ function move(x, y, z) {
 function selectGroup(id, showDetails) {
   $("#groupQuotaContainer").hide();
   $("#groupNameContainer").hide();
-  $("#seedConnectedDiv").hide();
-  Graph.linkColor(fadedColor);
+  $("#groupSeedConnectedDiv").hide();
+  $("#showMainGraph").hide();
+  $("#groupDitailPlaceHolder").hide();
+  $("#groupDitailContent").show();
 
   $("#groupIdText").html(id);
   $("#groupIdField").val(id);
 
   const group = groups[id];
-  if (group.seed) {
-    Graph.nodeColor(n => group.members.includes(n.id) || group.seedConnected.includes(n.id) ? resetNodesColor(n) : fadedColor);
-  } else {
+  if (!mainGraph && !group.seed) {
+    drawMainGraph();
+    mainGraph = true;
+  }
+
+  if (!group.seed) {
+    Graph.linkColor(fadedColor);
     Graph.nodeColor(n => group.members.includes(n.id) ? resetNodesColor(n) : fadedColor);
   }
 
@@ -263,15 +271,19 @@ function selectGroup(id, showDetails) {
     $("#groupNameContainer").show();
   }
 
-  if ('quota' in group) {
-    $("#groupQuota").html(group.quota);
-    $("#groupQuotaContainer").show();
+  if (group.img && group.img.src && group.img.src.includes("base64")) {
+    $("#groupImg").attr("src", group.img.src);
+  } else {
+    $("#groupImg").attr("src", "");
   }
 
-  if (group.img && group.img.src && group.img.src.includes("base64")) {
-    $('#groupImg').attr('src', group.img.src);
-  } else {
-    $('#groupImg').attr('src', '');
+  const subgraphNodes = {};
+  const subgraphLinks = [];
+  $("#groupMembersCount").html(group.members.length);
+  $("#members").empty().append(new Option("", "none"));
+  for (const member of group.members) {
+    $("#members").append(new Option(nodes[member].name || member, member));
+    subgraphNodes[member] = nodes[member];
   }
 
   if (group.seedConnected.length > 0) {
@@ -279,14 +291,27 @@ function selectGroup(id, showDetails) {
     $("#seedConnected").empty().append(new Option("", "none"));
     for (const u of group.seedConnected) {
       $("#seedConnected").append(new Option(nodes[u].name || u, u));
+      subgraphNodes[u] = nodes[u];
     }
-    $("#seedConnectedDiv").show();
+    $("#groupSeedConnectedDiv").show();
+    links.forEach((link) => {
+      if (link.source.id in subgraphNodes && link.target.id in subgraphNodes) {
+        subgraphLinks.push(link);
+      }
+    });
   }
 
-  $("#groupMembersCount").html(group.members.length);
-  $("#members").empty().append(new Option("", "none"));
-  for (const member of group.members) {
-    $("#members").append(new Option(nodes[member].name || member, member));
+  if (group.seed) {
+    mainGraph = false;
+    $("#showMainGraph").show();
+    Graph.nodeColor(n => group.members.includes(n.id) || group.seedConnected.includes(n.id) ? resetNodesColor(n) : fadedColor);
+    $("#groupQuota").html(group.quota);
+    $("#groupQuotaContainer").show();
+    for (const u of Object.keys(subgraphNodes)) {
+      delete subgraphNodes[u].fx;
+      delete subgraphNodes[u].fy;
+    }
+    drawGraph({ nodes: Object.values(subgraphNodes), links: subgraphLinks }, true);
   }
 
   if (showDetails) {
@@ -300,7 +325,7 @@ function selectGroup(id, showDetails) {
     sumY += nodes[member].y;
   }
   const n = group.members.length;
-  move(sumX / n, sumY / n, 1.2);
+  move(sumX / n, sumY / n, .2);
 }
 
 function selectVerification(verification) {
@@ -365,9 +390,11 @@ function getGroupName(group) {
 }
 
 function selectNode(node, showDetails) {
+  $("#userDitailContent").show();
   $("#seedData").hide();
   $("#userNameContainer").hide();
   $("#userRecoveryContainer").hide();
+  $("#userDitailPlaceHolder").hide();
 
   Object.values(nodes).forEach(node => {
     node.selected = false
@@ -378,16 +405,16 @@ function selectNode(node, showDetails) {
   $("#brightidText").html(node.id);
   $("#brightidField").val(node.id);
 
-  $("#recoveryIn").html(node.statistics['inbound']['recovery']);
-  $("#recoveryOut").html(node.statistics['outbound']['recovery']);
-  $("#alreadyKnownIn").html(node.statistics['inbound']['already known']);
-  $("#alreadyKnownOut").html(node.statistics['outbound']['already known']);
-  $("#justMetIn").html(node.statistics['inbound']['just met']);
-  $("#justMetOut").html(node.statistics['outbound']['just met']);
-  $("#suspiciousIn").html(node.statistics['inbound']['suspicious']);
-  $("#suspiciousOut").html(node.statistics['outbound']['suspicious']);
-  $("#reportedIn").html(node.statistics['inbound']['reported']);
-  $("#reportedOut").html(node.statistics['outbound']['reported']);
+  $("#recoveryIn").html(node.statistics["inbound"]["recovery"]);
+  $("#recoveryOut").html(node.statistics["outbound"]["recovery"]);
+  $("#alreadyKnownIn").html(node.statistics["inbound"]["already known"]);
+  $("#alreadyKnownOut").html(node.statistics["outbound"]["already known"]);
+  $("#justMetIn").html(node.statistics["inbound"]["just met"]);
+  $("#justMetOut").html(node.statistics["outbound"]["just met"]);
+  $("#suspiciousIn").html(node.statistics["inbound"]["suspicious"]);
+  $("#suspiciousOut").html(node.statistics["outbound"]["suspicious"]);
+  $("#reportedIn").html(node.statistics["inbound"]["reported"]);
+  $("#reportedOut").html(node.statistics["outbound"]["reported"]);
 
   if (node.node_type == "Seed") {
     $("#quotaValue").html(node.quota);
@@ -400,9 +427,9 @@ function selectNode(node, showDetails) {
     $("#userNameContainer").show();
   }
 
-  $('#userImage').attr('src', node?.img?.src || '');
+  $("#userImage").attr("src", node?.img?.src || "");
 
-  if (node.statistics.recoveries) {
+  if (node.statistics.recoveries.length > 0) {
     $("#userRecoveries").empty();
     node.statistics.recoveries.forEach((tid) => {
       const text = nodes[tid]?.name || tid;
@@ -429,19 +456,19 @@ function selectNode(node, showDetails) {
         for (const groupId of value) {
           seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
         }
-        value = seedGroups.join(', ');
+        value = seedGroups.join(", ");
       } else if (key == "reported") {
         const seedGroups = [];
         for (const groupId of value) {
           seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
         }
-        value = seedGroups.join(', ');
+        value = seedGroups.join(", ");
       } else if (key == "raw_rank") {
         value = value.toFixed(2);
       }
       details.push(`${key}: ${value}`);
     }
-    verificationsString += `<b>${name}</b> ${details.join(', ')}<br/>`;
+    verificationsString += `<b>${name}</b> ${details.join(", ")}<br/>`;
   }
   $("#verifications").html(verificationsString);
 
@@ -488,7 +515,8 @@ function updateStatistics() {
   $("#averageConnection").html(Math.ceil(numNeighbors / numVerifieds));
 }
 
-function drawGraph(data) {
+function drawGraph(data, subgraph) {
+  $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem)
     .graphData(data)
@@ -505,7 +533,7 @@ function drawGraph(data) {
         selectNode(node, true);
       }
     })
-    .linkVisibility((link) => false)
+    .linkVisibility((link) => subgraph ? true : false)
     .onBackgroundClick(() => {
       if (!selectedNode) {
         return;
@@ -531,14 +559,14 @@ function drawGraph(data) {
         try {
           ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
         } catch (err) {
-          console.log('Error in drawImage: ', err)
+          console.log("Error in drawImage: ", err)
         }
         ctx.stroke();
         ctx.restore();
       }
     })
     .onEngineStop(async () => {
-      if ((await localforage.getItem('explorer_backup_data')) && !autoLoginDone) {
+      if ((await localforage.getItem("explorer_backup_data")) && !autoLoginDone) {
         loadInfo();
       }
     });
@@ -552,6 +580,11 @@ function logPositions() {
     }
   });
   console.log(pos);
+}
+
+function drawMainGraph() {
+  drawGraph({ nodes: Object.values(nodes), links }, false);
+  $("#showMainGraph").hide();
 }
 
 $(document).ready(function() {
@@ -610,7 +643,7 @@ $(document).ready(function() {
       nodes[link.source].neighbors.add(link.target);
     });
 
-    drawGraph(data);
+    drawMainGraph();
     updateStatistics();
   });
 
@@ -656,7 +689,6 @@ $(document).ready(function() {
       location.reload();
     });
   });
-
   $("#login").click(loadInfo);
   $("#showGroup").click(showGroup);
   $("#copyBrightid").click(copyBrightid);
@@ -672,4 +704,5 @@ $(document).ready(function() {
   $("#dateRange").change(setDateRange);
   $("#fromDate").change(highlightLinks);
   $("#toDate").change(highlightLinks);
+  $("#showMainGraph").click(drawMainGraph);
 });

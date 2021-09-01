@@ -27,11 +27,11 @@
   <div class="d-flex toggled" id="wrapper">
     <div class="bg-dark border-right " id="sidebar-wrapper" style="height: 100vh; width: 35vw;">
       <div class="sidebar-heading" style="height: 10vh">
-        <h1 class="text-light h4">Explorer brightID</h1>
+        <h1 class="text-light h4">Explorer BrightID</h1>
       </div>
       <div id="sidebarMenu" class="list-group list-group-flush sidebar" style="height: 90vh">
         <a href="#" onclick="openCollapsible('loginDetail')" class="list-group-item list-group-item-action bg-primary">
-          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          <i style="font-size:16px" class="fas">&#xf105; </i>
           Login
         </a>
         <div class="hiden menu-item-body" id="loginDetail">
@@ -57,146 +57,159 @@
           </div>
         </div>
         <a id="userbtntitle" onclick="openCollapsible('userDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
-          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          <i style="font-size:16px" class="fas">&#xf105; </i>
           User
         </a>
         <div class="hiden menu-item-body" id="userDitail">
-          <div class="text-center">
-            <img id="userImage" class="user-image"/>
+          <div class="menu-item-body" id="userDitailPlaceHolder">
+              <h6 class="text-white mt-3">Select a user</h6>
           </div>
-          <div class="row mt-2 px-4" id="userNameContainer">
-            <div class="text-white text-center mt-3" style="font-size: 16px;" id="userName"></div>
-          </div>
-          <div class="row px-4">
-            <h6 class="text-white mt-3">BrightID:</h6> <br>
-            <input style="opacity: 0;" type="text" id="brightidField" value="">
-          </div>
-          <div class="text-white ml-2" style="font-size: 12px;" id="brightidText"></div>
-          <div class="row justify-content-md-center">
-            <button id="copyBrightid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
-          </div>
-          <div id="userRecoveryContainer">
-            <h6 class="row mt-3 px-4 text-white">Recovery connections:</h6>
-            <ul id="userRecoveries"></ul>
-          </div>
-          <div class="row px-4">
-            <h6 class="text-white mt-3">Connections: </h6>
-          </div>
-          <div class="row px-4 text-white mt-3">
-            <table cellpadding="10">
-              <tbody>
-                <tr>
-                  <td>Level</td>
-                  <td>In</td>
-                  <td>Out</td>
-                </tr>
-                <tr>
-                  <td>recovery</td>
-                  <td id="recoveryIn"></td>
-                  <td id="recoveryOut"></td>
-                </tr>
-                <tr>
-                  <td>already known</td>
-                  <td id="alreadyKnownIn"></td>
-                  <td id="alreadyKnownOut"></td>
-                </tr>
-                <tr>
-                  <td>just met</td>
-                  <td id="justMetIn"></td>
-                  <td id="justMetOut"></td>
-                </tr>
-                <tr>
-                  <td>suspicious</td>
-                  <td id="suspiciousIn"></td>
-                  <td id="suspiciousOut"></td>
-                </tr>
-                <tr>
-                  <td>reported</td>
-                  <td id="reportedIn"></td>
-                  <td id="reportedOut"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div id="seedData">
+          <div class="menu-item-body hiden" id="userDitailContent">
+            <div class="text-center">
+              <img id="userImage" class="user-image"/>
+            </div>
+            <div class="row mt-2 px-4 hiden" id="userNameContainer">
+              <div class="text-white text-center mt-3" style="font-size: 16px;" id="userName"></div>
+            </div>
             <div class="row px-4">
-              <h6 class="text-white mt-3">No. Seed Groups: </h6>
-              <h6 class="text-white mt-3 ml-2" id="noSeedGroups"></h6>
+              <h6 class="text-white mt-3">BrightID:</h6> <br>
+              <input style="opacity: 0;" type="text" id="brightidField" value="">
             </div>
-            <div class="row mt-2 px-4">
-              <h6 class="text-white mt-3">Seed Quota: </h6>
-              <h6 class="text-white mt-3 ml-2" id="quotaValue"></h6>
+            <div class="text-white ml-2" style="font-size: 12px;" id="brightidText"></div>
+            <div class="row justify-content-md-center">
+              <button id="copyBrightid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
             </div>
-          </div>
-          <div class="row">
-            <h6 class="text-white ml-4 mt-3">Groups:</h6>
-          </div>
-          <div class="input-group px-2">
-            <select class="custom-select mt-3" id="groups" name="groups">
-              <option value="none" selected="">None</option>
-            </select>
-          </div>
-          <div class="row justify-content-md-center mt-2">
-            <button id="showGroup" class="btn btn-primary align-center">Show Group</button>
-          </div>
-          <div class="row mt-2 px-4">
-            <h6 class="text-white mt-3">Verifications:</h6>
-          </div>
-          <div class="text-white px-4" id="verifications"></div>
-        </div>
-        <a id="groupbtntitle" onclick="openCollapsible('groupDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
-          <i style='font-size:16px' class='fas'>&#xf105; </i>
-          Group
-        </a>
-        <div class="hiden menu-item-body" id="groupDitail">
-          <div class="text-center">
-            <img id="groupImg" class="group-image"/>
-          </div>
-          <div class="row px-4" id="groupNameContainer">
-            <h6 class="text-white mt-3">Group Name:</h6>
-            <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupName"></div>
-          </div>
-          <div class="row px-4" id="groupQuotaContainer">
-            <h6 class="text-white mt-3">Seed Group Quota:</h6>
-            <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupQuota"></div>
-          </div>
-          <div class="row px-4">
-            <h6 class="text-white mt-3">Group ID:</h6> <br>
-          </div>
-          <div class="text-white" style="font-size: 12px;" id="groupIdText"></div>
-          <div class="row justify-content-md-center">
-            <button id="copyGroupId" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
-          </div>
-          <div class="row mt-2">
-            <h6 class="text-white ml-4 mt-3">Members:</h6>
-            <h6 class="text-white mt-3 ml-2" id="groupMembersCount"></h6>
-          </div>
-          <div class="input-group mb-3 px-2">
-            <select class="custom-select" id="members" name="members">
-              <option value="none" selected="">None</option>
-            </select>
-          </div>
-          <div class="row justify-content-md-center mt-2">
-            <button id="showMemeber" class="btn btn-primary align-center mb-5">Show Memeber</button>
-          </div>
-          <div id="seedConnectedDiv">
+            <div id="userRecoveryContainer" class="hiden">
+              <h6 class="row mt-3 px-4 text-white">Recovery connections:</h6>
+              <ul id="userRecoveries"></ul>
+            </div>
+            <div class="row px-4">
+              <h6 class="text-white mt-3">Connections: </h6>
+            </div>
+            <div class="row px-4 text-white mt-3">
+              <table cellpadding="10">
+                <tbody>
+                  <tr>
+                    <td>Level</td>
+                    <td>In</td>
+                    <td>Out</td>
+                  </tr>
+                  <tr>
+                    <td>recovery</td>
+                    <td id="recoveryIn"></td>
+                    <td id="recoveryOut"></td>
+                  </tr>
+                  <tr>
+                    <td>already known</td>
+                    <td id="alreadyKnownIn"></td>
+                    <td id="alreadyKnownOut"></td>
+                  </tr>
+                  <tr>
+                    <td>just met</td>
+                    <td id="justMetIn"></td>
+                    <td id="justMetOut"></td>
+                  </tr>
+                  <tr>
+                    <td>suspicious</td>
+                    <td id="suspiciousIn"></td>
+                    <td id="suspiciousOut"></td>
+                  </tr>
+                  <tr>
+                    <td>reported</td>
+                    <td id="reportedIn"></td>
+                    <td id="reportedOut"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="seedData" class="hiden">
+              <div class="row px-4">
+                <h6 class="text-white mt-3">No. Seed Groups: </h6>
+                <h6 class="text-white mt-3 ml-2" id="noSeedGroups"></h6>
+              </div>
+              <div class="row mt-2 px-4">
+                <h6 class="text-white mt-3">Seed Quota: </h6>
+                <h6 class="text-white mt-3 ml-2" id="quotaValue"></h6>
+              </div>
+            </div>
             <div class="row">
-              <h6 class="text-white ml-4 mt-3">Users conected to this seed group:</h6>
-              <h6 class="text-white mt-3 ml-2" id="seedConectedCount"></h6>
+              <h6 class="text-white ml-4 mt-3">Groups:</h6>
             </div>
-            <div class="input-group mb-3 px-2">
-              <select class="custom-select" id="seedConnected" name="seedConnected">
+            <div class="input-group px-2">
+              <select class="custom-select mt-3" id="groups" name="groups">
                 <option value="none" selected="">None</option>
               </select>
             </div>
             <div class="row justify-content-md-center mt-2">
-              <button id="showUser" class="btn btn-primary align-center mb-5">Show User</button>
+              <button id="showGroup" class="btn btn-primary align-center">Show Group</button>
             </div>
+            <div class="row mt-2 px-4">
+              <h6 class="text-white mt-3">Verifications:</h6>
+            </div>
+            <div class="text-white px-4" id="verifications"></div>
           </div>
-          <input style="opacity: 0;" type="text" id="groupIdField" value="">
+        </div>
+        <a id="groupbtntitle" onclick="openCollapsible('groupDitail')" href="#" class="list-group-item list-group-item-action bg-primary">
+          <i style="font-size:16px" class="fas">&#xf105; </i>
+          Group / Community
+        </a>
+        <div class="hiden menu-item-body" id="groupDitail">
+          <div class="menu-item-body" id="groupDitailPlaceHolder">
+              <h6 class="text-white mt-3">Select a group</h6>
+          </div>
+          <div class="hiden menu-item-body" id="groupDitailContent">
+            <div class="row justify-content-md-center">
+              <button id="showMainGraph" class="btn btn-primary align-center my-3 hiden">Main Graph</button>
+            </div>
+            <div class="text-center">
+              <img id="groupImg" class="group-image"/>
+            </div>
+            <div class="row px-4 hiden" id="groupNameContainer">
+              <h6 class="text-white mt-3">Name: </h6>
+              <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupName"></div>
+            </div>
+            <div class="row px-4 hiden" id="groupQuotaContainer">
+              <h6 class="text-white mt-3">Quota: </h6>
+              <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupQuota"></div>
+            </div>
+            <div class="row px-4">
+              <h6 class="text-white mt-3">ID: </h6>
+              <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="groupIdText"></div>
+            </div>
+            <div class="row justify-content-md-center">
+              <button id="copyGroupId" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
+            </div>
+            <div class="row mt-2">
+              <h6 class="text-white ml-4 mt-3">Members:</h6>
+              <h6 class="text-white mt-3 ml-2" id="groupMembersCount"></h6>
+            </div>
+            <div class="input-group mb-3 px-2" id="groupMembersContainer">
+              <select class="custom-select" id="members" name="members">
+                <option value="none" selected="">None</option>
+              </select>
+            </div>
+            <div class="row justify-content-md-center mt-2">
+              <button id="showMemeber" class="btn btn-primary align-center mb-5">Show Memeber</button>
+            </div>
+            <div id="groupSeedConnectedDiv" class="hiden">
+              <div class="row">
+                <h6 class="text-white ml-4 mt-3">Users conected to this seed group:</h6>
+                <h6 class="text-white mt-3 ml-2" id="seedConectedCount"></h6>
+              </div>
+              <div class="input-group mb-3 px-2">
+                <select class="custom-select" id="seedConnected" name="seedConnected">
+                  <option value="none" selected="">None</option>
+                </select>
+              </div>
+              <div class="row justify-content-md-center mt-2">
+                <button id="showUser" class="btn btn-primary align-center mb-5">Show User</button>
+              </div>
+            </div>
+            <input style="opacity: 0;" type="text" id="groupIdField" value="">
+          </div>
         </div>
         <a href="#" onclick="openCollapsible('statisticsDitail')" class="list-group-item list-group-item-action bg-primary">
-          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          <i style="font-size:16px" class="fas">&#xf105; </i>
           Statistics
         </a>
         <div class="hiden menu-item-body" id="statisticsDitail">
@@ -236,7 +249,7 @@
           </div>
         </div>
         <a href="#" onclick="openCollapsible('linkDetail')" class="list-group-item list-group-item-action bg-primary">
-          <i style='font-size:16px' class='fas'>&#xf105; </i>
+          <i style="font-size:16px" class="fas">&#xf105; </i>
           Links
         </a>
         <div class="hiden menu-item-body" id="linkDetail">
@@ -309,22 +322,22 @@
       </nav>
       <div style="height: 90vh;" class="container-fluid mx-0 px-0">
         <div style="height: 100%;" id="graphDiv"></div>
-        <div class='my-legend'>
-          <div class='legend-title'>Node colors</div>
-          <div class='legend-scale'>
-            <ul class='legend-labels'>
-              <li><span style='background:blue;'></span>Seed</li>
-              <li><span style='background:green;'></span>Verified</li>
-              <li><span style='background:yellow;'></span>Not Verified</li>
+        <div class="my-legend">
+          <div class="legend-title">Node colors</div>
+          <div class="legend-scale">
+            <ul class="legend-labels">
+              <li><span style="background:blue;"></span>Seed</li>
+              <li><span style="background:green;"></span>Verified</li>
+              <li><span style="background:yellow;"></span>Not Verified</li>
             </ul>
           </div>
-          <div class='legend-title'>Link colors</div>
-          <div class='legend-scale'>
-            <ul class='legend-labels'>
-              <li><span style='background:blue;'></span>Recovery</li>
-              <li><span style='background:green;'></span>Already known</li>
-              <li><span style='background:orange;'></span>Suspicious</li>
-              <li><span style='background:red;'></span>Reported</li>
+          <div class="legend-title">Link colors</div>
+          <div class="legend-scale">
+            <ul class="legend-labels">
+              <li><span style="background:blue;"></span>Recovery</li>
+              <li><span style="background:green;"></span>Already known</li>
+              <li><span style="background:orange;"></span>Suspicious</li>
+              <li><span style="background:red;"></span>Reported</li>
             </ul>
           </div>
         </div>
@@ -334,9 +347,9 @@
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="vendor/script/script.js?v=1628083557"></script>
   <script>
-  $('#menu-toggle').click(function(e) {
+  $("#menu-toggle").click(function(e) {
     e.preventDefault();
-    $('#wrapper').toggleClass('toggled');
+    $("#wrapper").toggleClass("toggled");
   });
   </script>
 </body>
