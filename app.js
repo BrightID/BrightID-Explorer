@@ -304,7 +304,7 @@ function selectGroup(id, showDetails) {
 }
 
 function selectVerification(verification) {
-  const verifieds = [];
+  const verifieds = {};
   if (verification.startsWith("Rank ")) {
     const rank = parseInt(verification.replace("Rank ", "").replace("+", ""));
     for (const id in nodes) {
@@ -312,17 +312,17 @@ function selectVerification(verification) {
         "Yekta" in nodes[id].verifications &&
         nodes[id].verifications.Yekta.rank >= rank
       ) {
-        verifieds.push(id);
+        verifieds[id] = true;
       }
     }
   } else {
     for (const id in nodes) {
       if (verification in nodes[id].verifications) {
-        verifieds.push(id);
+        verifieds[id] = true;
       }
     }
   }
-  Graph.nodeColor(n => verifieds.includes(n.id) ? resetNodesColor(n) : fadedColor);
+  Graph.nodeColor(n => n.id in verifieds ? resetNodesColor(n) : fadedColor);
   Graph.linkColor(fadedColor);
 }
 
