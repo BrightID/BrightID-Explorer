@@ -654,7 +654,7 @@ $(document).ready(function() {
     }
     const id = val.trim();
     if (
-      ["BrightID", "SeedConnected", "DollarForEveryone"].includes(id) ||
+      ["BrightID", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id) ||
       id.startsWith("Rank ")
     ) {
       selectVerification(id);
