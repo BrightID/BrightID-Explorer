@@ -275,10 +275,19 @@
             </select>
           </div>
           <div class="input-group px-2">
-            <input class="form-control  mb-2" type="date" id="fromDate" name="fromdate" />
+            <input class="form-control mb-2" type="date" id="fromDate" title="From date" />
           </div>
           <div class="input-group px-2">
-            <input class="form-control  mb-2" type="date" id="toDate" name="todate" />
+            <input class="form-control mb-2" type="date" id="toDate" title="To date" />
+          </div>
+          <div class="input-group px-2">
+            <input class="form-control mb-2" type="number" id="duration" value="0" min="0" title="Demo duration"/>
+          </div>
+          <h6 class="text-white mt-3 ml-2" id="linkDetailDate"></h6>
+          <h6 class="text-white mt-3 ml-2" id="linkDetailNumNodes"></h6>
+          <h6 class="text-white mt-3 ml-2" id="linkDetailNumLinks"></h6>
+          <div class="row justify-content-md-center">
+            <button id="showConnections" class="btn btn-primary align-center">Show</button>
           </div>
         </div>
       </div>

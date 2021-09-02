@@ -189,7 +189,6 @@ function setDateRange() {
   }
   $("#fromDate").val(fromDate.toISOString().split("T")[0]);
   $("#toDate").val(new Date(today).toISOString().split("T")[0]);
-  highlightLinks();
 }
 
 // function readRegions(e) {
@@ -225,18 +224,34 @@ function highlightLinks() {
   const selectedNodes = new Set();
   const fromDate = new Date($("#fromDate").val()).getTime();
   const toDate = new Date($("#toDate").val()).getTime() + 24 * 60 * 60 * 1000;
-  links.forEach((link) => {
-    if (fromDate <= link.timestamp && link.timestamp <= toDate) {
-      selectedLinks.add(link);
-      selectedNodes.add(link.source.id);
-      selectedNodes.add(link.target.id);
-    }
-  });
-  Graph.nodeColor(n => selectedNodes.has(n.id) ? resetNodesColor(n) : fadedColor);
-  Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
-  Graph.linkWidth((link) => (selectedLinks.has(link) ? selectedLinkWidth : linkWidth))
-    .linkColor((link) => (selectedLinks.has(link) ? resetLinksColor(link) : fadedColor))
-    .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6);
+  const duration = Math.max($("#duration").val(), 1);
+  Graph.nodeColor(n => fadedColor);
+  Graph.linkVisibility(link => false);
+  const step = Math.floor((toDate - fromDate) / duration);
+  for (let i=1; i<=duration; i++) {
+     drawStep(i);
+  }
+  function drawStep(i) {
+    setTimeout(function() {
+      let to = fromDate + (i * step);
+      let from = to - step;
+      links.forEach((link) => {
+        if (from <= link.timestamp && link.timestamp <= to) {
+          selectedLinks.add(link);
+          selectedNodes.add(link.source.id);
+          selectedNodes.add(link.target.id);
+        }
+      });
+      $("#linkDetailDate").html(new Date(to).toDateString());
+      $("#linkDetailNumNodes").html(`No. Nodes: ${selectedNodes.size}`);
+      $("#linkDetailNumLinks").html(`No. Links: ${selectedLinks.size}`);
+      Graph.nodeColor(n => selectedNodes.has(n.id) ? resetNodesColor(n) : fadedColor);
+      Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
+      Graph.linkWidth((link) => (selectedLinks.has(link) ? selectedLinkWidth : linkWidth))
+        .linkColor((link) => (selectedLinks.has(link) ? resetLinksColor(link) : fadedColor))
+        .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6);
+    }, 1000 * i);
+  }
 }
 
 function move(x, y, z) {
@@ -702,7 +717,6 @@ $(document).ready(function() {
   // $("#regionfile").change(readRegions);
   $("#searchField").select2({ tags: true });
   $("#dateRange").change(setDateRange);
-  $("#fromDate").change(highlightLinks);
-  $("#toDate").change(highlightLinks);
+  $("#showConnections").click(highlightLinks);
   $("#showMainGraph").click(drawMainGraph);
 });
