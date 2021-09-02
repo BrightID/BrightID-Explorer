@@ -54,7 +54,7 @@ def get_links(main_component):
         if connections[ft]['level'] in ('just met', 'suspicious'):
             continue
         other_side_level = connections.get((ft[1], ft[0]), {}).get('level')
-        if connections[ft]['level'] == 'already known' and other_side_level in ('just met', 'suspicious'):
+        if connections[ft]['level'] == 'already known' and other_side_level in (None, 'just met', 'suspicious'):
             continue
         links.append({
             'source': ft[0],
