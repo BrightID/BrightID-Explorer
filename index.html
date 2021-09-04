@@ -250,7 +250,7 @@
         </div>
         <a href="#" onclick="openCollapsible('linkDetail')" class="list-group-item list-group-item-action bg-primary">
           <i style="font-size:16px" class="fas">&#xf105; </i>
-          Links
+          Illustrator
         </a>
         <div class="hiden menu-item-body" id="linkDetail">
           <!--<div class="row mt-2">
@@ -274,20 +274,32 @@
               <option value="month">Last Month</option>
             </select>
           </div>
-          <div class="input-group px-2">
-            <input class="form-control mb-2" type="date" id="fromDate" title="From date" />
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">From:</h6>
           </div>
           <div class="input-group px-2">
-            <input class="form-control mb-2" type="date" id="toDate" title="To date" />
+            <input class="form-control mb-2" type="date" id="fromDate" />
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">To:</h6>
           </div>
           <div class="input-group px-2">
-            <input class="form-control mb-2" type="number" id="duration" value="0" min="0" title="Demo duration"/>
+            <input class="form-control mb-2" type="date" id="toDate" />
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">Delay between steps (seconds):</h6>
+          </div>
+          <div class="input-group px-2">
+            <input class="form-control mb-2" type="number" id="delay" value="1" min="0" />
           </div>
           <h6 class="text-white mt-3 ml-2" id="linkDetailDate"></h6>
           <h6 class="text-white mt-3 ml-2" id="linkDetailNumNodes"></h6>
           <h6 class="text-white mt-3 ml-2" id="linkDetailNumLinks"></h6>
-          <div class="row justify-content-md-center">
-            <button id="showConnections" class="btn btn-primary align-center">Show</button>
+          <div class="row input-group px-2 justify-content-md-center">
+            <a id="previousBtn" class="fa fa-2x player-buttons fa-step-backward"></a>
+            <a id="stopBtn" class="fa fa-2x player-buttons fa-stop"></a>
+            <a id="playBtn" class="fa fa-2x player-buttons fa-play"></a>
+            <a id="nextBtn" class="fa fa-2x player-buttons fa-step-forward"></a>
           </div>
         </div>
       </div>

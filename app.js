@@ -8,7 +8,8 @@ links = {};
 groups = {};
 regions = {};
 mainGraph = true;
-
+playerSettingChanged = false;
+playerState = "stopped";
 
 function b64ToUrlSafeB64(s) {
   const alts = { "/": "_", "+": "-", "=": "" };
@@ -189,68 +190,129 @@ function setDateRange() {
   }
   $("#fromDate").val(fromDate.toISOString().split("T")[0]);
   $("#toDate").val(new Date(today).toISOString().split("T")[0]);
+  playerSettingChanged = true;
 }
 
-// function readRegions(e) {
-//   var file = e.target.files[0];
-//   if (!file) {
-//     return;
-//   }
-//   var reader = new FileReader();
-//   reader.onload = function(e) {
-//     parseRegions(e.target.result);
-//   };
-//   reader.readAsText(file);
-// }
+var gPlayer = new player();
 
-// function parseRegions(s) {
-//   const lines = s.split("\n");
-//   for (let line of lines) {
-//     line = line.trim();
-//     const [region, id] = line.split("\t");
-//     let type;
-//     if (!(region in regions)) {
-//       regions[region] = [];
-//     }
-//     if (!regions[region].includes(id)) {
-//       regions[region].push(id);
-//       $("#searchFieldRegions").append(new Option(region, region));
-//     }
-//   }
-// }
+function player() {
+  let task;
+  let fromDate;
+  let toDate;
+  let delay;
+  let stepLength;
+  let steps;
+  let step = 0;
 
-function highlightLinks() {
-  const selectedLinks = new Set();
-  const selectedNodes = new Set();
-  const fromDate = new Date($("#fromDate").val()).getTime();
-  const toDate = new Date($("#toDate").val()).getTime() + 24 * 60 * 60 * 1000;
-  const duration = Math.max($("#duration").val(), 1);
-  Graph.nodeColor(n => fadedColor);
-  Graph.linkVisibility(link => false);
-  const step = Math.floor((toDate - fromDate) / duration);
-  for (let i=1; i<=duration; i++) {
-     drawStep(i);
+  this.start = start;
+  this.pause = pause;
+  this.stop = stop;
+  this.next = next;
+  this.previous = previous;
+  this.reset = reset;
+
+  function reset() {
+    if (playerSettingChanged) {
+      step = 0;
+      $("#linkDetailDate").empty();
+      $("#linkDetailNumNodes").empty();
+      $("#linkDetailNumLinks").empty();
+      Graph.nodeColor(n => fadedColor);
+      Graph.linkVisibility(link => false);
+      fromDate = new Date($("#fromDate").val()).getTime();
+      toDate = new Date($("#toDate").val()).getTime() + 24 * 60 * 60 * 1000;
+      delay = $("#delay").val() * 1000;
+      if (toDate - fromDate == 24 * 60 * 60 * 1000) {
+        stepLength = 60 * 60 * 1000;
+      } else {
+        stepLength = 24 * 60 * 60 * 1000;
+      }
+      steps = Math.floor((toDate - fromDate) / stepLength);
+      playerSettingChanged = false;
+    }
   }
-  function drawStep(i) {
-    setTimeout(function() {
-      let to = fromDate + (i * step);
-      let from = to - step;
-      links.forEach((link) => {
-        if (from <= link.timestamp && link.timestamp <= to) {
-          selectedLinks.add(link);
-          selectedNodes.add(link.source.id);
-          selectedNodes.add(link.target.id);
-        }
-      });
-      $("#linkDetailDate").html(new Date(to).toDateString());
-      $("#linkDetailNumNodes").html(`No. Nodes: ${selectedNodes.size}`);
-      $("#linkDetailNumLinks").html(`No. Links: ${selectedLinks.size}`);
-      Graph.nodeColor(n => selectedNodes.has(n.id) ? resetNodesColor(n) : fadedColor);
-      Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
-      Graph.linkWidth((link) => (selectedLinks.has(link) ? selectedLinkWidth : linkWidth))
-        .linkColor((link) => (selectedLinks.has(link) ? resetLinksColor(link) : fadedColor))
-        .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6);
-    }, 1000 * i);
+
+  function start() {
+    reset();
+    task = setTimeout(loop, 0);
+    return true;
+  }
+
+  function pause() {
+    clearTimeout(task);
+    return true;
+  }
+
+  function stop() {
+    clearTimeout(task);
+    drawMainGraph();
+    $("#linkDetailDate").empty();
+    $("#linkDetailNumNodes").empty();
+    $("#linkDetailNumLinks").empty();
+    step = 0;
+    return true;
+  }
+
+  function next() {
+    clearTimeout(task);
+    reset();
+    if (step + 1 < steps) {
+      step++
+      drawStep();
+    }
+  }
+
+  function previous() {
+    clearTimeout(task);
+    reset();
+    if (step - 1 > 0) {
+      step--
+      drawStep();
+    }
+  }
+
+  function loop() {
+    if (step + 1 < steps) {
+      step++
+      task = setTimeout(loop, delay);
+      drawStep();
+    } else {
+      step = 0;
+      playerState = "stopped";
+      if ($("#playBtn").hasClass("fa-pause")) {
+        $("#playBtn").removeClass("fa-pause");
+        $("#playBtn").addClass("fa-play");
+      }
+      return true;
+    }
+  }
+
+  function drawStep() {
+    const stepLinks = new Set();
+    const stepNodes = new Set();
+    const previousStepsLinks = new Set();
+    const to = fromDate + (step * stepLength);
+    const from = to - stepLength;
+    links.forEach((link) => {
+      if (fromDate <= link.timestamp && link.timestamp < from) {
+        previousStepsLinks.add(link);
+        stepNodes.add(link.source.id);
+        stepNodes.add(link.target.id);
+      } else if (from <= link.timestamp && link.timestamp <= to) {
+        stepLinks.add(link);
+        stepNodes.add(link.source.id);
+        stepNodes.add(link.target.id);
+      }
+    });
+    const tString = stepLength == 60 * 60 * 1000 ? new Date(to).toGMTString() : new Date(to).toDateString();
+    $("#linkDetailDate").html(tString);
+    $("#linkDetailNumNodes").html(`No. Nodes: ${stepNodes.size}`);
+    $("#linkDetailNumLinks").html(`No. Links: ${stepLinks.size + previousStepsLinks.size}`);
+    Graph.nodeColor(n => stepNodes.has(n.id) ? resetNodesColor(n) : fadedColor);
+    Graph.linkVisibility((link) => (stepLinks.has(link) || previousStepsLinks.has(link) ? true : false));
+    Graph.linkWidth((link) => (stepLinks.has(link) ? selectedLinkWidth : linkWidth))
+      .linkColor((link) => (stepLinks.has(link) ? resetLinksColor(link) : fadedColor))
+      .linkDirectionalArrowLength((link) => stepLinks.has(link) ? 16 : 6);
   }
 }
 
@@ -710,13 +772,47 @@ $(document).ready(function() {
   $("#showMemeber").click(showMember);
   $("#showUser").click(showUser);
   $("#copyGroupId").click(copyGroupId);
-  // $("#uploadRegionBtn").click(function(e) {
-  //   e.preventDefault();
-  //   $("#regionfile").click();
-  // });
-  // $("#regionfile").change(readRegions);
   $("#searchField").select2({ tags: true });
   $("#dateRange").change(setDateRange);
-  $("#showConnections").click(highlightLinks);
   $("#showMainGraph").click(drawMainGraph);
+  $("#fromDate").change(() => playerSettingChanged = true);
+  $("#toDate").change(() => playerSettingChanged = true);
+  $("#delay").change(() => playerSettingChanged = true);
+  $("#playBtn").click(function() {
+    if (playerState == "stopped" || playerState == "paused") {
+      $("#playBtn").removeClass("fa-play");
+      $("#playBtn").addClass("fa-pause");
+      playerState = "playing";
+      gPlayer.start();
+    } else if (playerState == "playing") {
+      $("#playBtn").removeClass("fa-pause");
+      $("#playBtn").addClass("fa-play");
+      playerState = "paused";
+      gPlayer.pause();
+    }
+  });
+  $("#stopBtn").click(function() {
+    if ($("#playBtn").hasClass("fa-pause")) {
+      $("#playBtn").removeClass("fa-pause");
+      $("#playBtn").addClass("fa-play");
+    }
+    playerState = "stopped";
+    gPlayer.stop();
+  });
+  $("#previousBtn").click(function() {
+    if ($("#playBtn").hasClass("fa-pause")) {
+      $("#playBtn").removeClass("fa-pause");
+      $("#playBtn").addClass("fa-play");
+    }
+    playerState = "paused";
+    gPlayer.previous();
+  });
+  $("#nextBtn").click(function() {
+    if ($("#playBtn").hasClass("fa-pause")) {
+      $("#playBtn").removeClass("fa-pause");
+      $("#playBtn").addClass("fa-play");
+    }
+    playerState = "paused";
+    gPlayer.next();
+  });
 });
