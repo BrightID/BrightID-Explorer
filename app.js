@@ -180,9 +180,9 @@ function setDateRange() {
   if (v == "none") {
     fromDate = new Date(today + 2 * 24 * 60 * 60 * 1000);
   } else if (v == "all") {
-    fromDate = new Date(today - 10000 * 24 * 60 * 60 * 1000);
+    fromDate = new Date(1546562922436);
   } else if (v == "day") {
-    fromDate = new Date(today - 1 * 24 * 60 * 60 * 1000);
+    fromDate = new Date(today);
   } else if (v == "week") {
     fromDate = new Date(today - 7 * 24 * 60 * 60 * 1000);
   } else if (v == "month") {
@@ -214,9 +214,7 @@ function player() {
   function reset() {
     if (playerSettingChanged) {
       step = 0;
-      $("#linkDetailDate").empty();
-      $("#linkDetailNumNodes").empty();
-      $("#linkDetailNumLinks").empty();
+      $("#linkDetailDate").html("&nbsp;");
       Graph.nodeColor(n => fadedColor);
       Graph.linkVisibility(link => false);
       fromDate = new Date($("#fromDate").val()).getTime();
@@ -246,9 +244,7 @@ function player() {
   function stop() {
     clearTimeout(task);
     drawMainGraph();
-    $("#linkDetailDate").empty();
-    $("#linkDetailNumNodes").empty();
-    $("#linkDetailNumLinks").empty();
+    $("#linkDetailDate").html("&nbsp;");
     step = 0;
     return true;
   }
@@ -304,10 +300,12 @@ function player() {
         stepNodes.add(link.target.id);
       }
     });
-    const tString = stepLength == 60 * 60 * 1000 ? new Date(to).toGMTString() : new Date(to).toDateString();
-    $("#linkDetailDate").html(tString);
-    $("#linkDetailNumNodes").html(`No. Nodes: ${stepNodes.size}`);
-    $("#linkDetailNumLinks").html(`No. Links: ${stepLinks.size + previousStepsLinks.size}`);
+
+    if (stepLength == 60 * 60 * 1000) {
+      $("#linkDetailDate").html(new Date(to).toJSON().split('.')[0].replace('T', ' '));
+    } else {
+      $("#linkDetailDate").html(new Date(to).toJSON().split('T')[0]);
+    }
     Graph.nodeColor(n => stepNodes.has(n.id) ? resetNodesColor(n) : fadedColor);
     Graph.linkVisibility((link) => (stepLinks.has(link) || previousStepsLinks.has(link) ? true : false));
     Graph.linkWidth((link) => (stepLinks.has(link) ? selectedLinkWidth : linkWidth))
