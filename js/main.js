@@ -554,12 +554,20 @@ function selectNode(node, showDetails) {
 
   const selectedLinks = new Set();
   links.forEach((link) => {
-    if (link.source.id == node.id || link.target.id == node.id) {
+    if (link.source.id == node.id ||
+        link.target.id == node.id ||
+        node.neighbors.has(link.source.id) ||
+        node.neighbors.has(link.target.id)) {
       selectedLinks.add(link);
     }
   });
   Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
 
+  const activeNodes = new Set();
+  node.neighbors.forEach((n) => {
+    activeNodes.add(n);
+    n.neighbors.forEach((neighbor) => activeNodes.add(neighbor));
+  });
   Graph.nodeColor((n) => node.neighbors.has(n.id) || n == node ? resetNodesColor(n) : fadedColor)
     .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6)
     .linkWidth((link) => selectedLinks.has(link) ? selectedLinkWidth : linkWidth)
