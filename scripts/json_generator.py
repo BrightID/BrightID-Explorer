@@ -25,42 +25,35 @@ def get_links(main_component):
     links = []
     users_statistics = {}
     connections = records('connections')
-    connections = {(
-        c['_from'].replace('users/', ''),
-        c['_to'].replace('users/', '')
-    ): c for c in connections}
-    for ft in connections:
-        if ft[0] not in main_component or ft[1] not in main_component:
+    for c in connections:
+        f = c['_from'].replace('users/', '')
+        t = c['_to'].replace('users/', '')
+        if f not in main_component or t not in main_component:
             continue
 
-        if ft[0] not in users_statistics:
-            users_statistics[ft[0]] = {
+        if f not in users_statistics:
+            users_statistics[f] = {
                 'outbound': {k: 0 for k in connection_levels},
                 'inbound': {k: 0 for k in connection_levels},
                 'recoveries': []
             }
-        if ft[1] not in users_statistics:
-            users_statistics[ft[1]] = {
+        if t not in users_statistics:
+            users_statistics[t] = {
                 'outbound': {k: 0 for k in connection_levels},
                 'inbound': {k: 0 for k in connection_levels},
                 'recoveries': []
             }
-        users_statistics[ft[0]]['outbound'][connections[ft]['level']] += 1
-        users_statistics[ft[1]]['inbound'][connections[ft]['level']] += 1
+        users_statistics[f]['outbound'][c['level']] += 1
+        users_statistics[t]['inbound'][c['level']] += 1
 
-        if connections[ft]['level'] == 'recovery':
-            users_statistics[ft[0]]['recoveries'].append(ft[1])
+        if c['level'] == 'recovery':
+            users_statistics[f]['recoveries'].append(t)
 
-        if connections[ft]['level'] in ('just met', 'suspicious'):
-            continue
-        other_side_level = connections.get((ft[1], ft[0]), {}).get('level')
-        if connections[ft]['level'] != 'reported' and other_side_level in (None, 'just met', 'suspicious'):
-            continue
         links.append({
-            'source': ft[0],
-            'target': ft[1],
-            'level': connections[ft]['level'],
-            'timestamp': connections[ft]['timestamp']
+            'source': f,
+            'target': t,
+            'level': c['level'],
+            'timestamp': c['timestamp']
         })
     return links, users_statistics
 

@@ -4,7 +4,8 @@ fadedColor = "rgba(204, 204, 204, 1)";
 selectedNode = undefined;
 autoLoginDone = false;
 nodes = {};
-links = {};
+links = [];
+allLinks = [];
 groups = {};
 regions = {};
 mainGraph = true;
@@ -679,7 +680,21 @@ $(document).ready(function() {
 
   $.get("brightid.json", function(data) {
     // data = JSON.parse(data);
-    links = data.links;
+    allLinks = data.links;
+    const connections = {};
+    data.links.forEach((l) => {
+      connections[`${l.source}_${l.target}`] = l;
+    })
+    Object.values(connections).forEach((l) => {
+      if (['just met', 'suspicious'].includes(l.level)) {
+        return;
+      }
+      const otherSideLevel = connections[`${l.target}_${l.source}`]?.level
+      if (l.level != 'reported' && [undefined, 'just met', 'suspicious'].includes(otherSideLevel)) {
+        return;
+      }
+      links.push(l);
+    })
 
     data.nodes.forEach((node) => {
       if (node.id in fixedPositions) {
