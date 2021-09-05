@@ -144,7 +144,8 @@ function resetLinksColor(link) {
 }
 
 function resetNodesColor(n) {
-  if (n.node_type == "Seed") return "blue";
+  if (n.selected) return "red";
+  else if (n.node_type == "Seed") return "blue";
   else if (n.verifications && "BrightID" in n.verifications) return "green";
   else return "yellow";
 }
