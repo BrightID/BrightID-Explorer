@@ -432,8 +432,8 @@ function selectNode(node, showDetails) {
     (nodes[n].neighbors || []).forEach((neighbor) => activeNodes.add(neighbor));
   });
   Graph.nodeColor((n) => activeNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
-    .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6)
-    .linkWidth((link) => selectedLinks.has(link) ? selectedLinkWidth : linkWidth)
+    // .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6)
+    // .linkWidth((link) => selectedLinks.has(link) ? selectedLinkWidth : linkWidth)
     .linkColor((link) => selectedLinks.has(link) ? resetLinksColor(link) : fadedColor);
 
   if (showDetails) {
