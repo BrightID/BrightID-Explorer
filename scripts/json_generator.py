@@ -101,9 +101,9 @@ def get_seed_groups_data(users):
             seed_group_connections[t] = {}
         if t not in seed_connections:
             seed_connections[t] = {}
-        g = users[f]['seed_groups'][0]
-        if g not in seed_group_connections[t]:
-            seed_group_connections[t][g] = c['timestamp']
+        for g in users[f]['seed_groups']:
+            if g not in seed_group_connections[t]:
+                seed_group_connections[t][g] = c['timestamp']
         if f not in seed_connections[t]:
             seed_connections[t][f] = c['timestamp']
     hourly = {}
