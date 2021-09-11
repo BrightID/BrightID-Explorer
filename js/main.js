@@ -575,11 +575,11 @@ $(document).ready(function() {
       connections[`${l.source}_${l.target}`] = l;
     })
     Object.values(connections).forEach((l) => {
-      if (['just met', 'suspicious'].includes(l.level)) {
+      if (['reported', 'just met', 'suspicious'].includes(l.level)) {
         return;
       }
       const otherSideLevel = connections[`${l.target}_${l.source}`]?.level
-      if (l.level != 'reported' && [undefined, 'just met', 'suspicious'].includes(otherSideLevel)) {
+      if ([undefined, 'just met', 'suspicious', 'reported'].includes(otherSideLevel)) {
         return;
       }
       links.push(l);
