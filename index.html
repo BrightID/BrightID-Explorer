@@ -20,7 +20,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.9.0/localforage.min.js"></script>
   <script src="//unpkg.com/force-graph"></script>
-  <script src="js/main.js?v=1628083557"></script>
+  <script src="js/main.js"></script>
+  <script src="js/usersIllustrator.js"></script>
+  <script src="js/starsIllustrator.js"></script>
 </head>
 
 <body>
@@ -248,20 +250,11 @@
             </div>
           </div>
         </div>
-        <a href="#" onclick="openCollapsible('linkDetail')" class="list-group-item list-group-item-action bg-primary">
+        <a href="#" onclick="openCollapsible('illustrator')" class="list-group-item list-group-item-action bg-primary">
           <i style="font-size:16px" class="fas">&#xf105; </i>
-          Illustrator
+          Users Activity Illustrator
         </a>
-        <div class="hiden menu-item-body" id="linkDetail">
-          <!--<div class="row mt-2">
-            <h6 class="text-white ml-4">Upload Regions File:</h6>
-          </div>
-          <div class="input-group px-2 mb-4">
-            <div class="custom-file">
-              <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
-              <input type="file" class="custom-file-input" id="inputGroupFile01 regionfile">
-            </div>
-          </div> -->
+        <div class="hiden menu-item-body" id="illustrator">
           <div class="row mt-2">
             <h6 class="text-white ml-4">Highlight Connections within:</h6>
           </div>
@@ -292,12 +285,55 @@
           <div class="input-group px-2">
             <input class="form-control mb-2" type="number" id="delay" value="1" min="0" />
           </div>
-          <h6 class="text-white mt-3 ml-2" id="linkDetailDate">&nbsp;</h6>
+          <h6 class="text-white mt-3 ml-2" id="date">&nbsp;</h6>
           <div class="row input-group px-2 justify-content-md-center">
             <a id="previousBtn" class="fa fa-2x player-buttons fa-step-backward"></a>
             <a id="stopBtn" class="fa fa-2x player-buttons fa-stop"></a>
             <a id="playBtn" class="fa fa-2x player-buttons fa-play"></a>
             <a id="nextBtn" class="fa fa-2x player-buttons fa-step-forward"></a>
+          </div>
+        </div>
+        <a href="#" onclick="openCollapsible('starsIllustrator')" class="list-group-item list-group-item-action bg-primary">
+          <i style="font-size:16px" class="fas">&#xf105; </i>
+          Stars Activity Illustrator
+        </a>
+        <div class="hiden menu-item-body" id="starsIllustrator">
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">Highlight connected users within:</h6>
+          </div>
+          <div class="input-group mb-3 px-2">
+            <select class="custom-select" id="dateRangeSI">
+              <option value="none" selected>None</option>
+              <option value="all">All</option>
+              <option value="day">Last Day</option>
+              <option value="week">Last Week</option>
+              <option value="month">Last Month</option>
+            </select>
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">From:</h6>
+          </div>
+          <div class="input-group px-2">
+            <input class="form-control mb-2" type="date" id="fromDateSI" />
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">To:</h6>
+          </div>
+          <div class="input-group px-2">
+            <input class="form-control mb-2" type="date" id="toDateSI" />
+          </div>
+          <div class="row mt-2">
+            <h6 class="text-white ml-4">Delay between steps (seconds):</h6>
+          </div>
+          <div class="input-group px-2">
+            <input class="form-control mb-2" type="number" id="delaySI" value="1" min="0" />
+          </div>
+          <h6 class="text-white mt-3 ml-2" id="dateSI">&nbsp;</h6>
+          <div class="row input-group px-2 justify-content-md-center">
+            <a id="previousBtnSI" class="fa fa-2x player-buttons fa-step-backward"></a>
+            <a id="stopBtnSI" class="fa fa-2x player-buttons fa-stop"></a>
+            <a id="playBtnSI" class="fa fa-2x player-buttons fa-play"></a>
+            <a id="nextBtnSI" class="fa fa-2x player-buttons fa-step-forward"></a>
           </div>
         </div>
       </div>
@@ -306,6 +342,9 @@
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
         <button class="btn btn-primary" id="menu-toggle">
           <i class="fas fa-bars"></i>
+        </button>
+        <button class="ml-3 btn btn-primary" id="reset">
+          Reset
         </button>
         <form class="form-inline ml-3">
           <div id="searchbox">
@@ -342,7 +381,7 @@
       </nav>
       <div style="height: 90vh;" class="container-fluid mx-0 px-0">
         <div style="height: 100%;" id="graphDiv"></div>
-        <div class="my-legend">
+        <div class="my-legend" id="defaultLegend">
           <div class="legend-title">Node colors</div>
           <div class="legend-scale">
             <ul class="legend-labels">
@@ -359,6 +398,12 @@
               <li><span style="background:orange;"></span>Suspicious</li>
               <li><span style="background:red;"></span>Reported</li>
             </ul>
+          </div>
+        </div>
+        <div class="my-legend hiden" id="customizedLegend">
+          <div class="legend-title">Node colors</div>
+          <div class="legend-scale">
+            <ul class="legend-labels" id="customizedLegendUi"></ul>
           </div>
         </div>
       </div>
