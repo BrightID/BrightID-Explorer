@@ -531,6 +531,31 @@ function logPositions() {
   console.log(pos);
 }
 
+function rotate(degree) {
+  let maxX = 0;
+  let minX = 0;
+  let maxY = 0;
+  let minY = 0;
+  Object.values(nodes).forEach(node => {
+    if (maxX < node.x) maxX = node.x;
+    if (minX > node.x) minX = node.x;
+    if (maxY < node.y) maxY = node.y;
+    if (minY < node.y) minY = node.y;
+  });
+  const cX = (maxX - minX) / 2;
+  const cY = (maxY - minY) / 2;
+  const newPoses = []
+  const r = degree * (Math.PI/180);
+  Object.values(nodes).forEach(node => {
+    const newX = (node.x - cX) * Math.cos(r) - (node.y - cY) * Math.sin(r) + cX;
+    const newY = (node.x - cX) * Math.sin(r) + (node.y - cY) * Math.cos(r) + cY;
+    node.x = newX;
+    node.y = newY;
+    newPoses.push(node)
+  });
+  drawGraph({ nodes: Object.values(newPoses), links }, false);
+}
+
 function drawMainGraph() {
   drawGraph({ nodes: Object.values(nodes), links }, false);
   $("#showMainGraph").hide();
