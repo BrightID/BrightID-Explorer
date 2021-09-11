@@ -416,20 +416,22 @@ function selectNode(node, showDetails, focus) {
   }
 
   const selectedLinks = new Set();
+  const lightNeigbors =  Array.from(node.neighbors).filter(
+    n => nodes[n].neighbors.size < 100);
   links.forEach((link) => {
     if (link.source.id == node.id ||
         link.target.id == node.id ||
-        (node.neighbors || new Set()).has(link.source.id) ||
-        (node.neighbors || new Set()).has(link.target.id)) {
+        lightNeigbors.includes(link.source.id) ||
+        lightNeigbors.includes(link.target.id)) {
       selectedLinks.add(link);
     }
   });
   Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
 
   const activeNodes = new Set([node.id]);
-  (node.neighbors || []).forEach((n) => {
+  lightNeigbors.forEach((n) => {
     activeNodes.add(n);
-    (nodes[n].neighbors || []).forEach((neighbor) => activeNodes.add(neighbor));
+    nodes[n].neighbors.forEach((neighbor) => activeNodes.add(neighbor));
   });
   Graph.nodeColor((n) => activeNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
     // .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6)
