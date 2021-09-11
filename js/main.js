@@ -327,7 +327,7 @@ function getGroupName(group) {
   return (groups[group] && groups[group].name) || group;
 }
 
-function selectNode(node, showDetails) {
+function selectNode(node, showDetails, focus) {
   $("#userDitailContent").show();
   $("#seedData").hide();
   $("#userNameContainer").hide();
@@ -439,8 +439,9 @@ function selectNode(node, showDetails) {
   if (showDetails) {
     openCollapsible("userDitail", true);
   }
-
-  move(node.x, node.y, 1.2);
+  if (focus === undefined || focus === true) {
+    move(node.x, node.y, 1.2);
+  }
 }
 
 function updateStatistics() {
@@ -476,7 +477,7 @@ function drawGraph(data, subgraph) {
     .linkTarget("target")
     .onNodeClick((node) => {
       if (!node.selected) {
-        selectNode(node, true);
+        selectNode(node, true, false);
       }
     })
     .linkVisibility((link) => subgraph ? true : false)
