@@ -324,7 +324,7 @@ function selectRegion(name) {
 }
 
 function getGroupName(group) {
-  return (groups[group] && groups[group].name) || group;
+  return groups[group]?.region || groups[group]?.name || group;
 }
 
 function selectNode(node, showDetails, focus) {
