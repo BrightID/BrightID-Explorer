@@ -339,10 +339,9 @@ function selectNode(node, showDetails, focus) {
   });
   selectedNode = node;
   node.selected = true;
-
   $("#brightidText").html(node.id);
   $("#brightidField").val(node.id);
-
+  $("#nodeCreatedAt").html(new Date(node.createdAt).toJSON().split('T')[0]);
   $("#recoveryIn").html(node.statistics["inbound"]["recovery"]);
   $("#recoveryOut").html(node.statistics["outbound"]["recovery"]);
   $("#alreadyKnownIn").html(node.statistics["inbound"]["already known"]);
