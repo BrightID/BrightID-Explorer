@@ -168,6 +168,11 @@ function showMember() {
   selectNode(node, true);
 }
 
+function showSeed() {
+  const node = nodes[$("#ConnectedToSeeds").val()];
+  selectNode(node, true, true);
+}
+
 function copyGroupId() {
   $("#groupIdField").select();
   document.execCommand("copy");
@@ -333,6 +338,7 @@ function selectNode(node, showDetails, focus) {
   $("#userNameContainer").hide();
   $("#userRecoveryContainer").hide();
   $("#userDitailPlaceHolder").hide();
+  $("#ConnectedToSeedsContainer").hide();
 
   Object.values(nodes).forEach(node => {
     node.selected = false
@@ -365,6 +371,14 @@ function selectNode(node, showDetails, focus) {
   }
 
   $("#userImage").attr("src", node?.img?.src || "");
+
+  if (node.seedNeighbors.size > 0) {
+    $("#ConnectedToSeeds").empty().append(new Option("", "none"));
+    node.seedNeighbors.forEach(s => {
+      $("#ConnectedToSeeds").append(new Option(getGroupName(nodes[s]?.name || s), s));
+    })
+    $("#ConnectedToSeedsContainer").show();
+  }
 
   if (node.statistics.recoveries.length > 0) {
     $("#userRecoveries").empty();
@@ -591,6 +605,7 @@ $(document).ready(function() {
       }
 
       node.neighbors = new Set();
+      node.seedNeighbors = new Set();
       node.statistics = data.users_statistics[node.id];
       nodes[node.id] = node;
 
@@ -628,6 +643,12 @@ $(document).ready(function() {
     links.forEach((link) => {
       nodes[link.target].neighbors.add(link.source);
       nodes[link.source].neighbors.add(link.target);
+    });
+
+    allLinks.forEach((link) => {
+      if (nodes[link.source].node_type == "Seed" && ['recovery', 'already known', 'just met'].includes(link.level)) {
+        nodes[link.target].seedNeighbors.add(link.source);
+      }
     });
 
     drawMainGraph();
@@ -679,7 +700,7 @@ $(document).ready(function() {
   $("#login").click(loadInfo);
   $("#showGroup").click(showGroup);
   $("#copyBrightid").click(copyBrightid);
-  $("#showMemeber").click(showMember);
+  $("#showMember").click(showMember);
   $("#showUser").click(showUser);
   $("#copyGroupId").click(copyGroupId);
   $("#searchField").select2({ tags: true });
@@ -705,4 +726,5 @@ $(document).ready(function() {
     stopBtnSI();
     stopBtnUI();
   });
+  $('#showSeed').click(showSeed)
 });

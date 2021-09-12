@@ -89,6 +89,20 @@
               <h6 class="row mt-3 px-4 text-white">Recovery connections:</h6>
               <ul id="userRecoveries"></ul>
             </div>
+            <div class="hiden" id="ConnectedToSeedsContainer">
+              <div class="row mt-2">
+                <h6 class="text-white ml-4 mt-3">Connected to seeds:</h6>
+                <h6 class="text-white mt-3 ml-2" id="ConnectedToSeedsCount"></h6>
+              </div>
+              <div class="input-group mb-3 px-2">
+                <select class="custom-select" id="ConnectedToSeeds" name="ConnectedToSeeds">
+                  <option value="none" selected="">None</option>
+                </select>
+              </div>
+              <div class="row justify-content-md-center mt-2">
+                <button id="showSeed" class="btn btn-primary align-center mb-5">Show Seed</button>
+              </div>
+            </div>
             <div class="row px-4">
               <h6 class="text-white mt-3">Connections: </h6>
             </div>
@@ -195,7 +209,7 @@
               </select>
             </div>
             <div class="row justify-content-md-center mt-2">
-              <button id="showMemeber" class="btn btn-primary align-center mb-5">Show Memeber</button>
+              <button id="showMember" class="btn btn-primary align-center mb-5">Show Memeber</button>
             </div>
             <div id="groupSeedConnectedDiv" class="hiden">
               <div class="row">
