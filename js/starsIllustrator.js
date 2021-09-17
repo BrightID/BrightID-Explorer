@@ -26,8 +26,8 @@ function starsPlayer() {
       fromDate = new Date($("#fromDateSI").val()).getTime();
       toDate = new Date($("#toDateSI").val()).getTime() + 24 * 60 * 60 * 1000;
       allLinks.forEach((link) => {
-        if (nodes[link.source]?.node_type != 'Seed' ||
-          link.level == 'reported' ||
+        if (nodes[link.source]?.node_type != "Seed" ||
+          link.level == "reported" ||
           link.timestamp < fromDate ||
           link.timestamp > toDate
         ) {
@@ -46,7 +46,7 @@ function starsPlayer() {
         const seed = sortedKeys[i];
         Object.keys(allConnected[seed]).forEach(n => {
           const colorId = Math.min(i, 5);
-          colored[n] = { 'color': colors[colorId], 'groupId': i, 'timestamp': allConnected[seed][n] };
+          colored[n] = { "color": colors[colorId], "groupId": i, "timestamp": allConnected[seed][n] };
         })
       }
       step = 0;
@@ -67,11 +67,11 @@ function starsPlayer() {
       <div class="legend-title">Node colors</div>
       <div class="legend-scale">
         <ul class="legend-labels">
-          <li><span style="background:purple;"></span>Connected to ${nodes[sortedKeys[0]]?.name || sortedKeys[0] || '__'}</li>
-          <li><span style="background:blue;"></span>Connected to ${nodes[sortedKeys[1]]?.name || sortedKeys[1] || '__'}</li>
-          <li><span style="background:green;"></span>Connected to ${nodes[sortedKeys[2]]?.name || sortedKeys[2] || '__'}</li>
-          <li><span style="background:red;"></span>Connected to ${nodes[sortedKeys[3]]?.name || sortedKeys[3] || '__'}</li>
-          <li><span style="background:orange;"></span>Connected to ${nodes[sortedKeys[4]]?.name || sortedKeys[4] || '__'}</li>
+          <li><span style="background:purple;"></span>Connected to ${nodes[sortedKeys[0]]?.name || sortedKeys[0] || "__"}</li>
+          <li><span style="background:blue;"></span>Connected to ${nodes[sortedKeys[1]]?.name || sortedKeys[1] || "__"}</li>
+          <li><span style="background:green;"></span>Connected to ${nodes[sortedKeys[2]]?.name || sortedKeys[2] || "__"}</li>
+          <li><span style="background:red;"></span>Connected to ${nodes[sortedKeys[3]]?.name || sortedKeys[3] || "__"}</li>
+          <li><span style="background:orange;"></span>Connected to ${nodes[sortedKeys[4]]?.name || sortedKeys[4] || "__"}</li>
           <li><span style="background:brown;"></span>Connected to other seeds</li>
         </ul>
       </div>
@@ -138,17 +138,17 @@ function starsPlayer() {
     const to = fromDate + (step * stepLength);
     let from = to - stepLength;
     if (stepLength == 60 * 60 * 1000) {
-      $("#dateSI").html(new Date(to).toJSON().split('.')[0].replace('T', ' '));
+      $("#dateSI").html(new Date(to).toJSON().split(".")[0].replace("T", " "));
     } else {
-      $("#dateSI").html(new Date(to).toJSON().split('T')[0]);
+      $("#dateSI").html(new Date(to).toJSON().split("T")[0]);
     }
 
     function setColor(n) {
       if (step + 1 == steps) {
         from = fromDate;
       }
-      if (n.id in colored && from <= colored[n.id]['timestamp'] && colored[n.id]['timestamp'] <= to) {
-        return colored[n.id]['color'];
+      if (n.id in colored && from <= colored[n.id]["timestamp"] && colored[n.id]["timestamp"] <= to) {
+        return colored[n.id]["color"];
       }
       else {
         return fadedColor;
@@ -156,7 +156,7 @@ function starsPlayer() {
     }
 
     function setSize(n) {
-      if (n.id in colored && fromDate <= colored[n.id]['timestamp'] && colored[n.id]['timestamp'] <= to) {
+      if (n.id in colored && fromDate <= colored[n.id]["timestamp"] && colored[n.id]["timestamp"] <= to) {
         return 30;
       } else {
         return 2;

@@ -111,9 +111,9 @@ function player() {
     });
 
     if (stepLength == 60 * 60 * 1000) {
-      $("#date").html(new Date(to).toJSON().split('.')[0].replace('T', ' '));
+      $("#date").html(new Date(to).toJSON().split(".")[0].replace("T", " "));
     } else {
-      $("#date").html(new Date(to).toJSON().split('T')[0]);
+      $("#date").html(new Date(to).toJSON().split("T")[0]);
     }
     Graph.nodeColor(n => stepNodes.has(n.id) ? resetNodesColor(n) : fadedColor);
     Graph.linkVisibility((link) => (stepLinks.has(link) || previousStepsLinks.has(link) ? true : false));

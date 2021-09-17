@@ -168,9 +168,22 @@ function showMember() {
   selectNode(node, true);
 }
 
-function showSeed() {
-  const node = nodes[$("#ConnectedToSeeds").val()];
+function selectNeighbor() {
+  const node = nodes[$("#allNeighbors").val()];
   selectNode(node, true, true);
+}
+
+function showNeighborDetails() {
+  const node = nodes[$("#allNeighbors").val()];
+  const fTime = selectedNode.allNeighbors[node.id].fTime;
+  const tTime = selectedNode.allNeighbors[node.id].tTime;
+  $("#neighbor").html(node.id);
+  $("#outboundLevel").html(selectedNode.allNeighbors[node.id].fLevel || "__");
+  $("#outboundTime").html(fTime ? new Date(fTime).toJSON().split("T")[0] : "__");
+  $("#inboundLevel").html(selectedNode.allNeighbors[node.id].tLevel || "__");
+  $("#inboundTime").html(tTime ? new Date(tTime).toJSON().split("T")[0] : "__");
+  $("#neighborContainer").show();
+  move(node.x, node.y, 1.2);
 }
 
 function copyGroupId() {
@@ -338,7 +351,8 @@ function selectNode(node, showDetails, focus) {
   $("#userNameContainer").hide();
   $("#userRecoveryContainer").hide();
   $("#userDitailPlaceHolder").hide();
-  $("#ConnectedToSeedsContainer").hide();
+  $("#allNeighborsContainer").hide();
+  $("#neighborContainer").hide();
 
   Object.values(nodes).forEach(node => {
     node.selected = false
@@ -347,7 +361,7 @@ function selectNode(node, showDetails, focus) {
   node.selected = true;
   $("#brightidText").html(node.id);
   $("#brightidField").val(node.id);
-  $("#nodeCreatedAt").html(new Date(node.createdAt).toJSON().split('T')[0]);
+  $("#nodeCreatedAt").html(new Date(node.createdAt).toJSON().split("T")[0]);
   $("#recoveryIn").html(node.statistics["inbound"]["recovery"]);
   $("#recoveryOut").html(node.statistics["outbound"]["recovery"]);
   $("#alreadyKnownIn").html(node.statistics["inbound"]["already known"]);
@@ -372,12 +386,18 @@ function selectNode(node, showDetails, focus) {
 
   $("#userImage").attr("src", node?.img?.src || "");
 
-  if (node.seedNeighbors.size > 0) {
-    $("#ConnectedToSeeds").empty().append(new Option("", "none"));
-    node.seedNeighbors.forEach(s => {
-      $("#ConnectedToSeeds").append(new Option(getGroupName(nodes[s]?.name || s), s));
+  const allNeighborsCount = Object.keys(node.allNeighbors).length;
+  if (allNeighborsCount > 0) {
+    $("#allNeighborsCount").html(allNeighborsCount);
+    $("#allNeighbors").empty().append(new Option("", "none"));
+    Object.keys(node.allNeighbors).forEach(n => {
+      let text = `${nodes[n]?.name || n} | ${node.allNeighbors[n]?.fLevel || "__" } | ${node.allNeighbors[n]?.tLevel  || "__"}`
+      if (nodes[n].node_type == "Seed") {
+        text = "* " + text
+      }
+      $("#allNeighbors").append(new Option(text, n));
     })
-    $("#ConnectedToSeedsContainer").show();
+    $("#allNeighborsContainer").show();
   }
 
   if (node.statistics.recoveries.length > 0) {
@@ -429,13 +449,13 @@ function selectNode(node, showDetails, focus) {
   }
 
   const selectedLinks = new Set();
-  const lightNeigbors =  Array.from(node.neighbors).filter(
+  const lightNeigbors = Array.from(node.neighbors).filter(
     n => nodes[n].neighbors.size < 100);
   links.forEach((link) => {
     if (link.source.id == node.id ||
-        link.target.id == node.id ||
-        lightNeigbors.includes(link.source.id) ||
-        lightNeigbors.includes(link.target.id)) {
+      link.target.id == node.id ||
+      lightNeigbors.includes(link.source.id) ||
+      lightNeigbors.includes(link.target.id)) {
       selectedLinks.add(link);
     }
   });
@@ -558,7 +578,7 @@ function rotate(degree) {
   const cX = (maxX - minX) / 2;
   const cY = (maxY - minY) / 2;
   const newPoses = []
-  const r = degree * (Math.PI/180);
+  const r = degree * (Math.PI / 180);
   Object.values(nodes).forEach(node => {
     const newX = (node.x - cX) * Math.cos(r) - (node.y - cY) * Math.sin(r) + cX;
     const newY = (node.x - cX) * Math.sin(r) + (node.y - cY) * Math.cos(r) + cY;
@@ -588,11 +608,11 @@ $(document).ready(function() {
       connections[`${l.source}_${l.target}`] = l;
     })
     Object.values(connections).forEach((l) => {
-      if (['reported', 'just met', 'suspicious'].includes(l.level)) {
+      if (["reported", "just met", "suspicious"].includes(l.level)) {
         return;
       }
-      const otherSideLevel = connections[`${l.target}_${l.source}`]?.level
-      if ([undefined, 'just met', 'suspicious', 'reported'].includes(otherSideLevel)) {
+      const otherSideLevel = connections[`${l.target}_${l.source}`]?.level;
+      if ([undefined, "just met", "suspicious", "reported"].includes(otherSideLevel)) {
         return;
       }
       links.push(l);
@@ -605,7 +625,7 @@ $(document).ready(function() {
       }
 
       node.neighbors = new Set();
-      node.seedNeighbors = new Set();
+      node.allNeighbors = {};
       node.statistics = data.users_statistics[node.id];
       nodes[node.id] = node;
 
@@ -645,10 +665,17 @@ $(document).ready(function() {
       nodes[link.source].neighbors.add(link.target);
     });
 
-    allLinks.forEach((link) => {
-      if (nodes[link.source].node_type == "Seed" && ['recovery', 'already known', 'just met'].includes(link.level)) {
-        nodes[link.target].seedNeighbors.add(link.source);
+    allLinks.forEach(l => {
+      if (!(l.target in nodes[l.source].allNeighbors)) {
+        nodes[l.source].allNeighbors[l.target] = {};
       }
+      nodes[l.source].allNeighbors[l.target]["fLevel"] = l.level;
+      nodes[l.source].allNeighbors[l.target]["fTime"] = l.timestamp;
+      if (!(l.source in nodes[l.target].allNeighbors)) {
+        nodes[l.target].allNeighbors[l.source] = {};
+      }
+      nodes[l.target].allNeighbors[l.source]["tLevel"] = l.level;
+      nodes[l.target].allNeighbors[l.source]["tTime"] = l.timestamp;
     });
 
     drawMainGraph();
@@ -722,9 +749,10 @@ $(document).ready(function() {
   $("#stopBtnSI").click(stopBtnSI);
   $("#previousBtnSI").click(previousBtnSI);
   $("#nextBtnSI").click(nextBtnSI);
-  $("#reset").click( () => {
+  $("#reset").click(() => {
     stopBtnSI();
     stopBtnUI();
   });
-  $('#showSeed').click(showSeed)
+  $("#selectNeighbor").click(selectNeighbor)
+  $("#allNeighbors").change(showNeighborDetails);
 });

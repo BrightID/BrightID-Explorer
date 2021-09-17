@@ -50,7 +50,7 @@
           </div>
           <div id="logoutForm">
             <div class="text-center">
-              <img id="logoutFormImage" class="profile-image"/>
+              <img id="logoutFormImage" class="profile-image" />
             </div>
             <div id="logoutFormUserName" class="text-center text-white mt-2" style="font-size: 25px;"></div>
             <div class="row justify-content-md-center mt-3">
@@ -64,11 +64,11 @@
         </a>
         <div class="hiden menu-item-body" id="userDitail">
           <div class="menu-item-body" id="userDitailPlaceHolder">
-              <h6 class="text-white mt-3">Select a user</h6>
+            <h6 class="text-white mt-3">Select a user</h6>
           </div>
           <div class="menu-item-body hiden" id="userDitailContent">
             <div class="text-center">
-              <img id="userImage" class="user-image"/>
+              <img id="userImage" class="user-image" />
             </div>
             <div class="row mt-2 px-4 hiden" id="userNameContainer">
               <div class="text-white text-center mt-3" style="font-size: 16px;" id="userName"></div>
@@ -76,31 +76,47 @@
             <div class="row px-4">
               <h6 class="text-white mt-3">BrightID:</h6> <br>
               <input style="opacity: 0;" type="text" id="brightidField" value="">
-            </div>
-            <div class="text-white ml-2" style="font-size: 12px;" id="brightidText"></div>
-            <div class="row justify-content-md-center">
-              <button id="copyBrightid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
+              <div class="text-white ml-2" style="font-size: 12px;" id="brightidText"></div>
             </div>
             <div class="row px-4">
               <h6 class="text-white mt-3">Joined At: </h6>
               <div class="text-white mt-3 ml-2" style="font-size: 14px;" id="nodeCreatedAt"></div>
             </div>
+            <!--<div class="row justify-content-md-center">
+              <button id="copyBrightid" class="btn btn-primary align-center my-3">Copy to Clipboard</button>
+            </div> -->
             <div id="userRecoveryContainer" class="hiden">
               <h6 class="row mt-3 px-4 text-white">Recovery connections:</h6>
               <ul id="userRecoveries"></ul>
             </div>
-            <div class="hiden" id="ConnectedToSeedsContainer">
+            <div class="hiden" id="allNeighborsContainer">
               <div class="row mt-2">
-                <h6 class="text-white ml-4 mt-3">Connected to seeds:</h6>
-                <h6 class="text-white mt-3 ml-2" id="ConnectedToSeedsCount"></h6>
+                <h6 class="text-white ml-4 mt-3">Connections:</h6>
+                <h6 class="text-white mt-3 ml-2" id="allNeighborsCount"></h6>
               </div>
               <div class="input-group mb-3 px-2">
-                <select class="custom-select" id="ConnectedToSeeds" name="ConnectedToSeeds">
+                <select class="custom-select" id="allNeighbors" name="allNeighbors">
                   <option value="none" selected="">None</option>
                 </select>
               </div>
+              <div class="hiden" id="neighborContainer">
+                <div class="row px-4">
+                  <h6 class="text-white mt-3">Outbound Connection: </h6>
+                </div>
+                <div class="row px-4">
+                  <div class="text-white mt-1 ml-2 mr-2" style="font-size: 14px;" id="outboundLevel"></div>
+                  <div class="text-white mt-1 ml-2" style="font-size: 14px;" id="outboundTime"></div>
+                </div>
+                <div class="row px-4">
+                  <h6 class="text-white mt-3">Inbound Connection: </h6>
+                </div>
+                <div class="row px-4">
+                  <div class="text-white mt-1 ml-2" style="font-size: 14px;" id="inboundLevel"></div>
+                  <div class="text-white mt-1 ml-2" style="font-size: 14px;" id="inboundTime"></div>
+                </div>
+              </div>
               <div class="row justify-content-md-center mt-2">
-                <button id="showSeed" class="btn btn-primary align-center mb-5">Show Seed</button>
+                <button id="selectNeighbor" class="btn btn-primary align-center mb-5">Show Neighbor</button>
               </div>
             </div>
             <div class="row px-4">
@@ -175,14 +191,14 @@
         </a>
         <div class="hiden menu-item-body" id="groupDitail">
           <div class="menu-item-body" id="groupDitailPlaceHolder">
-              <h6 class="text-white mt-3">Select a group</h6>
+            <h6 class="text-white mt-3">Select a group</h6>
           </div>
           <div class="hiden menu-item-body" id="groupDitailContent">
             <div class="row justify-content-md-center">
               <button id="showMainGraph" class="btn btn-primary align-center my-3 hiden">Main Graph</button>
             </div>
             <div class="text-center">
-              <img id="groupImg" class="group-image"/>
+              <img id="groupImg" class="group-image" />
             </div>
             <div class="row px-4 hiden" id="groupNameContainer">
               <h6 class="text-white mt-3">Name: </h6>
