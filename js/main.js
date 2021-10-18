@@ -1,18 +1,22 @@
-selectedLinkWidth = 1.0;
-linkWidth = 0.3;
-fadedColor = "rgba(204, 204, 204, 1)";
-selectedNode = undefined;
-autoLoginDone = false;
-nodes = {};
-links = [];
-allLinks = [];
-groups = {};
-regions = {};
-mainGraph = true;
-playerSettingChanged = false;
-playerState = "stopped";
-playerSettingChangedSI = false;
-PlayerStateSI = "stopped";
+var selectedLinkWidth = 1.0;
+var linkWidth = 0.3;
+var fadedColor = "rgba(204, 204, 204, 1)";
+var selectedNode = undefined;
+var autoLoginDone = false;
+var groups = {};
+var regions = {};
+var mainGraph = true;
+var playerSettingChanged = false;
+var playerState = "stopped";
+var playerSettingChangedSI = false;
+var PlayerStateSI = "stopped";
+var mode3D = false;
+var allNodes = {};
+var allLinks = {};
+var graphNodes = {};
+var graphLinks = [];
+var Graph;
+var positions = {'status': '', '2d': {}, '3d': {}};
 
 function b64ToUrlSafeB64(s) {
   const alts = { "/": "_", "+": "-", "=": "" };
@@ -29,16 +33,16 @@ async function loadUsers(user, key1, password) {
   $("#logoutFormUserName").text(user.name || "");
 
   // set the user's name and image
-  Object.assign(nodes[user.id], { name: user.name, img: new Image() });
+  Object.assign(allNodes[user.id], { name: user.name, img: new Image() });
   let imgData = await localforage.getItem(`explorer_img_${user.id}`);
   if (imgData) {
-    nodes[user.id].img.src = imgData;
+    allNodes[user.id].img.src = imgData;
     $("#logoutFormImage").attr("src", imgData);
   } else {
     $.get(`/storage/${key1}/${user.id}`, (data) => {
       imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
       localforage.setItem(`explorer_img_${user.id}`, imgData);
-      nodes[user.id].img.src = imgData;
+      allNodes[user.id].img.src = imgData;
       $("#logoutFormImage").attr("src", imgData);
     });
   }
@@ -46,19 +50,19 @@ async function loadUsers(user, key1, password) {
   // set the connections' name and image
   for (const conn of user.connections || []) {
     // skip conn.id === user.id to solve bugs related to users connected to themselves!
-    if (!nodes[conn.id] || conn.id === user.id) {
+    if (!allNodes[conn.id] || conn.id === user.id) {
       continue;
     }
     $("#searchFieldConnections").append(new Option(conn.name, conn.id));
-    Object.assign(nodes[conn.id], { name: conn.name, img: new Image() });
+    Object.assign(allNodes[conn.id], { name: conn.name, img: new Image() });
     let imgData = await localforage.getItem(`explorer_img_${conn.id}`);
     if (imgData) {
-      nodes[conn.id].img.src = imgData;
+      allNodes[conn.id].img.src = imgData;
     } else {
       $.get(`/storage/${key1}/${conn.id}`, (data) => {
         imgData = CryptoJS.AES.decrypt(data, password).toString(CryptoJS.enc.Utf8);
         localforage.setItem(`explorer_img_${conn.id}`, imgData);
-        nodes[conn.id].img.src = imgData;
+        allNodes[conn.id].img.src = imgData;
       });
     }
   }
@@ -135,12 +139,13 @@ async function loadInfo() {
   });
   await loadGroups(user, key1, password);
   await loadUsers(user, key1, password);
-  selectNode(nodes[user.id], true);
+  selectNode(allNodes[user.id], true);
 }
 
 function resetLinksColor(link) {
   if (link.level == "recovery") return "blue";
   else if (link.level == "already known") return "green";
+  else if (link.level == "just met") return "yellow";
   else if (link.level == "suspicious") return "orange";
   else if (link.level == "reported") return "red";
   else return "black";
@@ -159,28 +164,28 @@ function copyBrightid() {
 }
 
 function showUser() {
-  const node = nodes[$("#seedConnected").val()];
+  const node = allNodes[$("#seedConnected").val()];
   selectNode(node, true);
 }
 
 function showMember() {
-  const node = nodes[$("#members").val()];
+  const node = allNodes[$("#members").val()];
   selectNode(node, true);
 }
 
 function selectNeighbor() {
-  const node = nodes[$("#allNeighbors").val()];
+  const node = allNodes[$("#neighbors").val()];
   selectNode(node, true, true);
 }
 
 function showNeighborDetails() {
-  const node = nodes[$("#allNeighbors").val()];
-  const fTime = selectedNode.allNeighbors[node.id].fTime;
-  const tTime = selectedNode.allNeighbors[node.id].tTime;
+  const node = allNodes[$("#neighbors").val()];
+  const fTime = selectedNode.neighbors[node.id].fTime;
+  const tTime = selectedNode.neighbors[node.id].tTime;
   $("#neighbor").html(node.id);
-  $("#outboundLevel").html(selectedNode.allNeighbors[node.id].fLevel || "__");
+  $("#outboundLevel").html(selectedNode.neighbors[node.id].fLevel || "__");
   $("#outboundTime").html(fTime ? new Date(fTime).toJSON().split("T")[0] : "__");
-  $("#inboundLevel").html(selectedNode.allNeighbors[node.id].tLevel || "__");
+  $("#inboundLevel").html(selectedNode.neighbors[node.id].tLevel || "__");
   $("#inboundTime").html(tTime ? new Date(tTime).toJSON().split("T")[0] : "__");
   $("#neighborContainer").show();
   move(node.x, node.y, 1.2);
@@ -196,17 +201,26 @@ function showGroup() {
 }
 
 function move(x, y, z) {
-  Graph.centerAt(x + 200, y);
-  Graph.zoom(z, 2000);
+  if (mode3D) {
+    const distance = 40;
+    const distRatio = 1 + distance / Math.hypot(x, y, z);
+
+    Graph.cameraPosition({ x: x * distRatio, y: y * distRatio, z: z * distRatio }, { x, y, z }, // lookAt ({ x, y, z })
+      3000 // ms transition duration
+    );
+
+  } else {
+    Graph.centerAt(x + 200, y);
+    Graph.zoom(z, 2000);
+  }
 }
 
 function selectGroup(id, showDetails) {
   $("#groupQuotaContainer").hide();
   $("#groupNameContainer").hide();
   $("#groupSeedConnectedDiv").hide();
-  $("#showMainGraph").hide();
-  $("#groupDitailPlaceHolder").hide();
-  $("#groupDitailContent").show();
+  $("#groupDetailsPlaceHolder").hide();
+  $("#groupDetailsContent").show();
 
   $("#groupIdText").html(id);
   $("#groupIdField").val(id);
@@ -238,19 +252,19 @@ function selectGroup(id, showDetails) {
   $("#groupMembersCount").html(group.members.length);
   $("#members").empty().append(new Option("", "none"));
   for (const member of group.members) {
-    $("#members").append(new Option(nodes[member].name || member, member));
-    subgraphNodes[member] = nodes[member];
+    $("#members").append(new Option(allNodes[member].name || member, member));
+    subgraphNodes[member] = allNodes[member];
   }
 
   if (group.seedConnected.length > 0) {
     $("#seedConectedCount").html(group.seedConnected.length);
     $("#seedConnected").empty().append(new Option("", "none"));
     for (const u of group.seedConnected) {
-      $("#seedConnected").append(new Option(nodes[u].name || u, u));
-      subgraphNodes[u] = nodes[u];
+      $("#seedConnected").append(new Option(allNodes[u].name || u, u));
+      subgraphNodes[u] = allNodes[u];
     }
     $("#groupSeedConnectedDiv").show();
-    links.forEach((link) => {
+    Object.values(allLinks).forEach((link) => {
       if (link.source.id in subgraphNodes && link.target.id in subgraphNodes) {
         subgraphLinks.push(link);
       }
@@ -259,26 +273,33 @@ function selectGroup(id, showDetails) {
 
   if (group.seed) {
     mainGraph = false;
-    $("#showMainGraph").show();
     Graph.nodeColor(n => group.members.includes(n.id) || group.seedConnected.includes(n.id) ? resetNodesColor(n) : fadedColor);
     $("#groupQuota").html(group.quota);
     $("#groupQuotaContainer").show();
     for (const u of Object.keys(subgraphNodes)) {
+      // delete subgraphNodes[u].x;
+      // delete subgraphNodes[u].y;
+      // delete subgraphNodes[u].z;
       delete subgraphNodes[u].fx;
       delete subgraphNodes[u].fy;
+      delete subgraphNodes[u].fz;
     }
-    drawGraph({ nodes: Object.values(subgraphNodes), links: subgraphLinks }, true);
+    if ($("#3dBtn").is(":checked")) {
+      draw3dGraph({ nodes: Object.values(subgraphNodes), links: subgraphLinks }, true);
+    } else {
+      drawGraph({ nodes: Object.values(subgraphNodes), links: subgraphLinks }, true);
+    }
   }
 
   if (showDetails) {
-    openCollapsible("groupDitail", true);
+    openCollapsible("groupDetails", true);
   }
 
   let sumX = 0;
   let sumY = 0;
   for (const member of group.members) {
-    sumX += nodes[member].x;
-    sumY += nodes[member].y;
+    sumX += allNodes[member].x;
+    sumY += allNodes[member].y;
   }
   const n = group.members.length;
   move(sumX / n, sumY / n, .2);
@@ -288,17 +309,17 @@ function selectVerification(verification) {
   const verifieds = {};
   if (verification.startsWith("Rank ")) {
     const rank = parseInt(verification.replace("Rank ", "").replace("+", ""));
-    for (const id in nodes) {
+    for (const id in allNodes) {
       if (
-        "Yekta" in nodes[id].verifications &&
-        nodes[id].verifications.Yekta.rank >= rank
+        "Yekta" in allNodes[id].verifications &&
+        allNodes[id].verifications.Yekta.rank >= rank
       ) {
         verifieds[id] = true;
       }
     }
   } else {
-    for (const id in nodes) {
-      if (verification in nodes[id].verifications) {
+    for (const id in allNodes) {
+      if (verification in allNodes[id].verifications) {
         verifieds[id] = true;
       }
     }
@@ -309,7 +330,7 @@ function selectVerification(verification) {
 
 function selectRegion(name) {
   if (name == "Complete Graph") {
-    const centerNode = nodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"];
+    const centerNode = allNodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"];
     Graph.nodeColor(resetNodesColor);
     Graph.linkColor(resetLinksColor);
     return move(centerNode.x, centerNode.y, 0.7);
@@ -322,7 +343,7 @@ function selectRegion(name) {
     let count = 0;
     const members = [];
     for (const id of regions[name]) {
-      if (nodes[id]) {
+      if (allNodes[id]) {
         members.push(id);
       } else if (groups[id]) {
         for (const member of groups[id].members) {
@@ -331,8 +352,8 @@ function selectRegion(name) {
       }
     }
     for (const id of members) {
-      sumX += nodes[id].x;
-      sumY += nodes[id].y;
+      sumX += allNodes[id].x;
+      sumY += allNodes[id].y;
     }
     Graph.nodeColor(n => members.includes(n.id) ? resetNodesColor(n) : fadedColor);
     Graph.linkColor(fadedColor);
@@ -345,20 +366,56 @@ function getGroupName(group) {
   return groups[group]?.region || groups[group]?.name || group;
 }
 
+function getConnText(neighbor, conn) {
+  let connTime, fLevel, tLevel;
+  if (conn.fTime && conn.tTime) {
+    if (Math.abs(conn.fTime - conn.tTime) > 24 * 60 * 60 * 1000) {
+      connTime = `${new Date(conn.fTime).toJSON().split("T")[0]} | ${new Date(conn.tTime).toJSON().split("T")[0]}`
+    } else {
+      connTime = new Date(conn.fTime).toJSON().split("T")[0];
+    }
+  } else {
+      connTime = new Date(conn.fTime || conn.tTime).toJSON().split("T")[0];
+  }
+  if (conn.fLevel) {
+    if (conn.fLevel == 'reported') {
+      fLevel = 'reported';
+    } else {
+      fLevel = conn.fLevel[0].toUpperCase();
+    }
+  } else {
+    fLevel = '_'
+  }
+  if (conn.tLevel) {
+    if (conn.tLevel == 'reported') {
+      tLevel = 'reported';
+    } else {
+      tLevel = conn.tLevel[0].toUpperCase();
+    }
+  } else {
+    tLevel = '_'
+  }
+  let text = `${allNodes[neighbor]?.name || neighbor} | ${fLevel} | ${tLevel} | ${connTime}`
+  if (allNodes[neighbor].node_type == "Seed") {
+    text = `* ${text}`;
+  }
+  return text;
+}
+
 function selectNode(node, showDetails, focus) {
-  $("#userDitailContent").show();
+  $("#userDetailsContent").show();
   $("#seedData").hide();
   $("#userNameContainer").hide();
   $("#userRecoveryContainer").hide();
-  $("#userDitailPlaceHolder").hide();
-  $("#allNeighborsContainer").hide();
+  $("#userDetailsPlaceHolder").hide();
+  $("#neighborsContainer").hide();
   $("#neighborContainer").hide();
 
-  Object.values(nodes).forEach(node => {
-    node.selected = false
-  });
-  selectedNode = node;
+  if (selectedNode) {
+    selectedNode.selected = false;
+  }
   node.selected = true;
+  selectedNode = node;
   $("#brightidText").html(node.id);
   $("#brightidField").val(node.id);
   $("#nodeCreatedAt").html(new Date(node.createdAt).toJSON().split("T")[0]);
@@ -385,29 +442,25 @@ function selectNode(node, showDetails, focus) {
   }
 
   $("#userImage").attr("src", node?.img?.src || "");
-
-  const allNeighborsCount = Object.keys(node.allNeighbors).length;
-  if (allNeighborsCount > 0) {
-    $("#allNeighborsCount").html(allNeighborsCount);
-    $("#allNeighbors").empty().append(new Option("", "none"));
-    Object.keys(node.allNeighbors).forEach(n => {
-      let text = `${nodes[n]?.name || n} | ${node.allNeighbors[n]?.fLevel || "__" } | ${node.allNeighbors[n]?.tLevel  || "__"}`
-      if (nodes[n].node_type == "Seed") {
-        text = "* " + text
-      }
-      $("#allNeighbors").append(new Option(text, n));
+  const neighborsCount = Object.keys(node.neighbors).length;
+  if (neighborsCount > 0) {
+    $("#neighborsCount").html(neighborsCount);
+    $("#neighbors").empty().append(new Option("", "none"));
+    Object.keys(node.neighbors).forEach(n => {
+      const connText = getConnText(n, node.neighbors[n]);
+      $("#neighbors").append(new Option(connText, n));
     })
-    $("#allNeighborsContainer").show();
+    $("#neighborsContainer").show();
   }
 
-  if (node.statistics.recoveries.length > 0) {
-    $("#userRecoveries").empty();
-    node.statistics.recoveries.forEach((tid) => {
-      const text = nodes[tid]?.name || tid;
-      $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
-    });
-    $("#userRecoveryContainer").show();
-  }
+  // if (node.statistics.recoveries.length > 0) {
+  //   $("#userRecoveries").empty();
+  //   node.statistics.recoveries.forEach((tid) => {
+  //     const text = allNodes[tid]?.name || tid;
+  //     $('<li class="text-white" style="font-size: 12px;">').text(text).appendTo("#userRecoveries");
+  //   });
+  //   $("#userRecoveryContainer").show();
+  // }
 
   let verificationsString = "";
   for (const name in node.verifications) {
@@ -444,36 +497,45 @@ function selectNode(node, showDetails, focus) {
   $("#verifications").html(verificationsString);
 
   $("#groups").empty().append(new Option("", "none"));
+  $('#groupsCount').html(node.groups.length);
   for (const group of node.groups) {
     $("#groups").append(new Option(getGroupName(group), group));
   }
 
-  const selectedLinks = new Set();
-  const lightNeigbors = Array.from(node.neighbors).filter(
-    n => nodes[n].neighbors.size < 100);
-  links.forEach((link) => {
-    if (link.source.id == node.id ||
-      link.target.id == node.id ||
-      lightNeigbors.includes(link.source.id) ||
-      lightNeigbors.includes(link.target.id)) {
-      selectedLinks.add(link);
+  const highlightNodes = new Set([node.id]);
+  Object.keys(node.neighbors).forEach(n1 => {
+    if (!selectedLevels.includes(node.neighbors[n1].fLevel) || !selectedLevels.includes(node.neighbors[n1].tLevel)) {
+      return;
+    }
+    highlightNodes.add(n1);
+    // const neighborsOfNeighbor = Object.keys(allNodes[n1].neighbors);
+    // if (neighborsOfNeighbor.length < 100) {
+    //   neighborsOfNeighbor.forEach(n2 => {
+    //     if (!selectedLevels.includes(allNodes[n1].neighbors[n2].fLevel) || !selectedLevels.includes(allNodes[n1].neighbors[n2].tLevel)) {
+    //       return;
+    //     }
+    //     highlightNodes.add(n2)
+    //   });
+    // }
+  });
+  const highlightLinks = new Set();
+  Object.values(graphLinks).forEach(l => {
+    if (l.source.id != node.id && l.target.id != node.id) {
+      return;
+    }
+    if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
+      highlightLinks.add(l);
     }
   });
-  Graph.linkVisibility((link) => (selectedLinks.has(link) ? true : false));
-
-  const activeNodes = new Set([node.id]);
-  lightNeigbors.forEach((n) => {
-    activeNodes.add(n);
-    nodes[n].neighbors.forEach((neighbor) => activeNodes.add(neighbor));
-  });
-  Graph.nodeColor((n) => activeNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
-    // .linkDirectionalArrowLength((link) => selectedLinks.has(link) ? 16 : 6)
-    // .linkWidth((link) => selectedLinks.has(link) ? selectedLinkWidth : linkWidth)
-    .linkColor((link) => selectedLinks.has(link) ? resetLinksColor(link) : fadedColor);
+  Graph.linkVisibility(l => (highlightLinks.has(l) ? true : false));
+  Graph.nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
+    .linkDirectionalArrowLength(l => highlightLinks.has(l) ? 6 : 2)
+    .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor);
 
   if (showDetails) {
-    openCollapsible("userDitail", true);
+    openCollapsible("userDetails", true);
   }
+
   if (focus === undefined || focus === true) {
     move(node.x, node.y, 1.2);
   }
@@ -481,33 +543,80 @@ function selectNode(node, showDetails, focus) {
 
 function updateStatistics() {
   let numVerifieds = numSeeds = numNeighbors = 0;
-  Object.keys(nodes).forEach((id) => {
-    const node = nodes[id];
+  Object.keys(graphNodes).forEach((id) => {
+    const node = allNodes[id];
     if (node.verifications && "BrightID" in node.verifications) {
       numVerifieds++;
-      numNeighbors += node.neighbors.size;
+      numNeighbors += Object.keys(node.neighbors).length;
     }
     if (node.node_type == "Seed") {
       numSeeds++;
     }
   });
-  $("#numNodes").html(Object.keys(nodes).length);
+  $("#numNodes").html(Object.keys(graphNodes).length);
   $("#numVerifieds").html(numVerifieds);
   $("#numSeeds").html(numSeeds);
   $("#averageConnection").html(Math.ceil(numNeighbors / numVerifieds));
 }
 
+function setPosition(graphType) {
+  const predefinedPosition = $("#predefinedPosition").is(":checked");
+  if (!predefinedPosition) {
+    if (positions['status'] != 'noPosition') {
+      for (let n of Object.values(graphNodes)) {
+        delete n.x;
+        delete n.y;
+        delete n.z;
+        delete n.fx;
+        delete n.fy;
+        delete n.fz;
+      }
+      positions['status'] = 'noPosition';
+    }
+  } else if (graphType == '2d') {
+    if (positions['status'] != '2d') {
+      for (let n of Object.values(graphNodes)) {
+        if (n.id in positions['2d']) {
+          n.fx = positions['2d'][n.id].x;
+          n.fy = positions['2d'][n.id].y;
+        }
+      }
+      positions['status'] = '2d';
+    }
+  } else if (graphType == '3d') {
+    if (positions['status'] != '3d') {
+      for (let n of Object.values(graphNodes)) {
+        if (n.id in positions['3d']) {
+          n.fx = positions['3d'][n.id].x;
+          n.fy = positions['3d'][n.id].y;
+          n.fz = positions['3d'][n.id].z;
+        }
+      }
+      positions['status'] = '3d';
+    }
+  }
+}
+
 function drawGraph(data, subgraph) {
+  setPosition('2d');
+  const cooldownTime = $("#cooldownTime").val() * 1000;
+  for (let l of data.links) {
+    if (!l.__indexColor) {
+      l.__indexColor = resetLinksColor(l);
+    }
+  }
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem)
-    .graphData(data)
+    .cooldownTime(cooldownTime)
+    .enableNodeDrag(false)
     .linkColor(resetLinksColor)
+    .nodeColor(resetNodesColor)
+    .graphData(data)
     .nodeId("id")
     .nodeVal("size")
     .nodeLabel("id")
     .linkWidth(linkWidth)
-    .nodeColor(resetNodesColor)
     .linkSource("source")
     .linkTarget("target")
     .onNodeClick((node) => {
@@ -530,7 +639,7 @@ function drawGraph(data, subgraph) {
     .nodeCanvasObjectMode(() => "after")
     .linkDirectionalArrowLength(6)
     .nodeCanvasObject((n, ctx) => {
-      let size = 30;
+      const size = 30;
       if (n.img) {
         ctx.lineWidth = 5;
         ctx.save();
@@ -554,13 +663,69 @@ function drawGraph(data, subgraph) {
     });
 }
 
-function logPositions() {
+function draw3dGraph(data, subgraph) {
+  setPosition('3d');
+  const cooldownTime = $("#cooldownTime").val() * 1000;
+  $("#graphDiv").empty();
+  const elem = document.getElementById("graphDiv");
+  Graph = ForceGraph3D()(elem)
+    .cooldownTime(cooldownTime)
+    .enableNodeDrag(false)
+    .linkColor(resetLinksColor)
+    .nodeColor(resetNodesColor)
+    .graphData(data)
+    .nodeOpacity(1)
+    .nodeLabel(n => n.id)
+    .nodeId("id")
+    .nodeVal("size")
+    .linkWidth(linkWidth)
+    .linkSource("source")
+    .linkTarget("target")
+    .onNodeClick((node) => {
+      if (!node.selected) {
+        selectNode(node, true, false);
+      }
+    })
+    .linkVisibility((link) => subgraph ? true : false)
+    .onBackgroundClick(() => {
+      if (!selectedNode) {
+        return;
+      }
+      selectedNode.selected = false;
+      selectedNode = undefined;
+      Graph.linkWidth(linkWidth)
+        .nodeColor(resetNodesColor)
+        .linkColor(resetLinksColor)
+        .linkDirectionalArrowLength(6);
+    })
+    .linkDirectionalArrowLength(6)
+}
+
+function logPositions2d() {
   const pos = {};
-  Object.values(nodes).forEach(node => {
-    if (Date.now() - 30 * 24 * 60 * 60 * 1000 > node.createdAt) {
+  Object.values(graphNodes).forEach(node => {
+    if (!('x' in node) || !('y' in node)) {
+      return;
+    }
+    if (Date.now() - 10 * 24 * 60 * 60 * 1000 > node.createdAt) {
       pos[node.id] = { x: node.x, y: node.y };
     }
   });
+  console.log(`nodes: ${Object.keys(pos).length}`);
+  console.log(pos);
+}
+
+function logPositions3d() {
+  const pos = {};
+  Object.values(graphNodes).forEach(node => {
+    if (!('x' in node) || !('y' in node) || !('z' in node)) {
+      return;
+    }
+    if (Date.now() - 10 * 24 * 60 * 60 * 1000 > node.createdAt) {
+      pos[node.id] = { x: node.x, y: node.y, z: node.z };
+    }
+  });
+  console.log(`nodes: ${Object.keys(pos).length}`);
   console.log(pos);
 }
 
@@ -569,7 +734,7 @@ function rotate(degree) {
   let minX = 0;
   let maxY = 0;
   let minY = 0;
-  Object.values(nodes).forEach(node => {
+  Object.values(graphNodes).forEach(node => {
     if (maxX < node.x) maxX = node.x;
     if (minX > node.x) minX = node.x;
     if (maxY < node.y) maxY = node.y;
@@ -577,77 +742,70 @@ function rotate(degree) {
   });
   const cX = (maxX - minX) / 2;
   const cY = (maxY - minY) / 2;
-  const newPoses = []
   const r = degree * (Math.PI / 180);
-  Object.values(nodes).forEach(node => {
+  Object.values(graphNodes).forEach(node => {
     const newX = (node.x - cX) * Math.cos(r) - (node.y - cY) * Math.sin(r) + cX;
     const newY = (node.x - cX) * Math.sin(r) + (node.y - cY) * Math.cos(r) + cY;
-    node.x = newX;
-    node.y = newY;
-    newPoses.push(node)
+    node.fx = newX;
+    node.fy = newY;
   });
-  drawGraph({ nodes: Object.values(newPoses), links }, false);
+  drawGraph({ nodes: Object.values(graphNodes), links: Object.values(graphLinks) }, false);
 }
 
 function drawMainGraph() {
-  drawGraph({ nodes: Object.values(nodes), links }, false);
-  $("#showMainGraph").hide();
+  drawGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
+}
+
+function drawMain3dGraph() {
+  draw3dGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
+}
+
+function updateGraphData(index) {
+  graphNodes = {};
+  graphLinks = [];
+  const connectionLevels = ["suspicious", "just met", "already known", "recovery"];
+  selectedLevels = connectionLevels.slice(index, 4);
+
+  Object.values(allLinks).forEach(l => {
+    if (!(selectedLevels.includes(l.level))) {
+      return;
+    }
+
+    const s = l.source?.id || l.source;
+    const t = l.target?.id || l.target
+    const otherSideLevel = allLinks[`${t}${s}`]?.level;
+    if (!(selectedLevels.includes(otherSideLevel))) {
+      return;
+    }
+
+    graphLinks.push(l);
+    if (!(s in graphNodes)) {
+      graphNodes[s] = allNodes[s];
+    }
+    if (!(t in graphNodes)) {
+      graphNodes[t] = allNodes[t];
+    }
+  });
+  updateStatistics();
 }
 
 $(document).ready(function() {
-  let fixedPositions = {};
-  $.get("positions.json", function(data) {
-    fixedPositions = data;
+  $.get("positions2d.json", function(data) {
+    positions['2d'] = data;
+  });
+
+  $.get("positions3d.json", function(data) {
+    positions['3d'] = data;
   });
 
   $.get("brightid.json", function(data) {
     // data = JSON.parse(data);
-    allLinks = data.links;
-    const connections = {};
-    data.links.forEach((l) => {
-      connections[`${l.source}_${l.target}`] = l;
-    })
-    Object.values(connections).forEach((l) => {
-      if (["reported", "just met", "suspicious"].includes(l.level)) {
-        return;
-      }
-      const otherSideLevel = connections[`${l.target}_${l.source}`]?.level;
-      if ([undefined, "just met", "suspicious", "reported"].includes(otherSideLevel)) {
-        return;
-      }
-      links.push(l);
-    })
-
-    data.nodes.forEach((node) => {
-      if (node.id in fixedPositions) {
-        node.fx = fixedPositions[node.id].x;
-        node.fy = fixedPositions[node.id].y;
-      }
-
-      node.neighbors = new Set();
-      node.allNeighbors = {};
-      node.statistics = data.users_statistics[node.id];
-      nodes[node.id] = node;
-
-      node.groups.forEach((group) => {
-        if (!(group in groups)) {
-          groups[group] = { members: [], seedConnected: [] };
-        }
-        groups[group].members.push(node.id);
-      });
-
-      if (node.verifications.SeedConnected) {
-        for (const sg of node.verifications.SeedConnected.connected) {
-          if (!(sg in groups)) {
-            groups[sg] = { members: [], seedConnected: [] };
-          }
-          groups[sg].seedConnected.push(node.id);
-        }
-      }
+    data.links.forEach(l => {
+      allLinks[`${l.source}${l.target}`] = {...l, '__indexColor': '#000000'};
     });
 
-    data.groups.forEach((group) => {
-      groups[group.id] = Object.assign(groups[group.id] || {}, group);
+    data.groups.forEach(group => {
+      groups[group.id] = {...group, members: [], seedConnected: [] };
       const region = group.region;
       if (region) {
         if (!(region in regions)) {
@@ -660,26 +818,34 @@ $(document).ready(function() {
       }
     });
 
-    links.forEach((link) => {
-      nodes[link.target].neighbors.add(link.source);
-      nodes[link.source].neighbors.add(link.target);
+    data.nodes.forEach(node => {
+      node.neighbors = {};
+      node.statistics = data.users_statistics[node.id];
+      allNodes[node.id] = node;
+
+      node.groups.forEach(group => groups[group].members.push(node.id));
+      if (node.verifications.SeedConnected) {
+        for (const sg of node.verifications.SeedConnected.connected) {
+          groups[sg].seedConnected.push(node.id);
+        }
+      }
     });
 
-    allLinks.forEach(l => {
-      if (!(l.target in nodes[l.source].allNeighbors)) {
-        nodes[l.source].allNeighbors[l.target] = {};
+    Object.values(allLinks).forEach(l => {
+      if (!(l.target in allNodes[l.source].neighbors)) {
+        allNodes[l.source].neighbors[l.target] = {};
       }
-      nodes[l.source].allNeighbors[l.target]["fLevel"] = l.level;
-      nodes[l.source].allNeighbors[l.target]["fTime"] = l.timestamp;
-      if (!(l.source in nodes[l.target].allNeighbors)) {
-        nodes[l.target].allNeighbors[l.source] = {};
+      allNodes[l.source].neighbors[l.target]["fLevel"] = l.level;
+      allNodes[l.source].neighbors[l.target]["fTime"] = l.timestamp;
+      if (!(l.source in allNodes[l.target].neighbors)) {
+        allNodes[l.target].neighbors[l.source] = {};
       }
-      nodes[l.target].allNeighbors[l.source]["tLevel"] = l.level;
-      nodes[l.target].allNeighbors[l.source]["tTime"] = l.timestamp;
+      allNodes[l.target].neighbors[l.source]["tLevel"] = l.level;
+      allNodes[l.target].neighbors[l.source]["tTime"] = l.timestamp;
     });
 
+    updateGraphData(2);
     drawMainGraph();
-    updateStatistics();
   });
 
   $("#searchField").change(function() {
@@ -693,8 +859,8 @@ $(document).ready(function() {
       id.startsWith("Rank ")
     ) {
       selectVerification(id);
-    } else if (nodes[id]) {
-      selectNode(nodes[id], true);
+    } else if (allNodes[id]) {
+      selectNode(allNodes[id], true);
     } else if (groups[id]) {
       selectGroup(id, true);
     } else if (regions[id] || id == "Complete Graph") {
@@ -711,12 +877,12 @@ $(document).ready(function() {
 
   $("#members").change(function() {
     const id = $(this).val();
-    selectNode(nodes[id], false);
+    selectNode(allNodes[id], false);
   });
 
   $("#seedConnected").change(function() {
     const id = $(this).val();
-    selectNode(nodes[id], false);
+    selectNode(allNodes[id], false);
   });
 
   $("#logoutBtn").click(() => {
@@ -731,7 +897,6 @@ $(document).ready(function() {
   $("#showUser").click(showUser);
   $("#copyGroupId").click(copyGroupId);
   $("#searchField").select2({ tags: true });
-  $("#showMainGraph").click(drawMainGraph);
   $("#dateRange").change(setDateRange);
   $("#fromDate").change(() => playerSettingChanged = true);
   $("#toDate").change(() => playerSettingChanged = true);
@@ -749,10 +914,39 @@ $(document).ready(function() {
   $("#stopBtnSI").click(stopBtnSI);
   $("#previousBtnSI").click(previousBtnSI);
   $("#nextBtnSI").click(nextBtnSI);
-  $("#reset").click(() => {
+  $("#resetBtn").click(() => {
+    $('#3dBtn').prop('checked', false);
+    $("#levelsRange").val(2);
+    $("#connectionLevel").html("Already Known");
+    updateGraphData(2);
     stopBtnSI();
     stopBtnUI();
   });
   $("#selectNeighbor").click(selectNeighbor)
-  $("#allNeighbors").change(showNeighborDetails);
+  $("#neighbors").change(showNeighborDetails);
+  $("#3dBtn").click(() => {
+    if ($("#3dBtn").is(":checked")) {
+      mode3D = true;
+      drawMain3dGraph();
+    } else {
+      mode3D = false;
+      drawMainGraph();
+    }
+
+  })
+  $("#levelsRange").change(() => {
+    const levelIndex = $("#levelsRange").val();
+    const connectionLevels = ["Suspicious", "Just Met", "Already Known", "Recovery"];
+    $("#connectionLevel").html(connectionLevels[levelIndex]);
+  });
+
+  $("#drawGustomGraph").click(() => {
+    const levelIndex = $("#levelsRange").val();
+    updateGraphData(levelIndex);
+    if ($("#3dBtn").is(":checked")) {
+      draw3dGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
+    } else {
+      drawGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
+    }
+  });
 });

@@ -1,5 +1,5 @@
 var sPlayer = new starsPlayer();
-colors = ["purple", "blue", "green", "red", "orange", "brown"]
+var colors = ["purple", "blue", "green", "red", "orange", "brown"]
 
 function starsPlayer() {
   let task;
@@ -25,18 +25,18 @@ function starsPlayer() {
     if (playerSettingChangedSI) {
       fromDate = new Date($("#fromDateSI").val()).getTime();
       toDate = new Date($("#toDateSI").val()).getTime() + 24 * 60 * 60 * 1000;
-      allLinks.forEach((link) => {
-        if (nodes[link.source]?.node_type != "Seed" ||
-          link.level == "reported" ||
-          link.timestamp < fromDate ||
-          link.timestamp > toDate
+      graphLinks.forEach((l) => {
+        if (l.source?.node_type != "Seed" ||
+          l.level == "reported" ||
+          l.timestamp < fromDate ||
+          l.timestamp > toDate
         ) {
           return;
         }
-        if (!(link.source in allConnected)) {
-          allConnected[link.source] = {};
+        if (!(l.source.id in allConnected)) {
+          allConnected[l.source.id] = {};
         }
-        allConnected[link.source][link.target] = link.timestamp;
+        allConnected[l.source.id][l.target.id] = l.timestamp;
       });
       sortedKeys = Object.keys(allConnected);
       sortedKeys.sort(function(a, b) {
@@ -67,11 +67,11 @@ function starsPlayer() {
       <div class="legend-title">Node colors</div>
       <div class="legend-scale">
         <ul class="legend-labels">
-          <li><span style="background:purple;"></span>Connected to ${nodes[sortedKeys[0]]?.name || sortedKeys[0] || "__"}</li>
-          <li><span style="background:blue;"></span>Connected to ${nodes[sortedKeys[1]]?.name || sortedKeys[1] || "__"}</li>
-          <li><span style="background:green;"></span>Connected to ${nodes[sortedKeys[2]]?.name || sortedKeys[2] || "__"}</li>
-          <li><span style="background:red;"></span>Connected to ${nodes[sortedKeys[3]]?.name || sortedKeys[3] || "__"}</li>
-          <li><span style="background:orange;"></span>Connected to ${nodes[sortedKeys[4]]?.name || sortedKeys[4] || "__"}</li>
+          <li><span style="background:purple;"></span>Connected to ${graphNodes[sortedKeys[0]]?.name || sortedKeys[0] || "__"}</li>
+          <li><span style="background:blue;"></span>Connected to ${graphNodes[sortedKeys[1]]?.name || sortedKeys[1] || "__"}</li>
+          <li><span style="background:green;"></span>Connected to ${graphNodes[sortedKeys[2]]?.name || sortedKeys[2] || "__"}</li>
+          <li><span style="background:red;"></span>Connected to ${graphNodes[sortedKeys[3]]?.name || sortedKeys[3] || "__"}</li>
+          <li><span style="background:orange;"></span>Connected to ${graphNodes[sortedKeys[4]]?.name || sortedKeys[4] || "__"}</li>
           <li><span style="background:brown;"></span>Connected to other seeds</li>
         </ul>
       </div>

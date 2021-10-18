@@ -98,7 +98,7 @@ function player() {
       from = fromDate;
       to = toDate;
     }
-    links.forEach((link) => {
+    graphLinks.forEach((link) => {
       if (fromDate <= link.timestamp && link.timestamp < from) {
         previousStepsLinks.add(link);
         stepNodes.add(link.source.id);
