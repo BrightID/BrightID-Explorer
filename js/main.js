@@ -49,9 +49,10 @@ $(document).keyup(function(e) {
   for (const id in allNodes) {
     if (inside([allNodes[id].x, allNodes[id].y], areaPoints)) {
       nodes.push(id);
+      allNodes[id].selected = true;
     }
   }
-  alert(nodes.join('\n'));
+  console.log(nodes);
   areaPoints = [];
 });
 
@@ -191,7 +192,7 @@ function resetLinksColor(link) {
 }
 
 function resetNodesColor(n) {
-  if (n.selected) return "red";
+  if (n.selected) { console.log(n); return "red"; }
   else if (n.node_type == "Seed") return "blue";
   else if (n.verifications && "BrightID" in n.verifications) return "green";
   else return "yellow";
@@ -450,8 +451,8 @@ function selectNode(node, showDetails, focus) {
   $("#neighborsContainer").hide();
   $("#neighborContainer").hide();
 
-  if (selectedNode) {
-    selectedNode.selected = false;
+  for (const id in graphNodes) {
+    graphNodes[id].selected = false;
   }
   node.selected = true;
   selectedNode = node;
@@ -660,7 +661,7 @@ function drawGraph(data, subgraph) {
     .linkTarget("target")
     .onNodeClick((node) => {
       console.log(node);
-      if (!node.selected) {
+      if (node.id != selectNode) {
         selectNode(node, true, false);
       }
     })
@@ -674,10 +675,9 @@ function drawGraph(data, subgraph) {
         return;
       }
 
-      if (!selectedNode) {
-        return;
+      for (const id in graphNodes) {
+        graphNodes[id].selected = false;
       }
-      selectedNode.selected = false;
       selectedNode = undefined;
       Graph.linkWidth(linkWidth)
         .nodeColor(resetNodesColor)
@@ -736,10 +736,9 @@ function draw3dGraph(data, subgraph) {
     })
     .linkVisibility((link) => subgraph ? true : false)
     .onBackgroundClick(() => {
-      if (!selectedNode) {
-        return;
+      for (const id in graphNodes) {
+        graphNodes[id].selected = false;
       }
-      selectedNode.selected = false;
       selectedNode = undefined;
       Graph.linkWidth(linkWidth)
         .nodeColor(resetNodesColor)
