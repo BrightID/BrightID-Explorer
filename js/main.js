@@ -29,6 +29,45 @@ function hash(data) {
   return b64ToUrlSafeB64(b);
 }
 
+function drawCoordinates(x, y, size) {
+    var canvas = document.getElementsByTagName('canvas')[0];
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ff2626"; // Red color
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2, true);
+    ctx.fill();
+}
+
+var areaPoints = [];
+$(document).keyup(function(e) {
+  if (e.keyCode != 17){
+    return;
+  };
+  // clear area points from canvas
+  Graph.zoom(Graph.zoom());
+  const nodes = [];
+  for (const id in allNodes) {
+    if (inside([allNodes[id].x, allNodes[id].y], areaPoints)) {
+      nodes.push(id);
+    }
+  }
+  alert(nodes.join('\n'));
+  areaPoints = [];
+});
+
+function inside(point, vs) {
+  var x = point[0], y = point[1];
+  var inside = false;
+  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    var xi = vs[i][0], yi = vs[i][1];
+    var xj = vs[j][0], yj = vs[j][1];
+    var intersect = ((yi > y) != (yj > y))
+      && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+};
+
 async function loadUsers(user, key1, password) {
   $("#logoutFormUserName").text(user.name || "");
 
@@ -620,12 +659,21 @@ function drawGraph(data, subgraph) {
     .linkSource("source")
     .linkTarget("target")
     .onNodeClick((node) => {
+      console.log(node);
       if (!node.selected) {
         selectNode(node, true, false);
       }
     })
     .linkVisibility((link) => subgraph ? true : false)
-    .onBackgroundClick(() => {
+    .onBackgroundClick((evt) => {
+      if (evt.ctrlKey) {
+        const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
+        var rect = document.getElementById('graphDiv').getBoundingClientRect();
+        drawCoordinates(p.x, p.y, 5 / (Graph.zoom()**.5));
+        areaPoints.push([p.x, p.y]);
+        return;
+      }
+
       if (!selectedNode) {
         return;
       }
