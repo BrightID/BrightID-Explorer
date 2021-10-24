@@ -48,11 +48,11 @@ $(document).keyup(function(e) {
   const nodes = [];
   for (const id in allNodes) {
     if (inside([allNodes[id].x, allNodes[id].y], areaPoints)) {
-      nodes.push(id);
+      nodes.push(allNodes[id]);
       allNodes[id].selected = true;
     }
   }
-  console.log(nodes);
+  selectNodes(nodes);
   areaPoints = [];
 });
 
@@ -440,6 +440,35 @@ function getConnText(neighbor, conn) {
     text = `* ${text}`;
   }
   return text;
+}
+
+function selectNodes(nodes) {
+  const allHighlightedNodes = new Set([]);
+  const allHighlightLinks = new Set();
+  nodes.forEach(node => {
+    highlightNodes = new Set([node.id]);
+    Object.keys(node.neighbors).forEach(n1 => {
+      if (!selectedLevels.includes(node.neighbors[n1].fLevel) || !selectedLevels.includes(node.neighbors[n1].tLevel)) {
+        return;
+      }
+      highlightNodes.add(n1);
+    });
+    const highlightLinks = new Set();
+    Object.values(graphLinks).forEach(l => {
+      if (l.source.id != node.id && l.target.id != node.id) {
+        return;
+      }
+      if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
+        highlightLinks.add(l);
+      }
+    });
+    highlightNodes.forEach(n => allHighlightedNodes.add(n));
+    highlightLinks.forEach(l => allHighlightLinks.add(l));
+  });
+  Graph.linkVisibility(l => (allHighlightLinks.has(l) ? true : false));
+  Graph.nodeColor(n => allHighlightedNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
+    .linkDirectionalArrowLength(l => allHighlightLinks.has(l) ? 6 : 2)
+    .linkColor(l => allHighlightLinks.has(l) ? resetLinksColor(l) : fadedColor);
 }
 
 function selectNode(node, showDetails, focus) {
