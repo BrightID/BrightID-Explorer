@@ -192,7 +192,7 @@ function resetLinksColor(link) {
 }
 
 function resetNodesColor(n) {
-  if (n.selected) { console.log(n); return "red"; }
+  if (n.selected) return "red";
   else if (n.node_type == "Seed") return "blue";
   else if (n.verifications && "BrightID" in n.verifications) return "green";
   else return "yellow";
@@ -443,8 +443,18 @@ function getConnText(neighbor, conn) {
 }
 
 function selectNodes(nodes) {
+  $("#userDetailsContent").show();
+  $("#seedData").hide();
+  $("#userNameContainer").hide();
+  $("#userRecoveryContainer").hide();
+  $("#userDetailsPlaceHolder").hide();
+  $("#neighborsContainer").hide();
+  $("#neighborContainer").hide();
+  openCollapsible("userDetails", true);
+
   const allHighlightedNodes = new Set([]);
   const allHighlightLinks = new Set();
+  $("#brightidText").html(nodes.map(n => n.id).join('<br/>'));
   nodes.forEach(node => {
     highlightNodes = new Set([node.id]);
     Object.keys(node.neighbors).forEach(n1 => {
