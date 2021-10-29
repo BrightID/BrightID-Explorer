@@ -15,6 +15,7 @@ function player() {
   this.next = next;
   this.previous = previous;
   this.reset = reset;
+  this.subgraph = subgraph;
 
   function reset() {
     if (playerSettingChanged) {
@@ -22,17 +23,39 @@ function player() {
       $("#date").html("&nbsp;");
       Graph.nodeColor(n => fadedColor);
       Graph.linkVisibility(link => false);
-      fromDate = new Date($("#fromDate").val()).getTime();
-      toDate = new Date($("#toDate").val()).getTime() + 24 * 60 * 60 * 1000;
+      const fd = $("#fromDate").val()
+      const td = $("#toDate").val()
+      fromDate = new Date(fd).getTime() - (new Date(fd).getTimezoneOffset() * 60000);
+      toDate = new Date(td).getTime() - (new Date(td).getTimezoneOffset() * 60000);
       delay = $("#delay").val() * 1000;
-      if (toDate - fromDate == 24 * 60 * 60 * 1000) {
+      if (toDate - fromDate >= 24 * 60 * 60 * 1000) {
+        stepLength = 24 * 60 * 60 * 1000;
+      } else if (toDate - fromDate >= 60 * 60 * 1000) {
         stepLength = 60 * 60 * 1000;
       } else {
-        stepLength = 24 * 60 * 60 * 1000;
+        stepLength = 60 * 1000;
       }
       steps = Math.floor((toDate - fromDate) / stepLength);
       playerSettingChanged = false;
     }
+  }
+
+  function subgraph() {
+    console.log('subgraph')
+    reset();
+    const subgraphLinks = [];
+    const subgraphNodes = {};
+    graphLinks.forEach((link) => {
+      if (fromDate <= link.timestamp && link.timestamp <= toDate) {
+        subgraphLinks.push(link);
+        subgraphNodes[link.source.id] = link.source;
+        subgraphNodes[link.target.id] = link.target;
+      }
+    });
+    console.log('subgraphLinks', subgraphLinks)
+    console.log('subgraphNodes', subgraphNodes)
+
+    drawSubgraph(Object.values(subgraphNodes), subgraphLinks);
   }
 
   function start() {
@@ -48,7 +71,7 @@ function player() {
 
   function stop() {
     clearTimeout(task);
-    drawMainGraph();
+    drawGraph();
     $("#date").html("&nbsp;");
     step = 0;
     return true;
@@ -110,7 +133,7 @@ function player() {
       }
     });
 
-    if (stepLength == 60 * 60 * 1000) {
+    if (stepLength < 24 * 60 * 60 * 1000) {
       $("#date").html(new Date(to).toJSON().split(".")[0].replace("T", " "));
     } else {
       $("#date").html(new Date(to).toJSON().split("T")[0]);
@@ -182,4 +205,8 @@ function nextBtnUI() {
   }
   playerState = "paused";
   gPlayer.next();
+}
+
+function subgraphBtnUI() {
+  gPlayer.subgraph();
 }

@@ -1,5 +1,6 @@
-var selectedLinkWidth = 1.0;
+var selectedLinkWidth = 0.4;
 var linkWidth = 0.3;
+var arrowLength = 4;
 var fadedColor = "rgba(204, 204, 204, 1)";
 var selectedNode = undefined;
 var autoLoginDone = false;
@@ -16,7 +17,7 @@ var allLinks = {};
 var graphNodes = {};
 var graphLinks = [];
 var Graph;
-var positions = {'status': '', '2d': {}, '3d': {}};
+var positions = { 'status': '', '2d': {}, '3d': {} };
 
 function b64ToUrlSafeB64(s) {
   const alts = { "/": "_", "+": "-", "=": "" };
@@ -30,17 +31,17 @@ function hash(data) {
 }
 
 function drawCoordinates(x, y, size) {
-    var canvas = document.getElementsByTagName('canvas')[0];
-    var ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#ff2626"; // Red color
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2, true);
-    ctx.fill();
+  var canvas = document.getElementsByTagName('canvas')[0];
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ff2626"; // Red color
+  ctx.beginPath();
+  ctx.arc(x, y, size, 0, Math.PI * 2, true);
+  ctx.fill();
 }
 
 var areaPoints = [];
-$(document).keyup(function(e) {
-  if (e.keyCode != 17){
+$(document).keyup(function (e) {
+  if (e.keyCode != 17) {
     return;
   };
   // clear area points from canvas
@@ -188,6 +189,7 @@ function resetLinksColor(link) {
   else if (link.level == "just met") return "yellow";
   else if (link.level == "suspicious") return "orange";
   else if (link.level == "reported") return "red";
+  else if (link.level == "filtered") return "gray";
   else return "black";
 }
 
@@ -224,9 +226,9 @@ function showNeighborDetails() {
   const tTime = selectedNode.neighbors[node.id].tTime;
   $("#neighbor").html(node.id);
   $("#outboundLevel").html(selectedNode.neighbors[node.id].fLevel || "__");
-  $("#outboundTime").html(fTime ? new Date(fTime).toJSON().split("T")[0] : "__");
+  $("#outboundTime").html(fTime ? new Date(fTime).toJSON().split(".")[0].replace("T", " ") : "__");
   $("#inboundLevel").html(selectedNode.neighbors[node.id].tLevel || "__");
-  $("#inboundTime").html(tTime ? new Date(tTime).toJSON().split("T")[0] : "__");
+  $("#inboundTime").html(tTime ? new Date(tTime).toJSON().split(".")[0].replace("T", " ") : "__");
   $("#neighborContainer").show();
   move(node.x, node.y, 1.2);
 }
@@ -267,7 +269,7 @@ function selectGroup(id, showDetails) {
 
   const group = groups[id];
   if (!mainGraph && !group.seed) {
-    drawMainGraph();
+    drawGraph();
     mainGraph = true;
   }
 
@@ -313,22 +315,9 @@ function selectGroup(id, showDetails) {
 
   if (group.seed) {
     mainGraph = false;
-    Graph.nodeColor(n => group.members.includes(n.id) || group.seedConnected.includes(n.id) ? resetNodesColor(n) : fadedColor);
     $("#groupQuota").html(group.quota);
     $("#groupQuotaContainer").show();
-    for (const u of Object.keys(subgraphNodes)) {
-      // delete subgraphNodes[u].x;
-      // delete subgraphNodes[u].y;
-      // delete subgraphNodes[u].z;
-      delete subgraphNodes[u].fx;
-      delete subgraphNodes[u].fy;
-      delete subgraphNodes[u].fz;
-    }
-    if ($("#3dBtn").is(":checked")) {
-      draw3dGraph({ nodes: Object.values(subgraphNodes), links: subgraphLinks }, true);
-    } else {
-      drawGraph({ nodes: Object.values(subgraphNodes), links: subgraphLinks }, true);
-    }
+    drawSubgraph(subgraphNodes, subgraphLinks);
   }
 
   if (showDetails) {
@@ -409,13 +398,13 @@ function getGroupName(group) {
 function getConnText(neighbor, conn) {
   let connTime, fLevel, tLevel;
   if (conn.fTime && conn.tTime) {
-    if (Math.abs(conn.fTime - conn.tTime) > 24 * 60 * 60 * 1000) {
-      connTime = `${new Date(conn.fTime).toJSON().split("T")[0]} | ${new Date(conn.tTime).toJSON().split("T")[0]}`
+    if (Math.abs(conn.fTime - conn.tTime) > 15 * 60 * 1000) {
+      connTime = `${new Date(conn.fTime).toJSON().split(".")[0].replace("T", " ")} | ${new Date(conn.tTime).toJSON().split(".")[0].replace("T", " ")}`
     } else {
-      connTime = new Date(conn.fTime).toJSON().split("T")[0];
+      connTime = new Date(conn.fTime).toJSON().split(".")[0].replace("T", " ");
     }
   } else {
-      connTime = new Date(conn.fTime || conn.tTime).toJSON().split("T")[0];
+    connTime = new Date(conn.fTime || conn.tTime).toJSON().split(".")[0].replace("T", " ");
   }
   if (conn.fLevel) {
     if (conn.fLevel == 'reported') {
@@ -464,7 +453,7 @@ function selectNodes(nodes) {
       highlightNodes.add(n1);
     });
     const highlightLinks = new Set();
-    Object.values(graphLinks).forEach(l => {
+    graphLinks.forEach(l => {
       if (l.source.id != node.id && l.target.id != node.id) {
         return;
       }
@@ -490,8 +479,8 @@ function selectNode(node, showDetails, focus) {
   $("#neighborsContainer").hide();
   $("#neighborContainer").hide();
 
-  for (const id in graphNodes) {
-    graphNodes[id].selected = false;
+  if (selectedNode) {
+    selectedNode.selected = false;
   }
   node.selected = true;
   selectedNode = node;
@@ -508,6 +497,8 @@ function selectNode(node, showDetails, focus) {
   $("#suspiciousOut").html(node.statistics["outbound"]["suspicious"]);
   $("#reportedIn").html(node.statistics["inbound"]["reported"]);
   $("#reportedOut").html(node.statistics["outbound"]["reported"]);
+  $("#filteredIn").html(node.statistics["inbound"]["filtered"]);
+  $("#filteredOut").html(node.statistics["outbound"]["filtered"]);
 
   if (node.node_type == "Seed") {
     $("#quotaValue").html(node.quota);
@@ -582,9 +573,16 @@ function selectNode(node, showDetails, focus) {
   }
 
   const highlightNodes = new Set([node.id]);
+
   Object.keys(node.neighbors).forEach(n1 => {
-    if (!selectedLevels.includes(node.neighbors[n1].fLevel) || !selectedLevels.includes(node.neighbors[n1].tLevel)) {
-      return;
+    if (!selectedLevels.includes("just met")) {
+      if (!selectedLevels.includes(node.neighbors[n1].fLevel) || !selectedLevels.includes(node.neighbors[n1].tLevel)) {
+        return;
+      }
+    } else {
+      if (!selectedLevels.includes(node.neighbors[n1].fLevel) && !selectedLevels.includes(node.neighbors[n1].tLevel)) {
+        return;
+      }
     }
     highlightNodes.add(n1);
     // const neighborsOfNeighbor = Object.keys(allNodes[n1].neighbors);
@@ -597,8 +595,9 @@ function selectNode(node, showDetails, focus) {
     //   });
     // }
   });
+
   const highlightLinks = new Set();
-  Object.values(graphLinks).forEach(l => {
+  graphLinks.forEach(l => {
     if (l.source.id != node.id && l.target.id != node.id) {
       return;
     }
@@ -607,8 +606,10 @@ function selectNode(node, showDetails, focus) {
     }
   });
   Graph.linkVisibility(l => (highlightLinks.has(l) ? true : false));
+  Graph.linkColor(n => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
+
   Graph.nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
-    .linkDirectionalArrowLength(l => highlightLinks.has(l) ? 6 : 2)
+    .linkDirectionalArrowLength(l => highlightLinks.has(l) ? arrowLength : 1)
     .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor);
 
   if (showDetails) {
@@ -638,260 +639,23 @@ function updateStatistics() {
   $("#averageConnection").html(Math.ceil(numNeighbors / numVerifieds));
 }
 
-function setPosition(graphType) {
-  const predefinedPosition = $("#predefinedPosition").is(":checked");
-  if (!predefinedPosition) {
-    if (positions['status'] != 'noPosition') {
-      for (let n of Object.values(graphNodes)) {
-        delete n.x;
-        delete n.y;
-        delete n.z;
-        delete n.fx;
-        delete n.fy;
-        delete n.fz;
-      }
-      positions['status'] = 'noPosition';
-    }
-  } else if (graphType == '2d') {
-    if (positions['status'] != '2d') {
-      for (let n of Object.values(graphNodes)) {
-        if (n.id in positions['2d']) {
-          n.fx = positions['2d'][n.id].x;
-          n.fy = positions['2d'][n.id].y;
-        }
-      }
-      positions['status'] = '2d';
-    }
-  } else if (graphType == '3d') {
-    if (positions['status'] != '3d') {
-      for (let n of Object.values(graphNodes)) {
-        if (n.id in positions['3d']) {
-          n.fx = positions['3d'][n.id].x;
-          n.fy = positions['3d'][n.id].y;
-          n.fz = positions['3d'][n.id].z;
-        }
-      }
-      positions['status'] = '3d';
-    }
-  }
-}
-
-function drawGraph(data, subgraph) {
-  setPosition('2d');
-  const cooldownTime = $("#cooldownTime").val() * 1000;
-  for (let l of data.links) {
-    if (!l.__indexColor) {
-      l.__indexColor = resetLinksColor(l);
-    }
-  }
-  $("#graphDiv").empty();
-  const elem = document.getElementById("graphDiv");
-  Graph = ForceGraph()(elem)
-    .cooldownTime(cooldownTime)
-    .enableNodeDrag(false)
-    .linkColor(resetLinksColor)
-    .nodeColor(resetNodesColor)
-    .graphData(data)
-    .nodeId("id")
-    .nodeVal("size")
-    .nodeLabel("id")
-    .linkWidth(linkWidth)
-    .linkSource("source")
-    .linkTarget("target")
-    .onNodeClick((node) => {
-      console.log(node);
-      if (node.id != selectNode) {
-        selectNode(node, true, false);
-      }
-    })
-    .linkVisibility((link) => subgraph ? true : false)
-    .onBackgroundClick((evt) => {
-      if (evt.ctrlKey) {
-        const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
-        var rect = document.getElementById('graphDiv').getBoundingClientRect();
-        drawCoordinates(p.x, p.y, 5 / (Graph.zoom()**.5));
-        areaPoints.push([p.x, p.y]);
-        return;
-      }
-
-      for (const id in graphNodes) {
-        graphNodes[id].selected = false;
-      }
-      selectedNode = undefined;
-      Graph.linkWidth(linkWidth)
-        .nodeColor(resetNodesColor)
-        .linkColor(resetLinksColor)
-        .linkDirectionalArrowLength(6);
-    })
-    .nodeCanvasObjectMode(() => "after")
-    .linkDirectionalArrowLength(6)
-    .nodeCanvasObject((n, ctx) => {
-      const size = 30;
-      if (n.img) {
-        ctx.lineWidth = 5;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, true);
-        ctx.clip();
-        ctx.strokeStyle = resetNodesColor(n);
-        try {
-          ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
-        } catch (err) {
-          console.log("Error in drawImage: ", err)
-        }
-        ctx.stroke();
-        ctx.restore();
-      }
-    })
-    .onEngineStop(async () => {
-      if ((await localforage.getItem("explorer_backup_data")) && !autoLoginDone) {
-        loadInfo();
-      }
-    });
-}
-
-function draw3dGraph(data, subgraph) {
-  setPosition('3d');
-  const cooldownTime = $("#cooldownTime").val() * 1000;
-  $("#graphDiv").empty();
-  const elem = document.getElementById("graphDiv");
-  Graph = ForceGraph3D()(elem)
-    .cooldownTime(cooldownTime)
-    .enableNodeDrag(false)
-    .linkColor(resetLinksColor)
-    .nodeColor(resetNodesColor)
-    .graphData(data)
-    .nodeOpacity(1)
-    .nodeLabel(n => n.id)
-    .nodeId("id")
-    .nodeVal("size")
-    .linkWidth(linkWidth)
-    .linkSource("source")
-    .linkTarget("target")
-    .onNodeClick((node) => {
-      if (!node.selected) {
-        selectNode(node, true, false);
-      }
-    })
-    .linkVisibility((link) => subgraph ? true : false)
-    .onBackgroundClick(() => {
-      for (const id in graphNodes) {
-        graphNodes[id].selected = false;
-      }
-      selectedNode = undefined;
-      Graph.linkWidth(linkWidth)
-        .nodeColor(resetNodesColor)
-        .linkColor(resetLinksColor)
-        .linkDirectionalArrowLength(6);
-    })
-    .linkDirectionalArrowLength(6)
-}
-
-function logPositions2d() {
-  const pos = {};
-  Object.values(graphNodes).forEach(node => {
-    if (!('x' in node) || !('y' in node)) {
-      return;
-    }
-    if (Date.now() - 10 * 24 * 60 * 60 * 1000 > node.createdAt) {
-      pos[node.id] = { x: node.x, y: node.y };
-    }
-  });
-  console.log(`nodes: ${Object.keys(pos).length}`);
-  console.log(pos);
-}
-
-function logPositions3d() {
-  const pos = {};
-  Object.values(graphNodes).forEach(node => {
-    if (!('x' in node) || !('y' in node) || !('z' in node)) {
-      return;
-    }
-    if (Date.now() - 10 * 24 * 60 * 60 * 1000 > node.createdAt) {
-      pos[node.id] = { x: node.x, y: node.y, z: node.z };
-    }
-  });
-  console.log(`nodes: ${Object.keys(pos).length}`);
-  console.log(pos);
-}
-
-function rotate(degree) {
-  let maxX = 0;
-  let minX = 0;
-  let maxY = 0;
-  let minY = 0;
-  Object.values(graphNodes).forEach(node => {
-    if (maxX < node.x) maxX = node.x;
-    if (minX > node.x) minX = node.x;
-    if (maxY < node.y) maxY = node.y;
-    if (minY < node.y) minY = node.y;
-  });
-  const cX = (maxX - minX) / 2;
-  const cY = (maxY - minY) / 2;
-  const r = degree * (Math.PI / 180);
-  Object.values(graphNodes).forEach(node => {
-    const newX = (node.x - cX) * Math.cos(r) - (node.y - cY) * Math.sin(r) + cX;
-    const newY = (node.x - cX) * Math.sin(r) + (node.y - cY) * Math.cos(r) + cY;
-    node.fx = newX;
-    node.fy = newY;
-  });
-  drawGraph({ nodes: Object.values(graphNodes), links: Object.values(graphLinks) }, false);
-}
-
-function drawMainGraph() {
-  drawGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
-}
-
-function drawMain3dGraph() {
-  draw3dGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
-}
-
-function updateGraphData(index) {
-  graphNodes = {};
-  graphLinks = [];
-  const connectionLevels = ["suspicious", "just met", "already known", "recovery"];
-  selectedLevels = connectionLevels.slice(index, 4);
-
-  Object.values(allLinks).forEach(l => {
-    if (!(selectedLevels.includes(l.level))) {
-      return;
-    }
-
-    const s = l.source?.id || l.source;
-    const t = l.target?.id || l.target
-    const otherSideLevel = allLinks[`${t}${s}`]?.level;
-    if (!(selectedLevels.includes(otherSideLevel))) {
-      return;
-    }
-
-    graphLinks.push(l);
-    if (!(s in graphNodes)) {
-      graphNodes[s] = allNodes[s];
-    }
-    if (!(t in graphNodes)) {
-      graphNodes[t] = allNodes[t];
-    }
-  });
-  updateStatistics();
-}
-
-$(document).ready(function() {
-  $.get("positions2d.json", function(data) {
+$(document).ready(function () {
+  $.get("positions2d.json", function (data) {
     positions['2d'] = data;
   });
 
-  $.get("positions3d.json", function(data) {
+  $.get("positions3d.json", function (data) {
     positions['3d'] = data;
   });
 
-  $.get("brightid.json", function(data) {
+  $.get("brightid.json", function (data) {
     // data = JSON.parse(data);
     data.links.forEach(l => {
-      allLinks[`${l.source}${l.target}`] = {...l, '__indexColor': '#000000'};
+      allLinks[`${l.source}${l.target}`] = { ...l, '__indexColor': '#000000' };
     });
 
     data.groups.forEach(group => {
-      groups[group.id] = {...group, members: [], seedConnected: [] };
+      groups[group.id] = { ...group, members: [], seedConnected: [] };
       const region = group.region;
       if (region) {
         if (!(region in regions)) {
@@ -929,12 +693,12 @@ $(document).ready(function() {
       allNodes[l.target].neighbors[l.source]["tLevel"] = l.level;
       allNodes[l.target].neighbors[l.source]["tTime"] = l.timestamp;
     });
+    const levelIndex = $("#levelsRange").val();
 
-    updateGraphData(2);
-    drawMainGraph();
+    drawGraph();
   });
 
-  $("#searchField").change(function() {
+  $("#searchField").change(function () {
     const val = $("#searchField").val();
     if (!val) {
       return;
@@ -956,17 +720,17 @@ $(document).ready(function() {
     }
   });
 
-  $("#groups").change(function() {
+  $("#groups").change(function () {
     const id = $(this).val();
     selectGroup(id, false);
   });
 
-  $("#members").change(function() {
+  $("#members").change(function () {
     const id = $(this).val();
     selectNode(allNodes[id], false);
   });
 
-  $("#seedConnected").change(function() {
+  $("#seedConnected").change(function () {
     const id = $(this).val();
     selectNode(allNodes[id], false);
   });
@@ -991,7 +755,7 @@ $(document).ready(function() {
   $("#stopBtn").click(stopBtnUI);
   $("#previousBtn").click(previousBtnUI);
   $("#nextBtn").click(nextBtnUI);
-
+  $("#drawSubgraphBtn").click(subgraphBtnUI);
   $("#dateRangeSI").change(setDateRangeSI);
   $("#fromDateSI").change(() => playerSettingChangedSI = true);
   $("#toDateSI").change(() => playerSettingChangedSI = true);
@@ -1002,37 +766,18 @@ $(document).ready(function() {
   $("#nextBtnSI").click(nextBtnSI);
   $("#resetBtn").click(() => {
     $('#3dBtn').prop('checked', false);
-    $("#levelsRange").val(2);
+    $("#levelsRange").val(3);
     $("#connectionLevel").html("Already Known");
-    updateGraphData(2);
     stopBtnSI();
     stopBtnUI();
   });
   $("#selectNeighbor").click(selectNeighbor)
   $("#neighbors").change(showNeighborDetails);
-  $("#3dBtn").click(() => {
-    if ($("#3dBtn").is(":checked")) {
-      mode3D = true;
-      drawMain3dGraph();
-    } else {
-      mode3D = false;
-      drawMainGraph();
-    }
-
-  })
+  $("#3dBtn").click(drawGraph);
   $("#levelsRange").change(() => {
     const levelIndex = $("#levelsRange").val();
-    const connectionLevels = ["Suspicious", "Just Met", "Already Known", "Recovery"];
+    const connectionLevels = ["Suspicious", "Just Met", "Filtered", "Already Known", "Recovery"];
     $("#connectionLevel").html(connectionLevels[levelIndex]);
   });
-
-  $("#drawGustomGraph").click(() => {
-    const levelIndex = $("#levelsRange").val();
-    updateGraphData(levelIndex);
-    if ($("#3dBtn").is(":checked")) {
-      draw3dGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
-    } else {
-      drawGraph({ nodes: Object.values(graphNodes), links: graphLinks }, false);
-    }
-  });
+  $("#drawGustomGraph").click(drawGraph);
 });

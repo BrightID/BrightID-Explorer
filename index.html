@@ -22,6 +22,7 @@
   <script src="//unpkg.com/force-graph"></script>
   <script src="//unpkg.com/3d-force-graph"></script>
   <script src="js/main.js"></script>
+  <script src="js/graphs.js"></script>
   <script src="js/usersIllustrator.js"></script>
   <script src="js/starsIllustrator.js"></script>
 </head>
@@ -68,7 +69,7 @@
             <h5 class="text-white" id="connectionLevel">Already Known</h5>
           </div>
           <div class="row px-4 justify-content-md-center">
-            <input type="range" min="0" max="3" value="2" list="steplist" class="levels-range" id="levelsRange" />
+            <input type="range" min="0" max="4" value="3" list="steplist" class="levels-range" id="levelsRange" />
           </div>
 
           <div class="row mt-2">
@@ -112,6 +113,10 @@
               <div class="title">Joined At: </div>
               <div class="value" id="nodeCreatedAt"></div>
             </div>
+            <div class="row mt-2 px-4">
+              <div class="title">Verifications:</div>
+            </div>
+            <div class="text-white px-4 text-small" id="verifications"></div>
             <div class="hiden" id="neighborsContainer">
               <div class="row mt-2">
                 <div class="combo-title">Connections:</div>
@@ -139,14 +144,14 @@
                 </div>
               </div>
               <div class="row justify-content-md-center mt-2">
-                <button id="selectNeighbor" class="btn btn-primary align-center mb-5">Show Neighbor</button>
+                <button id="selectNeighbor" class="btn btn-primary align-center mb-2">Show Neighbor</button>
               </div>
             </div>
             <div class="row px-4">
               <div class="title">Connections: </div>
             </div>
-            <div class="row px-4 text-white mt-3 text-small">
-              <table cellpadding="10">
+            <div class="row px-4 text-white text-small">
+              <table cellpadding="5">
                 <tbody>
                   <tr>
                     <td>Level</td>
@@ -170,13 +175,19 @@
                   </tr>
                   <tr>
                     <td>suspicious</td>
-                    <td id="suspiciousIn"></td>
+                    <td id
+                    ="suspiciousIn"></td>
                     <td id="suspiciousOut"></td>
                   </tr>
                   <tr>
                     <td>reported</td>
                     <td id="reportedIn"></td>
                     <td id="reportedOut"></td>
+                  </tr>
+                  <tr>
+                    <td>filtered</td>
+                    <td id="filteredIn"></td>
+                    <td id="filteredOut"></td>
                   </tr>
                 </tbody>
               </table>
@@ -203,10 +214,6 @@
             <div class="row justify-content-md-center mt-2">
               <button id="showGroup" class="btn btn-primary align-center">Show Group</button>
             </div>
-            <div class="row mt-2 px-4">
-              <div class="title">Verifications:</div>
-            </div>
-            <div class="text-white px-4 text-small" id="verifications"></div>
           </div>
         </div>
         <a id="groupbtntitle" onclick="openCollapsible('groupDetails')" href="#" class="list-group-item list-group-item-action bg-primary">
@@ -310,7 +317,7 @@
           <div class="row mt-2">
             <div class="combo-title">Highlight Connections within:</div>
           </div>
-          <div class="input-group-sm mb-3 px-2">
+          <!--<div class="input-group-sm mb-3 px-2">
             <select class="custom-select" id="dateRange">
               <option value="none" selected>None</option>
               <option value="all">All</option>
@@ -318,18 +325,18 @@
               <option value="week">Last Week</option>
               <option value="month">Last Month</option>
             </select>
-          </div>
+          </div> -->
           <div class="row mt-2">
             <div class="combo-title">From:</div>
           </div>
           <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="date" id="fromDate" />
+            <input class="form-control mb-2" type="datetime-local" id="fromDate" />
           </div>
           <div class="row mt-2">
             <div class="combo-title">To:</div>
           </div>
           <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="date" id="toDate" />
+            <input class="form-control mb-2" type="datetime-local" id="toDate" />
           </div>
           <div class="row mt-2">
             <div class="combo-title">Delay between steps (seconds):</div>
@@ -344,6 +351,10 @@
             <a id="playBtn" class="fa fa-2x player-buttons fa-play"></a>
             <a id="nextBtn" class="fa fa-2x player-buttons fa-step-forward"></a>
           </div>
+          <div class="row justify-content-md-center mt-2">
+            <button id="drawSubgraphBtn" class="btn btn-primary align-center mt-2">Sub-graph</button>
+          </div>
+
         </div>
         <a href="#" onclick="openCollapsible('starsIllustrator')" class="list-group-item list-group-item-action bg-primary">
           <i style="font-size:16px" class="fas">&#xf105; </i>
@@ -455,6 +466,7 @@
               <li><span style="background:green;"></span>Already known</li>
               <li><span style="background:yellow;"></span>Just met</li>
               <li><span style="background:orange;"></span>Suspicious</li>
+              <li><span style="background:gray;"></span>filtered</li>
             </ul>
           </div>
         </div>

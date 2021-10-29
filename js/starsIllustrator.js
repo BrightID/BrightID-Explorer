@@ -39,7 +39,7 @@ function starsPlayer() {
         allConnected[l.source.id][l.target.id] = l.timestamp;
       });
       sortedKeys = Object.keys(allConnected);
-      sortedKeys.sort(function(a, b) {
+      sortedKeys.sort(function (a, b) {
         return Object.keys(allConnected[b]).length - Object.keys(allConnected[a]).length;
       });
       for (var i = sortedKeys.length - 1; i > 0; i--) {
@@ -94,7 +94,7 @@ function starsPlayer() {
     clearTimeout(task);
     $("#defaultLegend").show();
     $("#customizedLegend").hide();
-    drawMainGraph();
+    drawGraph();
     $("#dateSI").html("&nbsp;");
     step = 0;
     return true;
@@ -138,9 +138,9 @@ function starsPlayer() {
     const to = fromDate + (step * stepLength);
     let from = to - stepLength;
     if (stepLength == 60 * 60 * 1000) {
-      $("#dateSI").html(new Date(to).toJSON().split(".")[0].replace("T", " "));
+      $("#dateSI").html(new Date(to).toLocaleString());
     } else {
-      $("#dateSI").html(new Date(to).toJSON().split("T")[0]);
+      $("#dateSI").html(new Date(to).toLocaleDateString());
     }
 
     function setColor(n) {
