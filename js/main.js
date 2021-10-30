@@ -53,7 +53,9 @@ $(document).keyup(function (e) {
       allNodes[id].selected = true;
     }
   }
-  selectNodes(nodes);
+  if (nodes.length > 0) {
+    selectNodes(nodes);
+  }
   areaPoints = [];
 });
 
