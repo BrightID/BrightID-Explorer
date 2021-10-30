@@ -41,7 +41,6 @@ function player() {
   }
 
   function subgraph() {
-    console.log('subgraph')
     reset();
     const subgraphLinks = [];
     const subgraphNodes = {};
@@ -52,9 +51,6 @@ function player() {
         subgraphNodes[link.target.id] = link.target;
       }
     });
-    console.log('subgraphLinks', subgraphLinks)
-    console.log('subgraphNodes', subgraphNodes)
-
     drawSubgraph(Object.values(subgraphNodes), subgraphLinks);
   }
 

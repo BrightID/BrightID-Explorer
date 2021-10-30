@@ -15,15 +15,11 @@ function drawGraph() {
 
 function drawSubgraph(subgraphNodes, subgraphLinks) {
   const cooldownTime = 10000;
-  graphNodes = subgraphNodes;
-  graphLinks = subgraphLinks;
   setPosition('noPositions');
-  console.log('graphNodes', graphNodes)
-  console.log('graphLinks', graphLinks);
   if ($("#3dBtn").is(":checked")) {
-    drawGraph3d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, true);
+    drawGraph3d({ nodes: subgraphNodes, links: subgraphLinks }, cooldownTime, true);
   } else {
-    drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, true);
+    drawGraph2d({ nodes: subgraphNodes, links: subgraphLinks }, cooldownTime, true);
   }
 }
 
