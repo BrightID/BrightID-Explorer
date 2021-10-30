@@ -459,9 +459,6 @@ function selectNodes(nodes) {
       if (l.source.id != node.id && l.target.id != node.id) {
         return;
       }
-      if (!['recovery', 'already known'].includes(l.level)) {
-        return;
-      }
       if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
         highlightLinks.add(l);
       }
