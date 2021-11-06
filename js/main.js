@@ -30,7 +30,6 @@ $(document).keyup(function (e) {
   for (const id in allNodes) {
     if (inside([allNodes[id].x, allNodes[id].y], areaPoints)) {
       nodes.push(id);
-      allNodes[id].selected = true;
     }
   }
   if (nodes.length > 0) {
@@ -256,8 +255,14 @@ function selectNodes(nodes) {
   $("#userDetailsPlaceHolder").hide();
   $("#neighborsContainer").hide();
   $("#neighborContainer").hide();
-  $("#brightidText").html(nodes.map(n => n.id).join("<br/>"));
-  openCollapsible("userDetails", true);
+  const selectedNodesText = nodes.join("\n");
+  console.log('$$$', selectedNodesText)
+  navigator.clipboard.writeText(selectedNodesText).then(function() {
+    console.log('The selected nodes copying to clipboard was successful!');
+  }, function(err) {
+    console.error('Async: Could not copy text: ', err);
+  });
+
   const highlightNodes = new Set();
   nodes.forEach(id => {
     highlightNodes.add(id);
