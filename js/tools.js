@@ -63,6 +63,22 @@ function verify() {
     });
     Graph.nodeColor(n => mainComponent.has(n.id) ? "blue" : "red");
     console.log(`Num verifieds: ${mainComponent.size}`);
-    Graph.linkVisibility(l => true).linkDirectionalArrowLength(2).linkWidth(.1).nodeVal(15);
+
+    linksNum = {}
+    mainComponent.forEach(v => linksNum[v] = 0);
+    Graph.graphData().links.forEach(l => {
+      if (mainComponent.has(l.source.id) && mainComponent.has(l.target.id)) {
+        linksNum[l.source.id] += 1;
+      }
+    })
+    Graph.linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id)).nodeVal(n => 2*(linksNum[n.id] || 1)**.5);
+    Graph.nodeColor(n => mainComponent.has(n.id) ? "blue" : "red");
+    console.log(Object.keys(linksNum).map(user => {
+      return {
+        name: 'markaz',
+        user,
+        linksNum: linksNum[user]
+      }
+    }));
   });
 }
