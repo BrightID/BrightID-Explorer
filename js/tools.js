@@ -25,7 +25,8 @@ function getMainComponent() {
   return mainComponent;
 }
 
-function getMainComponent2() {
+function getMainComponent2(filtered_ids) {
+  filtered_ids = filtered_ids || new Set();
   const mainNode = "AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA";
   const checked = {};
   const checkList = [];
@@ -41,7 +42,7 @@ function getMainComponent2() {
         const inConns = allNodes[v].neighbors[neighbor]["from"];
         const tLevel = outConns.length > 0 ? outConns[outConns.length - 1][1] : null;
         const fLevel = inConns.length > 0 ? inConns[inConns.length - 1][1] : null;
-        if (["already known", "recovery"].includes(tLevel) && ["already known", "recovery"].includes(fLevel)) {
+        if (!filtered_ids.has(neighbor) && ["already known", "recovery"].includes(tLevel) && ["already known", "recovery"].includes(fLevel)) {
           checkList.push(neighbor);
         }
       }
@@ -53,14 +54,9 @@ function getMainComponent2() {
 }
 
 function verify() {
-  const mainComponent = new Set(getMainComponent2());
   $.getJSON("/test/filtered_ids.json", function (result) {
     const filtered_ids = new Set(result);
-    mainComponent.forEach(v => {
-      if (filtered_ids.has(v)) {
-        mainComponent.delete(v);
-      }
-    });
+    const mainComponent = new Set(getMainComponent2(filtered_ids));
     Graph.nodeColor(n => mainComponent.has(n.id) ? "blue" : "red");
     console.log(`Num verifieds: ${mainComponent.size}`);
 
@@ -71,8 +67,12 @@ function verify() {
         linksNum[l.source.id] += 1;
       }
     })
-    Graph.linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id)).nodeVal(n => 2*(linksNum[n.id] || 1)**.5);
-    Graph.nodeColor(n => mainComponent.has(n.id) ? "blue" : "red");
+    Graph
+      .linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id))
+      .nodeVal(n => 2*(linksNum[n.id] || 1)**.5)
+      .nodeColor(n => mainComponent.has(n.id) ? "blue" : "red")
+      .linkDirectionalArrowLength(2)
+      .linkWidth(.1);
     console.log(Object.keys(linksNum).map(user => {
       return {
         name: 'markaz',
