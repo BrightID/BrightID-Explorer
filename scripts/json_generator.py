@@ -17,45 +17,63 @@ one_year_ago = int(now - 365 * 24 * 3600) * 1000
 one_year_ago -= one_year_ago % (24 * 3600 * 1000)
 one_week_ago = int(now - 7 * 24 * 3600) * 1000
 one_week_ago -= one_week_ago % (3600 * 1000)
+filter_files_dir = './suspicious_conns'
 
 
-def get_links(main_component):
+def read_filtered_conns():
+    suspicious_conns = {}
+    if not os.path.exists(filter_files_dir):
+        os.makedirs(filter_files_dir)
+    files = os.listdir(filter_files_dir)
+    for file in files:
+        with open(os.path.join(filter_files_dir, file), 'r') as f:
+            for l in json.loads(f.read()):
+                suspicious_conns[tuple(l)] = True
+    return suspicious_conns
+
+
+def get_links():
+    suspicious_conns = read_filtered_conns()
     connection_levels = ('reported', 'suspicious',
-                         'just met', 'already known', 'recovery')
-    links = []
+                         'just met', 'already known', 'recovery', 'filtered')
+    links = {}
     users_statistics = {}
-    connections = records('connections')
-    for c in connections:
+    connections_history = records('connectionsHistory')
+    for c in connections_history:
+        if c['level'] in ['recovery', 'already known']:
+            if (c['_from'], c['_to']) in suspicious_conns:
+                c['level'] = 'filtered'
         f = c['_from'].replace('users/', '')
         t = c['_to'].replace('users/', '')
-        if f not in main_component or t not in main_component:
-            continue
+        k = f'{f}{t}'
+        if k not in links:
+            links[k] = {'source': f, 'target': t, 'history': []}
+        links[k]['history'].append([c['timestamp'], c['level']])
 
-        if f not in users_statistics:
-            users_statistics[f] = {
+    for key in links:
+        link = links[key]
+        if len(link['history']) > 1:
+            link['history'].sort(key=lambda x: x[0])
+
+        if link['source'] not in users_statistics:
+            users_statistics[link['source']] = {
                 'outbound': {k: 0 for k in connection_levels},
                 'inbound': {k: 0 for k in connection_levels},
                 'recoveries': []
             }
-        if t not in users_statistics:
-            users_statistics[t] = {
+        if link['target'] not in users_statistics:
+            users_statistics[link['target']] = {
                 'outbound': {k: 0 for k in connection_levels},
                 'inbound': {k: 0 for k in connection_levels},
                 'recoveries': []
             }
-        users_statistics[f]['outbound'][c['level']] += 1
-        users_statistics[t]['inbound'][c['level']] += 1
+        users_statistics[link['source']]['outbound'][link['history'][-1][1]] += 1
+        users_statistics[link['target']]['inbound'][link['history'][-1][1]] += 1
 
-        if c['level'] == 'recovery':
-            users_statistics[f]['recoveries'].append(t)
+        if link['history'][-1][1] == 'recovery':
+            users_statistics[link['source']]['recoveries'].append(link['target'])
 
-        links.append({
-            'source': f,
-            'target': t,
-            'level': c['level'],
-            'timestamp': c['timestamp']
-        })
-    return links, users_statistics
+    return list(links.values()), users_statistics
 
 
 def get_seeds_data(users, seed_connections):
@@ -130,7 +148,7 @@ def get_seed_groups_data(users):
     return {'seed_connections': seed_connections, 'hourly': h, 'daily': d}
 
 
-def get_groups_data(users, main_component, groups_used_quota):
+def get_groups_data(users, groups_used_quota):
     group_dics = []
     groups_quota = {}
     groups = records('groups')
@@ -148,9 +166,9 @@ def get_groups_data(users, main_component, groups_used_quota):
     #     g): return groups_quota[g] if groups_quota[g] > 0 else 1000000
     for user_group in records('usersInGroups'):
         u = user_group['_from'].replace('users/', '')
-        if u not in main_component:
-            continue
         g = user_group['_to'].replace('groups/', '')
+        if u not in users:
+            continue
         users[u]['groups'].append(g)
         if g in groups_quota:
             users[u]['seed_groups'].append(g)
@@ -168,11 +186,11 @@ def get_verifications_block():
     return sorted([int(block) for block in hashes])[-1]
 
 
-def get_verifications_data(users, main_component):
+def get_verifications_data(users):
     groups_used_quota = {}
     v_block = get_verifications_block()
     for v in records('verifications'):
-        if v['block'] != v_block or v['user'] not in main_component:
+        if v['block'] != v_block:
             continue
         u = v['user']
         name = v['name']
@@ -192,24 +210,14 @@ def get_verifications_data(users, main_component):
     return groups_used_quota
 
 
-def get_users(main_component):
+def get_users():
     recs = records('users')
     users = {}
     for r in recs:
         u = r['_id'].replace('users/', '')
-        if u not in main_component:
-            continue
         users[u] = {'id': u, 'createdAt': r['createdAt'], 'groups': [
         ], 'verifications': {}, 'seed_groups': [], 'quota': 0}
     return users
-
-
-def get_main_component():
-    connections = records('connections')
-    graph = nx.Graph()
-    graph.add_edges_from([(c['_from'].replace(
-        'users/', ''), c['_to'].replace('users/', '')) for c in connections])
-    return sorted([c for c in nx.connected_components(graph)], key=lambda l: len(l), reverse=True)[0]
 
 
 def records(table):
@@ -242,12 +250,10 @@ def read_backup():
 def load_from_backup():
     ret = {}
 
-    main_component = get_main_component()
+    users = get_users()
 
-    users = get_users(main_component)
-
-    groups_used_quota = get_verifications_data(users, main_component)
-    ret['groups'] = get_groups_data(users, main_component, groups_used_quota)
+    groups_used_quota = get_verifications_data(users)
+    ret['groups'] = get_groups_data(users, groups_used_quota)
 
     seed_groups_data = get_seed_groups_data(users)
     ret['seed_groups_hourly'] = seed_groups_data['hourly']
@@ -259,7 +265,7 @@ def load_from_backup():
     ret['seeds_daily'] = seeds_data['daily']
 
     ret['nodes'] = list(users.values())
-    ret['links'], ret['users_statistics'] = get_links(main_component)
+    ret['links'], ret['users_statistics'] = get_links()
     return ret
 
 
