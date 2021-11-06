@@ -62,8 +62,7 @@ function verify() {
       }
     });
     Graph.nodeColor(n => mainComponent.has(n.id) ? "blue" : "red");
-    Graph.nodeVal(15);
     console.log(`Num verifieds: ${mainComponent.size}`);
-    // Graph.linkVisibility(l => true).linkDirectionalArrowLength(2).linkWidth(.1).nodeVal(15);
+    Graph.linkVisibility(l => true).linkDirectionalArrowLength(2).linkWidth(.1).nodeVal(15);
   });
 }
