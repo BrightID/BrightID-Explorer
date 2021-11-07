@@ -34,7 +34,7 @@ function getMainComponent2(filtered_ids) {
   checkList.push(mainNode);
   while (checkList.length > 0) {
     const v = checkList.shift();
-    if (!checked[v]) {
+    if (!checked[v] && !filtered_ids.has(v)) {
       mainComponent.push(v);
       checked[v] = true;
       for (const neighbor of Object.keys(allNodes[v].neighbors)) {
@@ -42,7 +42,7 @@ function getMainComponent2(filtered_ids) {
         const inConns = allNodes[v].neighbors[neighbor]["from"];
         const tLevel = outConns.length > 0 ? outConns[outConns.length - 1][1] : null;
         const fLevel = inConns.length > 0 ? inConns[inConns.length - 1][1] : null;
-        if (!filtered_ids.has(neighbor) && ["already known", "recovery"].includes(tLevel) && ["already known", "recovery"].includes(fLevel)) {
+        if (["already known", "recovery"].includes(tLevel) && ["already known", "recovery"].includes(fLevel)) {
           checkList.push(neighbor);
         }
       }
@@ -68,8 +68,8 @@ function verify() {
       }
     })
     Graph
-      .linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id))
-      .nodeVal(n => 2*(linksNum[n.id] || 1)**.5)
+      .linkVisibility(l => mainComponent.has(l.source.id) || mainComponent.has(l.target.id))
+      .nodeVal(n => 3*(linksNum[n.id] || 1)**.5)
       .nodeColor(n => mainComponent.has(n.id) ? "blue" : "red")
       .linkDirectionalArrowLength(2)
       .linkWidth(.1);
