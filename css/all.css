@@ -4645,8 +4645,9 @@ readers do not read off random characters that represent icons */
     width: 60px;
     height: 60px;
     border: 4px #ddd solid;
-    border-top: 4px #2e93e6 solid;
+    border-top: 10px #2e93e6 solid;
     border-radius: 50%;
+    border-color: #ed795d;
     animation: sp-anime 0.8s infinite linear;
 }
 
