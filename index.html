@@ -431,15 +431,12 @@
           <div id="searchbox">
             <select name="searchfield" id="searchField" class="searchfield">
               <optgroup label="Verifications" id="searchFieldVerifications">
+                <option value="null"></option>
                 <option value="BrightID">BrightID</option>
+                <option value="markaz">Markaz</option>
+                <option value="SeedConnected">SeedConnected</option>
                 <option value="SocialRecoverySetup">Social Recovery Setup</option>
                 <option value="DollarForEveryone">DollarForEveryone</option>
-                <option value="SeedConnected">SeedConnected</option>
-                <option value="Rank 1+">Rank 1+</option>
-                <option value="Rank 2+">Rank 2+</option>
-                <option value="Rank 3+">Rank 3+</option>
-                <option value="Rank 4+">Rank 4+</option>
-                <option value="Rank 5">Rank 5</option>
               </optgroup>
               <optgroup label="Regions" id="searchFieldRegions">
                 <option value="Complete Graph">Complete Graph</option>
@@ -468,6 +465,11 @@
       </nav>
       <div style="height: 90vh;" class="container-fluid mx-0 px-0">
         <div style="height: 100%;" id="graphDiv"></div>
+        <div id="loadingoverlay">
+          <div class="cv-spinner">
+            <span class="spinner"></span>
+          </div>
+        </div>
         <div class="my-legend" id="defaultLegend">
           <div class="legend-title">Node colors</div>
           <div class="legend-scale">

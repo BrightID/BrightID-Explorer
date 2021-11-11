@@ -152,26 +152,13 @@ function selectGroup(id, showDetails) {
 }
 
 function selectVerification(verification) {
-  const verifieds = {};
-  if (verification.startsWith("Rank ")) {
-    const rank = parseInt(verification.replace("Rank ", "").replace("+", ""));
-    for (const id in allNodes) {
-      if (
-        "Yekta" in allNodes[id].verifications &&
-        allNodes[id].verifications.Yekta.rank >= rank
-      ) {
-        verifieds[id] = true;
-      }
-    }
-  } else {
-    for (const id in allNodes) {
-      if (verification in allNodes[id].verifications) {
-        verifieds[id] = true;
-      }
+  const verifieds = new Set();
+  for (const id in allNodes) {
+    if (verification in allNodes[id].verifications) {
+      verifieds.add(id);
     }
   }
-  Graph.nodeColor(n => n.id in verifieds ? resetNodesColor(n) : fadedColor);
-  Graph.linkColor(fadedColor);
+  Graph.nodeColor(n => verifieds.has(n.id) ? resetNodesColor(n) : fadedColor);
 }
 
 function selectRegion(name) {
@@ -471,7 +458,28 @@ function updateStatistics() {
 }
 
 $(document).ready(function () {
-  $.get("positions2d.json", function (data) {
+  $("#loadingoverlay").fadeIn();
+  let dataFileAddr;
+  let location2dFileAddr;
+  if (window.location.pathname === "/") {
+    dataFileAddr = "brightid.json";
+    location2dFileAddr = "positions2d.json";
+  } else if (window.location.pathname === "/test/") {
+    dataFileAddr = "/test/brightid.json";
+    location2dFileAddr = "/test/positions2d.json";
+  } else if (window.location.pathname === "/history/") {
+    const folderName = window.location.search.replace("?v=", "");
+    if (folderName == "last") {
+      dataFileAddr = `/history/brightid.json`;
+      location2dFileAddr = `/history/positions2d.json`;
+    } else {
+      dataFileAddr = `/history/${folderName}/brightid.json`;
+      location2dFileAddr = `/history/${folderName}/positions2d.json`;
+    }
+
+  }
+
+  $.get(location2dFileAddr, function (data) {
     positions["2d"] = data;
   });
 
@@ -479,7 +487,7 @@ $(document).ready(function () {
     positions["3d"] = data;
   });
 
-  $.get("brightid.json", function (data) {
+  $.get(dataFileAddr, function (data) {
     // data = JSON.parse(data);
     data.links.forEach(l => {
       allLinks[`${l.source}${l.target}`] = l;
@@ -524,6 +532,7 @@ $(document).ready(function () {
       }
     });
     drawGraph();
+    $("#loadingoverlay").fadeOut();
   });
 
   $("#searchField").change(function () {
@@ -532,10 +541,7 @@ $(document).ready(function () {
       return;
     }
     const id = val.trim();
-    if (
-      ["BrightID", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id) ||
-      id.startsWith("Rank ")
-    ) {
+    if (["BrightID", "markaz", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id)) {
       selectVerification(id);
     } else if (allNodes[id]) {
       selectNode(allNodes[id], true);

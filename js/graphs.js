@@ -155,11 +155,9 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
   if(linkVisibility) {
     linkDirectionalArrowLength = 2;
     linkWidth = .1;
-    nodeVal = 15;
   } else {
     linkDirectionalArrowLength = arrowLength;
     linkWidth = linkWidth;
-    nodeVal = "size";
   }
 
   $("#graphDiv").empty();
@@ -171,7 +169,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
     .nodeColor(resetNodesColor)
     .graphData(data)
     .nodeId("id")
-    .nodeVal("size")
+    .nodeVal(n => 5 * (n.verifications?.markaz?.linksNum || 1) ** .5)
     .nodeLabel("id")
     .linkWidth(linkWidth)
     .linkSource("source")
@@ -240,7 +238,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility, subgraph) {
     .nodeOpacity(1)
     .nodeLabel(n => n.id)
     .nodeId("id")
-    .nodeVal("size")
+    .nodeVal(n => 5 * (n.verifications?.markaz?.linksNum || 1) ** .5)
     .linkWidth(linkWidth)
     .linkSource("source")
     .linkTarget("target")
