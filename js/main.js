@@ -458,162 +458,162 @@ function updateStatistics() {
 }
 
 $(document).ready(function () {
-  // $("#loadingoverlay").fadeIn();
-  // let dataFileAddr;
-  // let location2dFileAddr;
-  // const req = new URL(window.location);
-  // const folderName = req.searchParams.get('d');
-  // if (folderName) {
-  //   if (folderName == "last") {
-  //     dataFileAddr = `/history/brightid.json.gz`;
-  //     location2dFileAddr = `/history/positions2d.json`;
-  //   } else {
-  //     dataFileAddr = `/history/${folderName}/brightid.json.gz`;
-  //     location2dFileAddr = `/history/${folderName}/positions2d.json`;
-  //   }
-  // } else {
-  //   dataFileAddr = "brightid.json";
-  //   location2dFileAddr = "positions2d.json";
-  // }
+  $("#loadingoverlay").fadeIn();
+  let dataFileAddr;
+  let location2dFileAddr;
+  const req = new URL(window.location);
+  const folderName = req.searchParams.get('d');
+  if (folderName) {
+    if (folderName == "last") {
+      dataFileAddr = `/history/brightid.json.gz`;
+      location2dFileAddr = `/history/positions2d.json`;
+    } else {
+      dataFileAddr = `/history/${folderName}/brightid.json.gz`;
+      location2dFileAddr = `/history/${folderName}/positions2d.json`;
+    }
+  } else {
+    dataFileAddr = "brightid.json";
+    location2dFileAddr = "positions2d.json";
+  }
 
-  // $.get(location2dFileAddr, function (data) {
-  //   positions["2d"] = data;
-  // });
+  $.get(location2dFileAddr, function (data) {
+    positions["2d"] = data;
+  });
 
-  // $.get("positions3d.json", function (data) {
-  //   positions["3d"] = data;
-  // });
+  $.get("positions3d.json", function (data) {
+    positions["3d"] = data;
+  });
 
-  // $.get(dataFileAddr, function (data) {
-  //   // data = JSON.parse(data);
-  //   data.links.forEach(l => {
-  //     allLinks[`${l.source}${l.target}`] = l;
-  //   });
-  //   data.groups.forEach(group => {
-  //     groups[group.id] = { ...group, members: [], seedConnected: [] };
-  //     const region = group.region;
-  //     if (region) {
-  //       if (!(region in regions)) {
-  //         regions[region] = [];
-  //       }
-  //       if (!regions[region].includes(group.id)) {
-  //         regions[region].push(group.id);
-  //         $("#searchFieldRegions").append(new Option(region, region));
-  //       }
-  //     }
-  //   });
+  $.get(dataFileAddr, function (data) {
+    // data = JSON.parse(data);
+    data.links.forEach(l => {
+      allLinks[`${l.source}${l.target}`] = l;
+    });
+    data.groups.forEach(group => {
+      groups[group.id] = { ...group, members: [], seedConnected: [] };
+      const region = group.region;
+      if (region) {
+        if (!(region in regions)) {
+          regions[region] = [];
+        }
+        if (!regions[region].includes(group.id)) {
+          regions[region].push(group.id);
+          $("#searchFieldRegions").append(new Option(region, region));
+        }
+      }
+    });
 
-  //   data.nodes.forEach(node => {
-  //     node.neighbors = {};
-  //     node.statistics = data.users_statistics[node.id];
-  //     allNodes[node.id] = node;
+    data.nodes.forEach(node => {
+      node.neighbors = {};
+      node.statistics = data.users_statistics[node.id];
+      allNodes[node.id] = node;
 
-  //     node.groups.forEach(group => groups[group].members.push(node.id));
-  //     if (node.verifications.SeedConnected) {
-  //       for (const sg of node.verifications.SeedConnected.connected) {
-  //         groups[sg].seedConnected.push(node.id);
-  //       }
-  //     }
-  //   });
+      node.groups.forEach(group => groups[group].members.push(node.id));
+      if (node.verifications.SeedConnected) {
+        for (const sg of node.verifications.SeedConnected.connected) {
+          groups[sg].seedConnected.push(node.id);
+        }
+      }
+    });
 
-  //   Object.values(allLinks).forEach(l => {
-  //     if (!(l.target in allNodes[l.source].neighbors)) {
-  //       allNodes[l.source].neighbors[l.target] = { "from": [], "to": [] };
-  //     }
-  //     if (!(l.source in allNodes[l.target].neighbors)) {
-  //       allNodes[l.target].neighbors[l.source] = { "from": [], "to": [] };
-  //     }
-  //     for (h of l["history"]) {
-  //       allNodes[l.source].neighbors[l.target]["to"].push(h);
-  //       allNodes[l.target].neighbors[l.source]["from"].push(h);
-  //     }
-  //   });
-  //   drawGraph();
-  //   $("#loadingoverlay").fadeOut();
-  // });
+    Object.values(allLinks).forEach(l => {
+      if (!(l.target in allNodes[l.source].neighbors)) {
+        allNodes[l.source].neighbors[l.target] = { "from": [], "to": [] };
+      }
+      if (!(l.source in allNodes[l.target].neighbors)) {
+        allNodes[l.target].neighbors[l.source] = { "from": [], "to": [] };
+      }
+      for (h of l["history"]) {
+        allNodes[l.source].neighbors[l.target]["to"].push(h);
+        allNodes[l.target].neighbors[l.source]["from"].push(h);
+      }
+    });
+    drawGraph();
+    $("#loadingoverlay").fadeOut();
+  });
 
-  // $("#searchField").change(function () {
-  //   const val = $("#searchField").val();
-  //   if (!val) {
-  //     return;
-  //   }
-  //   const id = val.trim();
-  //   if (["BrightID", "markaz", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id)) {
-  //     selectVerification(id);
-  //   } else if (allNodes[id]) {
-  //     selectNode(allNodes[id], true);
-  //   } else if (groups[id]) {
-  //     selectGroup(id, true);
-  //   } else if (regions[id] || id == "Complete Graph") {
-  //     selectRegion(id);
-  //   } else {
-  //     return;
-  //   }
-  // });
+  $("#searchField").change(function () {
+    const val = $("#searchField").val();
+    if (!val) {
+      return;
+    }
+    const id = val.trim();
+    if (["BrightID", "markaz", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id)) {
+      selectVerification(id);
+    } else if (allNodes[id]) {
+      selectNode(allNodes[id], true);
+    } else if (groups[id]) {
+      selectGroup(id, true);
+    } else if (regions[id] || id == "Complete Graph") {
+      selectRegion(id);
+    } else {
+      return;
+    }
+  });
 
-  // $("#groups").change(function () {
-  //   const id = $(this).val();
-  //   selectGroup(id, false);
-  // });
+  $("#groups").change(function () {
+    const id = $(this).val();
+    selectGroup(id, false);
+  });
 
-  // $("#members").change(function () {
-  //   const id = $(this).val();
-  //   selectNode(allNodes[id], false);
-  // });
+  $("#members").change(function () {
+    const id = $(this).val();
+    selectNode(allNodes[id], false);
+  });
 
-  // $("#seedConnected").change(function () {
-  //   const id = $(this).val();
-  //   selectNode(allNodes[id], false);
-  // });
+  $("#seedConnected").change(function () {
+    const id = $(this).val();
+    selectNode(allNodes[id], false);
+  });
 
-  // $("#logoutBtn").click(() => {
-  //   localforage.clear().then(() => {
-  //     location.reload();
-  //   });
-  // });
-  // $("#login").click(loadInfo);
-  // $("#showGroup").click(showGroup);
-  // $("#showMember").click(showMember);
-  // $("#showUser").click(showUser);
-  // $("#searchField").select2({ tags: true });
-  // $("#dateRange").change(setDateRange);
-  // $("#fromDate").change(() => playerSettingChanged = true);
-  // $("#toDate").change(() => playerSettingChanged = true);
-  // $("#delay").change(() => playerSettingChanged = true);
-  // $("#playBtn").click(playBtnUI);
-  // $("#stopBtn").click(stopBtnUI);
-  // $("#previousBtn").click(previousBtnUI);
-  // $("#nextBtn").click(nextBtnUI);
-  // $("#drawSubgraphBtn").click(subgraphBtnUI);
-  // $("#dateRangeSI").change(setDateRangeSI);
-  // $("#fromDateSI").change(() => playerSettingChangedSI = true);
-  // $("#toDateSI").change(() => playerSettingChangedSI = true);
-  // $("#delaySI").change(() => playerSettingChangedSI = true);
-  // $("#playBtnSI").click(playBtnSI);
-  // $("#stopBtnSI").click(stopBtnSI);
-  // $("#previousBtnSI").click(previousBtnSI);
-  // $("#nextBtnSI").click(nextBtnSI);
-  // $("#resetBtn").click(() => {
-  //   $("#3dBtn").prop("checked", false);
-  //   $("#levelsRange").val(3);
-  //   $("#connectionLevel").html("Already Known");
-  //   stopBtnSI();
-  //   stopBtnUI();
-  // });
-  // $("#selectNeighbor").click(selectNeighbor)
-  // $("#neighbors").change(showNeighborDetails);
-  // $("#3dBtn").click(drawGraph);
-  // $("#levelsRange").change(() => {
-  //   const levelIndex = $("#levelsRange").val();
-  //   const connectionLevels = ["Suspicious", "Just Met", "Filtered", "Already Known", "Recovery"];
-  //   $("#connectionLevel").html(connectionLevels[levelIndex]);
-  // });
-  // $("#drawGustomGraph").click(drawGraph);
-  // $("#linkVisibility").change(() => {
-  //   if ($("#linkVisibility").is(":checked")) {
-  //     Graph.linkVisibility(true).linkDirectionalArrowLength(2).linkWidth(.1).nodeVal(15);
-  //   } else {
-  //     Graph.linkVisibility(false);
-  //   }
-  // });
+  $("#logoutBtn").click(() => {
+    localforage.clear().then(() => {
+      location.reload();
+    });
+  });
+  $("#login").click(loadInfo);
+  $("#showGroup").click(showGroup);
+  $("#showMember").click(showMember);
+  $("#showUser").click(showUser);
+  $("#searchField").select2({ tags: true });
+  $("#dateRange").change(setDateRange);
+  $("#fromDate").change(() => playerSettingChanged = true);
+  $("#toDate").change(() => playerSettingChanged = true);
+  $("#delay").change(() => playerSettingChanged = true);
+  $("#playBtn").click(playBtnUI);
+  $("#stopBtn").click(stopBtnUI);
+  $("#previousBtn").click(previousBtnUI);
+  $("#nextBtn").click(nextBtnUI);
+  $("#drawSubgraphBtn").click(subgraphBtnUI);
+  $("#dateRangeSI").change(setDateRangeSI);
+  $("#fromDateSI").change(() => playerSettingChangedSI = true);
+  $("#toDateSI").change(() => playerSettingChangedSI = true);
+  $("#delaySI").change(() => playerSettingChangedSI = true);
+  $("#playBtnSI").click(playBtnSI);
+  $("#stopBtnSI").click(stopBtnSI);
+  $("#previousBtnSI").click(previousBtnSI);
+  $("#nextBtnSI").click(nextBtnSI);
+  $("#resetBtn").click(() => {
+    $("#3dBtn").prop("checked", false);
+    $("#levelsRange").val(3);
+    $("#connectionLevel").html("Already Known");
+    stopBtnSI();
+    stopBtnUI();
+  });
+  $("#selectNeighbor").click(selectNeighbor)
+  $("#neighbors").change(showNeighborDetails);
+  $("#3dBtn").click(drawGraph);
+  $("#levelsRange").change(() => {
+    const levelIndex = $("#levelsRange").val();
+    const connectionLevels = ["Suspicious", "Just Met", "Filtered", "Already Known", "Recovery"];
+    $("#connectionLevel").html(connectionLevels[levelIndex]);
+  });
+  $("#drawGustomGraph").click(drawGraph);
+  $("#linkVisibility").change(() => {
+    if ($("#linkVisibility").is(":checked")) {
+      Graph.linkVisibility(true).linkDirectionalArrowLength(2).linkWidth(.1).nodeVal(15);
+    } else {
+      Graph.linkVisibility(false);
+    }
+  });
 });
