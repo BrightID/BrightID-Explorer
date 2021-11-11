@@ -158,7 +158,7 @@ function selectVerification(verification) {
       verifieds.add(id);
     }
   }
-  Graph.nodeColor(n => verifieds.has(n.id) ? resetNodesColor(n) : fadedColor);
+  Graph.nodeColor(n => verifieds.has(n.id) ? "green" : "yellow");
 }
 
 function selectRegion(name) {
@@ -461,14 +461,9 @@ $(document).ready(function () {
   $("#loadingoverlay").fadeIn();
   let dataFileAddr;
   let location2dFileAddr;
-  if (window.location.pathname === "/") {
-    dataFileAddr = "brightid.json";
-    location2dFileAddr = "positions2d.json";
-  } else if (window.location.pathname === "/test/") {
-    dataFileAddr = "/test/brightid.json";
-    location2dFileAddr = "/test/positions2d.json";
-  } else if (window.location.pathname === "/history/") {
-    const folderName = window.location.search.replace("?v=", "");
+  const req = new URL(window.location);
+  const folderName = req.searchParams.get('d');
+  if (folderName) {
     if (folderName == "last") {
       dataFileAddr = `/history/brightid.json`;
       location2dFileAddr = `/history/positions2d.json`;
@@ -476,7 +471,9 @@ $(document).ready(function () {
       dataFileAddr = `/history/${folderName}/brightid.json`;
       location2dFileAddr = `/history/${folderName}/positions2d.json`;
     }
-
+  } else {
+    dataFileAddr = "brightid.json";
+    location2dFileAddr = "positions2d.json";
   }
 
   $.get(location2dFileAddr, function (data) {
