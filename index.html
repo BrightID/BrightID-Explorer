@@ -69,27 +69,31 @@
         <div class="hiden menu-item-body" id="graphDetails">
           <div class="row px-4 justify-content-md-center">
             <h5 class="text-white" id="connectionLevel">Already Known</h5>
+            <i class="fas fa-question-circle text-white" data-toggle="tooltip" data-placement="top" title="selected level as the lowest connection level to be included in the graph"></i>
           </div>
           <div class="row px-4 justify-content-md-center">
             <input type="range" min="0" max="4" value="3" list="steplist" class="levels-range" id="levelsRange" />
           </div>
 
           <div class="row mt-2">
-            <div class="combo-title">Cooldown Time (seconds):</div>
+            <div class="combo-title">Cooldown Time:
+              <i class="fas fa-question-circle" data-toggle="tooltip" data-placement="top" title="graph simulation cool down time in seconds"></i>
+            </div>
           </div>
           <div class="input-group-sm px-2 py-1">
-            <input class="form-control mb-2" type="number" id="cooldownTime" value="1" min="1" />
+            <input class="form-control" type="number" id="cooldownTime" value="1" min="1" />
           </div>
           <div class="form-check mt-2 ml-2">
             <input class="form-check-input" type="checkbox" value="" id="predefinedPosition" checked>
             <label class="form-check-label text-white" for="flexCheckDefault">
               Use predefined positions
+              <i class="fas fa-question-circle" data-toggle="tooltip" data-placement="top" title="set the predefined positions for the nodes"></i>
             </label>
           </div>
           <div class="form-check mt-2 ml-2">
             <input class="form-check-input" type="checkbox" value="" id="linkVisibility">
             <label class="form-check-label text-white" for="flexCheckDefault">
-              Draw links
+              Show links
             </label>
           </div>
           <div class="row justify-content-md-center mt-2">
