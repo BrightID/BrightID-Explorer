@@ -81,7 +81,7 @@
             </div>
           </div>
           <div class="input-group-sm px-2 py-1">
-            <input class="form-control" type="number" id="cooldownTime" value="1" min="1" />
+            <input class="form-control" type="number" id="cooldownTime" value="10" min="1" />
           </div>
           <div class="form-check mt-2 ml-2">
             <input class="form-check-input" type="checkbox" value="" id="predefinedPosition" checked>
@@ -91,7 +91,7 @@
             </label>
           </div>
           <div class="form-check mt-2 ml-2">
-            <input class="form-check-input" type="checkbox" value="" id="linkVisibility">
+            <input class="form-check-input" type="checkbox" value="" id="linkVisibility" checked>
             <label class="form-check-label text-white" for="flexCheckDefault">
               Show links
             </label>
@@ -435,9 +435,8 @@
           <div id="searchbox">
             <select name="searchfield" id="searchField" class="searchfield">
               <optgroup label="Verifications" id="searchFieldVerifications">
-                <option value="null"></option>
-                <option value="BrightID">BrightID</option>
                 <option value="markaz">Markaz</option>
+                <option value="BrightID">BrightID</option>
                 <option value="SeedConnected">SeedConnected</option>
                 <option value="SocialRecoverySetup">Social Recovery Setup</option>
                 <option value="DollarForEveryone">DollarForEveryone</option>
@@ -478,9 +477,8 @@
           <div class="legend-title">Node colors</div>
           <div class="legend-scale">
             <ul class="legend-labels">
-              <li><span style="background:blue;"></span>Seed</li>
               <li><span style="background:green;"></span>Verified</li>
-              <li><span style="background:yellow;"></span>Not Verified</li>
+              <li><span style="background:orange;"></span>Not Verified</li>
             </ul>
           </div>
           <div class="legend-title">Link colors</div>

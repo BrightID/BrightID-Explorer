@@ -1,7 +1,10 @@
 function drawGraph() {
   const cooldownTime = $("#cooldownTime").val() * 1000;
   const levelIndex = $("#levelsRange").val();
-  const linkVisibility = $("#linkVisibility").is(":checked");
+  const linkVisibility = $("#linkVisibility").is(":checked") && levelIndex > 2;
+  if ($("#linkVisibility").is(":checked") && levelIndex <= 2) {
+    console.log("You can't see the edges in this level")
+  }
   updateGraphData(levelIndex);
   const predefinedPosition = $("#predefinedPosition").is(":checked");
   if ($("#3dBtn").is(":checked")) {
@@ -55,8 +58,8 @@ function resetLinksColor(link) {
 function resetNodesColor(n) {
   if (n.selected) return "red";
   else if (n.node_type == "Seed") return "blue";
-  else if (n.verifications && "BrightID" in n.verifications) return "green";
-  else return "yellow";
+  else if (n.verifications && "markaz" in n.verifications) return "green";
+  else return "orange";
 }
 
 function move(x, y, z) {
@@ -91,8 +94,8 @@ function setPosition(type) {
     if (positions["status"] != "2d") {
       for (let n of Object.values(graphNodes)) {
         if (n.id in positions["2d"]) {
-          n.fx = positions["2d"][n.id].x;
-          n.fy = positions["2d"][n.id].y;
+          n.x = positions["2d"][n.id].x;
+          n.y = positions["2d"][n.id].y;
         }
       }
       positions["status"] = "2d";
@@ -101,9 +104,9 @@ function setPosition(type) {
     if (positions["status"] != "3d") {
       for (let n of Object.values(graphNodes)) {
         if (n.id in positions["3d"]) {
-          n.fx = positions["3d"][n.id].x;
-          n.fy = positions["3d"][n.id].y;
-          n.fz = positions["3d"][n.id].z;
+          n.x = positions["3d"][n.id].x;
+          n.y = positions["3d"][n.id].y;
+          n.z = positions["3d"][n.id].z;
         }
       }
       positions["status"] = "3d";
