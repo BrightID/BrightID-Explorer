@@ -158,7 +158,7 @@ function selectVerification(verification) {
       verifieds.add(id);
     }
   }
-  Graph.nodeColor(n => verifieds.has(n.id) ? "green" : "yellow");
+  Graph.nodeColor(n => verifieds.has(n.id) ? "green" : "orange");
 }
 
 function selectRegion(name) {
