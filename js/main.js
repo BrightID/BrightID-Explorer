@@ -619,7 +619,7 @@ $(document).ready(function () {
   $("#drawGustomGraph").click(drawGraph);
   $("#linkVisibility").change(() => {
     if ($("#linkVisibility").is(":checked")) {
-      Graph.linkVisibility(true).linkDirectionalArrowLength(2).linkWidth(.1).nodeVal(15);
+      Graph.linkVisibility(true);
     } else {
       Graph.linkVisibility(false);
     }
