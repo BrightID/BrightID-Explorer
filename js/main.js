@@ -424,12 +424,11 @@ function selectNode(node, showDetails, focus) {
       highlightLinks.add(l);
     }
   });
-  Graph.linkVisibility(l => (highlightLinks.has(l) ? true : false));
-  Graph.linkColor(n => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
 
-  Graph.nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
+  Graph.linkVisibility(l => (!highlightLinks.has(l) && !$("#linkVisibility").is(":checked")) ? false : true)
+    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
+    .linkColor(n => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
     .linkDirectionalArrowLength(l => highlightLinks.has(l) ? arrowLength : 1)
-    .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor);
 
   if (showDetails) {
     openCollapsible("userDetails", true);
