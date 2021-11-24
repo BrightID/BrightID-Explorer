@@ -441,7 +441,7 @@ function selectNode(node, showDetails, focus) {
 }
 
 function updateStatistics() {
-  const graphData = Graph.graphData()
+  const graphData = Graph.graphData();
   let numVerifieds = numSeeds = 0;
   graphData.nodes.forEach((node) => {
     if (node.verifications && "BrightID" in node.verifications) {
@@ -455,6 +455,12 @@ function updateStatistics() {
   $("#numVerifieds").html(numVerifieds);
   $("#numSeeds").html(numSeeds);
   $("#averageConnection").html(Math.ceil(graphData.links.length / graphData.nodes.length));
+}
+
+function alert(alertTitle, alertBody) {
+  $("#alertTitle").html(alertTitle);
+  $("#alertBody").html(alertBody);
+  $("#alert").modal("show")
 }
 
 $(document).ready(function () {
@@ -541,7 +547,11 @@ $(document).ready(function () {
     if (["BrightID", "markaz", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id)) {
       selectVerification(id);
     } else if (allNodes[id]) {
-      selectNode(allNodes[id], true);
+      if (graphNodes[id]) {
+        selectNode(allNodes[id], true);
+      } else {
+        alert('Error:', 'This id is not node of this subgraph.');
+      }
     } else if (groups[id]) {
       selectGroup(id, true);
     } else if (regions[id] || id == "Complete Graph") {
