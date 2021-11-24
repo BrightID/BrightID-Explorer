@@ -243,9 +243,8 @@ function selectNodes(nodes) {
   $("#neighborsContainer").hide();
   $("#neighborContainer").hide();
   const selectedNodesText = nodes.join("\n");
-  console.log('$$$', selectedNodesText)
   navigator.clipboard.writeText(selectedNodesText).then(function() {
-    console.log('The selected nodes copying to clipboard was successful!');
+    alert('Info:', "Selected nodes' id were copied to the clipboard.");
   }, function(err) {
     console.error('Async: Could not copy text: ', err);
   });
