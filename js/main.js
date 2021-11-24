@@ -426,7 +426,7 @@ function selectNode(node, showDetails, focus) {
 
   Graph.linkVisibility(l => (!highlightLinks.has(l) && !$("#linkVisibility").is(":checked")) ? false : true)
     .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
-    .linkColor(n => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
+    .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
     .linkDirectionalArrowLength(l => highlightLinks.has(l) ? arrowLength : 1)
 
   if (showDetails) {
