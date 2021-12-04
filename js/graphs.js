@@ -268,7 +268,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility, subgraph) {
 async function logPositions2d(type) {
   if (type == "a") {
     updateGraphData(3);
-    setPosition("noPositions");
+    setPosition("2d");
   } else if (type == "j") {
     updateGraphData(1);
     setPosition("2d");
@@ -276,12 +276,12 @@ async function logPositions2d(type) {
     console.log("type should be a (already Known) or j (just met)");
     return;
   }
-  for (let i = 0; i <= 6; i++) {
+  for (let i = 0; i <= 10; i++) {
     draw(i);
   }
   function draw(i) {
     setTimeout(function () {
-      if (i == 6) {
+      if (i == 10) {
         const pos = {};
         Object.values(graphNodes).forEach(node => {
           if (!("x" in node) || !("y" in node)) {
@@ -332,8 +332,8 @@ function rotate(degree) {
   Object.values(graphNodes).forEach(node => {
     const newX = (node.x - cX) * Math.cos(r) - (node.y - cY) * Math.sin(r) + cX;
     const newY = (node.x - cX) * Math.sin(r) + (node.y - cY) * Math.cos(r) + cY;
-    node.fx = newX;
-    node.fy = newY;
+    node.x = newX;
+    node.y = newY;
   });
   drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, false);
 }
