@@ -25,8 +25,8 @@ function getMainComponent() {
   return mainComponent;
 }
 
-function getMainComponent2(filtered_ids) {
-  filtered_ids = filtered_ids || new Set();
+function getMainComponent2(filteredIds) {
+  filteredIds = filteredIds || new Set();
   const mainNode = "AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA";
   const checked = {};
   const checkList = [];
@@ -34,7 +34,7 @@ function getMainComponent2(filtered_ids) {
   checkList.push(mainNode);
   while (checkList.length > 0) {
     const v = checkList.shift();
-    if (!checked[v] && !filtered_ids.has(v)) {
+    if (!checked[v] && !filteredIds.has(v)) {
       mainComponent.push(v);
       checked[v] = true;
       for (const neighbor of Object.keys(allNodes[v].neighbors)) {
@@ -54,30 +54,72 @@ function getMainComponent2(filtered_ids) {
 }
 
 function verify() {
-  $.getJSON("/test/filtered_ids.json", function (result) {
-    const filtered_ids = new Set(result);
-    const mainComponent = new Set(getMainComponent2(filtered_ids));
-    Graph.nodeColor(n => mainComponent.has(n.id) ? "blue" : "red");
-    console.log(`Num verifieds: ${mainComponent.size}`);
+  const directPenalty = 5;
+  const indirectPenalty = 2;
+  updateGraphData(0);
+  setPosition("2d");
+  drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, 0, false, false);
+  $.getJSON("/filtered_ids.json", function (result) {
+    const filteredIds = new Set(result);
+    const mainComponent = new Set(getMainComponent2(filteredIds));
 
-    linksNum = {}
-    mainComponent.forEach(v => linksNum[v] = 0);
+    scores = {}
+    mainComponent.forEach(v => scores[v] = {"linksNum": 0, "score": 0, "directReport": 0, "negativeScores": {}});
     Graph.graphData().links.forEach(l => {
-      if (mainComponent.has(l.source.id) && mainComponent.has(l.target.id)) {
-        linksNum[l.source.id] += 1;
+      const s = l.source.id;
+      const t = l.target.id;
+      if (!mainComponent.has(s)) {
+        return;
       }
-    })
+
+      const level = l.history[l.history.length - 1][1];
+      if (!["already known", "recovery"].includes(level)) {
+        return;
+      }
+      const ol = allLinks[`${t}${s}`];
+      const otherSideLevel = ol?.history[ol.history.length - 1][1];
+      if (["already known", "recovery"].includes(otherSideLevel)) {
+        scores[s]["linksNum"] += 1;
+        scores[s]["score"] += 1;
+      } else if (["suspicious", "reported"].includes(otherSideLevel)) {
+        scores[s]["directReport"] += 1;
+        scores[s]["score"] -= directPenalty;
+        scores[s]["negativeScores"][t] = -directPenalty;
+      }
+    });
+
+    Graph.graphData().links.forEach(l => {
+      const s = l.source.id;
+      const t = l.target.id;
+      if (!mainComponent.has(s) || !mainComponent.has(t)) {
+        return;
+      }
+
+      const level = l["history"][l["history"].length - 1][1];
+      if (!["already known", "recovery"].includes(level)) {
+        return;
+      }
+
+      if (scores[t]["directReport"] > 0) {
+        if (t in scores[s]["negativeScores"]) {
+          scores[s]["negativeScores"][t] -= scores[t]["directReport"] * indirectPenalty;
+        } else {
+          scores[s]["negativeScores"][t] = -scores[t]["directReport"] * indirectPenalty;
+        }
+      }
+    });
+
     Graph
-      .linkVisibility(l => mainComponent.has(l.source.id) || mainComponent.has(l.target.id))
-      .nodeVal(n => 3*(linksNum[n.id] || 1)**.5)
-      .nodeColor(n => mainComponent.has(n.id) ? "blue" : "red")
+      .linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id) && ["already known", "recovery"].includes(l.history[l.history.length - 1][1]))
+      .nodeVal(n => Math.max(3*(scores[n.id]?.score || 1), 20)**.5)
+      .nodeColor(n => scores[n.id]?.score || 0 > 0 ? "blue" : "red")
       .linkDirectionalArrowLength(2)
       .linkWidth(.1);
-    console.log(Object.keys(linksNum).map(user => {
+    console.log(Object.keys(scores).map(user => {
       return {
         name: 'markaz',
         user,
-        linksNum: linksNum[user]
+        ...scores[user]
       }
     }));
   });
