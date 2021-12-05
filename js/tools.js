@@ -55,7 +55,7 @@ function getMainComponent2(filteredIds) {
 
 function verify() {
   const directPenalty = 5;
-  const indirectPenalty = 2;
+  const indirectPenalty = 1;
   updateGraphData(0);
   setPosition("2d");
   drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, 0, false, false);
@@ -64,11 +64,11 @@ function verify() {
     const mainComponent = new Set(getMainComponent2(filteredIds));
 
     scores = {}
-    mainComponent.forEach(v => scores[v] = {"linksNum": 0, "score": 0, "directReport": 0, "negativeScores": {}});
+    mainComponent.forEach(v => scores[v] = {"linksNum": 0, "score": 0, "directReports": {}, "indirectReports": {}});
     Graph.graphData().links.forEach(l => {
       const s = l.source.id;
       const t = l.target.id;
-      if (!mainComponent.has(s)) {
+      if (!mainComponent.has(s) || !mainComponent.has(t)) {
         return;
       }
 
@@ -82,9 +82,8 @@ function verify() {
         scores[s]["linksNum"] += 1;
         scores[s]["score"] += 1;
       } else if (["suspicious", "reported"].includes(otherSideLevel)) {
-        scores[s]["directReport"] += 1;
+        scores[s]["directReports"][t] = -directPenalty;
         scores[s]["score"] -= directPenalty;
-        scores[s]["negativeScores"][t] = -directPenalty;
       }
     });
 
@@ -100,18 +99,14 @@ function verify() {
         return;
       }
 
-      if (scores[t]["directReport"] > 0) {
-        if (t in scores[s]["negativeScores"]) {
-          scores[s]["negativeScores"][t] -= scores[t]["directReport"] * indirectPenalty;
-        } else {
-          scores[s]["negativeScores"][t] = -scores[t]["directReport"] * indirectPenalty;
-        }
+      if (Object.keys(scores[t]["directReports"]).length > 0) {
+        scores[s]["indirectReports"][t] = -indirectPenalty * Object.keys(scores[t]["directReports"]).length;
       }
     });
 
     Graph
       .linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id) && ["already known", "recovery"].includes(l.history[l.history.length - 1][1]))
-      .nodeVal(n => Math.max(3*(scores[n.id]?.score || 1), 20)**.5)
+      .nodeVal(n => Math.max(Math.min(3*scores[n.id]?.score || 1, 3), 20)**.5)
       .nodeColor(n => scores[n.id]?.score || 0 > 0 ? "blue" : "red")
       .linkDirectionalArrowLength(2)
       .linkWidth(.1);
