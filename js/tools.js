@@ -56,18 +56,15 @@ function getMainComponent2(filteredIds) {
 function verify() {
   const directPenalty = 5;
   const indirectPenalty = 1;
-  updateGraphData(0);
-  setPosition("2d");
-  drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, 0, false, false);
   $.getJSON("/filtered_ids.json", function (result) {
     const filteredIds = new Set(result);
     const mainComponent = new Set(getMainComponent2(filteredIds));
 
     scores = {}
     mainComponent.forEach(v => scores[v] = {"linksNum": 0, "score": 0, "directReports": {}, "indirectReports": {}});
-    Graph.graphData().links.forEach(l => {
-      const s = l.source.id;
-      const t = l.target.id;
+    Object.values(allLinks).forEach(l => {
+      const s = l.source?.id || l.source;
+      const t = l.target?.id || l.target;
       if (!mainComponent.has(s) || !mainComponent.has(t)) {
         return;
       }
@@ -87,9 +84,9 @@ function verify() {
       }
     });
 
-    Graph.graphData().links.forEach(l => {
-      const s = l.source.id;
-      const t = l.target.id;
+    Object.values(allLinks).forEach(l => {
+      const s = l.source?.id || l.source;
+      const t = l.target?.id || l.target;
       if (!mainComponent.has(s) || !mainComponent.has(t)) {
         return;
       }
@@ -101,9 +98,14 @@ function verify() {
 
       if (Object.keys(scores[t]["directReports"]).length > 0) {
         scores[s]["indirectReports"][t] = -indirectPenalty * Object.keys(scores[t]["directReports"]).length;
+        scores[s]["score"] -= indirectPenalty * Object.keys(scores[t]["directReports"]).length;
       }
     });
 
+    // visualizing result
+    updateGraphData(0);
+    setPosition("2d");
+    drawGraph2d({ nodes: Object.values(allNodes), links: Object.values(allLinks) }, 0, false, false);
     Graph
       .linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id) && ["already known", "recovery"].includes(l.history[l.history.length - 1][1]))
       .nodeVal(n => Math.max(Math.min(3*scores[n.id]?.score || 1, 3), 20)**.5)
