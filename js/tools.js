@@ -112,7 +112,7 @@ function verify() {
       .linkWidth(.1);
     console.log(Object.keys(scores).map(user => {
       return {
-        name: 'markaz',
+        name: 'Bitu',
         user,
         ...scores[user]
       }
