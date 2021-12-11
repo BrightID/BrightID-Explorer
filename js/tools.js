@@ -53,7 +53,7 @@ function getMainComponent2(filteredIds) {
   return mainComponent;
 }
 
-function verify() {
+function bitu() {
   const directPenalty = 5;
   const indirectPenalty = 1;
   $.getJSON("/filtered_ids.json", function (result) {
