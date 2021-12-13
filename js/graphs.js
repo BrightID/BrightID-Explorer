@@ -58,7 +58,7 @@ function resetLinksColor(link) {
 function resetNodesColor(n) {
   if (n.selected) return "red";
   else if (n.node_type == "Seed") return "blue";
-  else if (n.verifications && "markaz" in n.verifications) return "green";
+  else if (n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.score > 0) return "green";
   else return "orange";
 }
 
@@ -172,7 +172,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
     .nodeColor(resetNodesColor)
     .graphData(data)
     .nodeId("id")
-    .nodeVal(n => 5 * (n.verifications?.markaz?.linksNum || 1) ** .5)
+    .nodeVal(n => Math.min(Math.max(3*n.verifications?.Bitu?.score || 1, 3), 20) ** .5)
     .nodeLabel("id")
     .linkWidth(linkWidth)
     .linkSource("source")
@@ -241,7 +241,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility, subgraph) {
     .nodeOpacity(1)
     .nodeLabel(n => n.id)
     .nodeId("id")
-    .nodeVal(n => 5 * (n.verifications?.markaz?.linksNum || 1) ** .5)
+    .nodeVal(n => Math.min(Math.max(3*n.verifications?.Bitu?.score || 1, 3), 20) ** .5)
     .linkWidth(linkWidth)
     .linkSource("source")
     .linkTarget("target")
@@ -266,12 +266,21 @@ function drawGraph3d(data, cooldownTime, linkVisibility, subgraph) {
 }
 
 async function logPositions2d(type) {
+  let fixed = [];
   if (type == "a") {
     updateGraphData(3);
     setPosition("2d");
   } else if (type == "j") {
-    updateGraphData(1);
+    updateGraphData(3);
     setPosition("2d");
+    fixed = Object.keys(graphNodes);
+    for (let n of Object.values(graphNodes)) {
+      if (n.id in positions["2d"]) {
+        n.fx = n.x;
+        n.fy = n.y;
+      }
+    }
+    updateGraphData(1);
   } else {
     console.log("type should be a (already Known) or j (just met)");
     return;

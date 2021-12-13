@@ -542,7 +542,7 @@ $(document).ready(function () {
       return;
     }
     const id = val.trim();
-    if (["BrightID", "markaz", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id)) {
+    if (["BrightID", "Bitu", "SeedConnected", "DollarForEveryone", "SocialRecoverySetup"].includes(id)) {
       selectVerification(id);
     } else if (allNodes[id]) {
       if (graphNodes[id]) {

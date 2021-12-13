@@ -108,7 +108,7 @@ function bitu() {
     drawGraph2d({ nodes: Object.values(allNodes), links: Object.values(allLinks) }, 0, false, false);
     Graph
       .linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id) && ["already known", "recovery"].includes(l.history[l.history.length - 1][1]))
-      .nodeVal(n => Math.max(Math.min(3*scores[n.id]?.score || 1, 3), 20)**.5)
+      .nodeVal(n => Math.min(Math.max(3*scores[n.id]?.score || 1, 3), 20)**.5)
       .nodeColor(n => scores[n.id]?.score || 0 > 0 ? "blue" : "red")
       .linkDirectionalArrowLength(2)
       .linkWidth(.1);
