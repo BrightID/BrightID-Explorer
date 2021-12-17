@@ -58,7 +58,6 @@ function resetLinksColor(link) {
 
 function resetNodesColor(n) {
   if (n.selected) return "red";
-  else if (n.node_type == "Seed") return "blue";
   else if (n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.score > 0) return "green";
   else return "orange";
 }
