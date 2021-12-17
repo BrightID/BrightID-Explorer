@@ -549,7 +549,7 @@ $(document).ready(function () {
       return;
     }
     const id = val.trim();
-    if (["BrightID", "Bitu", "SeedConnected", "Seed", "SocialRecoverySetup"].includes(id)) {
+    if (["Bitu", "SeedConnected", "Seed", "SocialRecoverySetup"].includes(id)) {
       selectVerification(id);
     } else if (allNodes[id]) {
       if (graphNodes[id]) {
