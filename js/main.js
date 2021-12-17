@@ -384,6 +384,8 @@ function selectNode(node, showDetails, focus) {
         value = seedGroups.join(", ");
       } else if (key == "raw_rank") {
         value = value.toFixed(2);
+      } else if (["directReports", "indirectReports"].includes(key)) {
+        value = JSON.stringify(value);
       }
       details.push(`${key}: ${value}`);
     }
