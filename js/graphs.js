@@ -14,6 +14,7 @@ function drawGraph() {
     const positions = predefinedPosition ? "2d" : "noPositions"
     setPosition(positions);
     drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility, false);
+    Graph.zoom(0, 2000);
   }
 }
 
