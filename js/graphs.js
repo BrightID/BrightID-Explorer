@@ -6,6 +6,7 @@ function drawGraph() {
     console.log("You can't see the edges in this level")
   }
   updateGraphData(levelIndex);
+  updateLegend(levelIndex);
   const predefinedPosition = $("#predefinedPosition").is(":checked");
   if ($("#3dBtn").is(":checked")) {
     setPosition(predefinedPosition ? "3d" : "noPositions");
@@ -269,9 +270,11 @@ async function logPositions2d(type) {
   let fixed = [];
   if (type == "a") {
     updateGraphData(3);
+    updateLegend(3);
     setPosition("2d");
   } else if (type == "j") {
     updateGraphData(3);
+    updateLegend(3);
     setPosition("2d");
     fixed = Object.keys(graphNodes);
     for (let n of Object.values(graphNodes)) {
@@ -281,6 +284,7 @@ async function logPositions2d(type) {
       }
     }
     updateGraphData(1);
+    updateLegend(1);
   } else {
     console.log("type should be a (already Known) or j (just met)");
     return;
