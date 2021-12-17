@@ -385,7 +385,12 @@ function selectNode(node, showDetails, focus) {
       } else if (key == "raw_rank") {
         value = value.toFixed(2);
       } else if (["directReports", "indirectReports"].includes(key)) {
-        value = JSON.stringify(value);
+        let temp = "{ ";
+        for (let k of Object.keys(value)) {
+          temp += `${allNodes[k].name || k}: ${value[k]}, `;
+        }
+        temp += "}"
+        value = temp;
       }
       details.push(`${key}: ${value}`);
     }
