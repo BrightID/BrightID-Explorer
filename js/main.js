@@ -491,9 +491,9 @@ $(document).ready(function () {
     positions["2d"] = data;
   });
 
-  $.get("positions3d.json", function (data) {
-    positions["3d"] = data;
-  });
+  // $.get("positions3d.json", function (data) {
+  //   positions["3d"] = data;
+  // });
 
   $.get(dataFileAddr, function (data) {
     // data = JSON.parse(data);
