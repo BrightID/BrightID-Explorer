@@ -18,6 +18,7 @@ var graphNodes = {};
 var graphLinks = [];
 var Graph;
 var positions = { "status": "", "2d": {}, "3d": {} };
+var selectedVerification = "Bitu";
 
 var areaPoints = [];
 $(document).keyup(function (e) {
@@ -90,7 +91,7 @@ function selectGroup(id, showDetails) {
 
   if (!group.seed) {
     Graph.linkColor(fadedColor);
-    Graph.nodeColor(n => group.members.includes(n.id) ? resetNodesColor(n) : fadedColor);
+    Graph.nodeColor(n => group.members.includes(n.id) ? resetNodesColor(n) : resetNodesColor(n, true));
   }
 
   if (group.region || group.name) {
@@ -152,13 +153,8 @@ function selectGroup(id, showDetails) {
 }
 
 function selectVerification(verification) {
-  const verifieds = new Set();
-  for (const id in allNodes) {
-    if (verification in allNodes[id].verifications) {
-      verifieds.add(id);
-    }
-  }
-  Graph.nodeColor(n => verifieds.has(n.id) ? "green" : "orange");
+  selectedVerification = verification;
+  Graph.nodeColor(resetNodesColor);
 }
 
 function selectRegion(name) {
@@ -188,7 +184,7 @@ function selectRegion(name) {
       sumX += allNodes[id].x;
       sumY += allNodes[id].y;
     }
-    Graph.nodeColor(n => members.includes(n.id) ? resetNodesColor(n) : fadedColor);
+    Graph.nodeColor(n => members.includes(n.id) ? resetNodesColor(n) : resetNodesColor(n, true));
     Graph.linkColor(fadedColor);
     const n = members.length;
     move(sumX / n, sumY / n, 1.2);
@@ -274,7 +270,7 @@ function selectNodes(nodes) {
   });
 
   Graph.linkVisibility(l => (highlightLinks.has(l) ? true : false))
-    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
+    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true))
     .linkDirectionalArrowLength(l => highlightLinks.has(l) ? 6 : 2)
     .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor);
 }
@@ -432,7 +428,7 @@ function selectNode(node, showDetails, focus) {
   });
 
   Graph.linkVisibility(l => (!highlightLinks.has(l) && !$("#linkVisibility").is(":checked")) ? false : true)
-    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
+    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true))
     .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
     .linkDirectionalArrowLength(l => highlightLinks.has(l) ? arrowLength : 1)
 
@@ -664,7 +660,7 @@ $(document).ready(function () {
 
   $("#logoutForm").hide();
 
-  $("#menu-toggle").click(function(e) {
+  $("#menuToggle").click(function(e) {
     e.preventDefault();
     if ($("#wrapper").hasClass("toggled")) {
       $("#menuToggleIcon").addClass("fa-times");
