@@ -244,9 +244,9 @@ function selectNodes(nodes) {
   $("#neighborContainer").hide();
   const selectedNodesText = nodes.join("\n");
   navigator.clipboard.writeText(selectedNodesText).then(function() {
-    alert('Info:', "Selected nodes' id were copied to the clipboard.");
+    alert("Info:", "Selected nodes' id were copied to the clipboard.");
   }, function(err) {
-    console.error('Async: Could not copy text: ', err);
+    console.error("Async: Could not copy text: ", err);
   });
 
   const highlightNodes = new Set();
@@ -477,12 +477,34 @@ function updateLegend(index) {
   });
 }
 
+function openCollapsible(selectedId, reopen) {
+  const open = {"loginDetails": false, "graphDetails": false, "userDetails": false, "groupDetails": false, "statisticsDetails":false, "userIllustratorDetails": false, "starsIllustrator": false};
+  let tag = $(`#${selectedId}`);
+  if ($("#wrapper").hasClass("toggled")) {
+    $("#wrapper").removeClass("toggled");
+    $("#menuToggleIcon").addClass("fa-times");
+  }
+  if (!open[selectedId]) {
+    tag.removeClass("hiden");
+    open[selectedId] = true;
+    Object.keys(open).forEach((id) => {
+      if (id != selectedId) {
+        $(`#${id}`).addClass("hiden");
+        open[id] = false;
+      }
+    })
+  } else if (open[selectedId] && !reopen) {
+    tag.addClass("hiden");
+    open[selectedId] = false;
+  }
+}
+
 $(document).ready(function () {
   $("#loadingoverlay").fadeIn();
   let dataFileAddr;
   let location2dFileAddr;
   const req = new URL(window.location);
-  const folderName = req.searchParams.get('d');
+  const folderName = req.searchParams.get("d");
   if (folderName) {
     if (folderName == "last") {
       dataFileAddr = `/history/brightid.json.gz`;
@@ -564,7 +586,7 @@ $(document).ready(function () {
       if (graphNodes[id]) {
         selectNode(allNodes[id], true);
       } else {
-        alert('Error:', 'This id is not node of this subgraph.');
+        alert("Error:", "This id is not node of this subgraph.");
       }
     } else if (groups[id]) {
       selectGroup(id, true);
@@ -629,7 +651,7 @@ $(document).ready(function () {
   $("#3dBtn").click(drawGraph);
   $("#levelsRange").change(() => {
     const levelIndex = $("#levelsRange").val();
-    const connectionLevels = ["Suspicious", "Just Met", "Filtered", "Already Known", "Recovery"];
+    const connectionLevels = ["Suspicious", "Just met", "Filtered", "Already known", "Recovery"];
     $("#connectionLevel").html(connectionLevels[levelIndex]);
   });
   $("#drawGustomGraph").click(drawGraph);
@@ -641,10 +663,17 @@ $(document).ready(function () {
     }
   });
 
+  $("#logoutForm").hide();
+
   $("#menu-toggle").click(function(e) {
     e.preventDefault();
-    $("#wrapper").toggleClass("toggled");
-    $("#menuToggleIcon").toggleClass("fa-times");
+    if ($("#wrapper").hasClass("toggled")) {
+      $("#menuToggleIcon").addClass("fa-times");
+      $("#wrapper").removeClass("toggled");
+    } else {
+      $("#menuToggleIcon").removeClass("fa-times");
+      $("#wrapper").addClass("toggled");
+    }
   });
 
 });
