@@ -642,7 +642,7 @@ $(document).ready(function () {
   $("#resetBtn").click(() => {
     $("#3dBtn").prop("checked", false);
     $("#levelsRange").val(3);
-    $("#connectionLevel").html("Already Known");
+    $("#connectionLevel").html("Already known");
     stopBtnSI();
     stopBtnUI();
   });
