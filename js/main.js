@@ -477,25 +477,24 @@ function updateLegend(index) {
   });
 }
 
+const accordion = {"loginDetails": false, "graphDetails": false, "userDetails": false, "groupDetails": false, "statisticsDetails":false, "userIllustratorDetails": false, "starsIllustrator": false};
 function openCollapsible(selectedId, reopen) {
-  const open = {"loginDetails": false, "graphDetails": false, "userDetails": false, "groupDetails": false, "statisticsDetails":false, "userIllustratorDetails": false, "starsIllustrator": false};
-  let tag = $(`#${selectedId}`);
   if ($("#wrapper").hasClass("toggled")) {
     $("#wrapper").removeClass("toggled");
     $("#menuToggleIcon").addClass("fa-times");
   }
-  if (!open[selectedId]) {
-    tag.removeClass("hiden");
-    open[selectedId] = true;
-    Object.keys(open).forEach((id) => {
+  if (!accordion[selectedId]) {
+    $(`#${selectedId}`).removeClass("hiden");
+    accordion[selectedId] = true;
+    Object.keys(accordion).forEach((id) => {
       if (id != selectedId) {
         $(`#${id}`).addClass("hiden");
-        open[id] = false;
+        accordion[id] = false;
       }
     })
-  } else if (open[selectedId] && !reopen) {
-    tag.addClass("hiden");
-    open[selectedId] = false;
+  } else if (accordion[selectedId]) {
+    $(`#${selectedId}`).addClass("hiden");
+    accordion[selectedId] = false;
   }
 }
 
