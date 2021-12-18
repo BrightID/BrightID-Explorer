@@ -640,4 +640,11 @@ $(document).ready(function () {
       Graph.linkVisibility(false);
     }
   });
+
+  $("#menu-toggle").click(function(e) {
+    e.preventDefault();
+    $("#wrapper").toggleClass("toggled");
+    $("#menuToggleIcon").toggleClass("fa-times");
+  });
+
 });

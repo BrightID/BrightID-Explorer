@@ -30,11 +30,51 @@
 </head>
 
 <body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+    <button class="btn btn-primary" id="menu-toggle">
+      <i id="menuToggleIcon" class="fas fa-bars"></i>
+    </button>
+    <button class="ml-5 btn btn-primary" id="resetBtn">
+      Reset
+    </button>
+    <form class="form-inline ml-3">
+      <div id="searchbox">
+        <select name="searchfield" id="searchField" class="searchfield">
+          <optgroup label="Verifications" id="searchFieldVerifications">
+            <option value="bitu">Bitu</option>
+            <option value="Seed">Seed</option>
+            <option value="SeedConnected">SeedConnected</option>
+            <option value="SocialRecoverySetup">Social Recovery Setup</option>
+          </optgroup>
+          <optgroup label="Regions" id="searchFieldRegions">
+            <option value="Complete Graph">Complete Graph</option>
+          </optgroup>
+          <optgroup label="Connections" id="searchFieldConnections"></optgroup>
+          <optgroup label="Groups" id="searchFieldGroups"></optgroup>
+        </select>
+      </div>
+    </form>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+<!--         <div class="row justify-content-md-center ml-3 mt-2">
+      <label class="switch">
+        <input type="checkbox" id="3dBtn">
+        <div class="slider round"></div>
+      </label>
+    </div> -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item active">
+          <a href="https://brightid.org" style="outline: none;">
+            <img width="100px" src="https://uploads-ssl.webflow.com/5e54622b3f6e65be8baf0653/5e57958e0eb38846a2658298_brightid-reversed.svg" alt="">
+          </a>
+        </li>
+      </ul>
+    </div>
+      </nav>
   <div class="d-flex toggled" id="wrapper">
     <div class="bg-dark" id="sidebar-wrapper" style="height: 100vh; width: 35vw;">
-      <div class="sidebar-heading" style="height: 10vh">
-        <h1 class="text-light h4">Explorer BrightID</h1>
-      </div>
       <div id="sidebarMenu" class="list-group list-group-flush sidebar" style="height: 90vh">
         <a href="#" onclick="openCollapsible('loginDetail')" class="list-group-item list-group-item-action bg-primary">
           <i style="font-size:16px" class="fas">&#xf105; </i>
@@ -424,47 +464,6 @@
       </div>
     </div>
     <div id="page-content-wrapper">
-      <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
-        <button class="btn btn-primary" id="menu-toggle">
-          <i class="fas fa-bars"></i>
-        </button>
-        <button class="ml-3 btn btn-primary" id="resetBtn">
-          Reset
-        </button>
-        <form class="form-inline ml-3">
-          <div id="searchbox">
-            <select name="searchfield" id="searchField" class="searchfield">
-              <optgroup label="Verifications" id="searchFieldVerifications">
-                <option value="bitu">Bitu</option>
-                <option value="Seed">Seed</option>
-                <option value="SeedConnected">SeedConnected</option>
-                <option value="SocialRecoverySetup">Social Recovery Setup</option>
-              </optgroup>
-              <optgroup label="Regions" id="searchFieldRegions">
-                <option value="Complete Graph">Complete Graph</option>
-              </optgroup>
-              <optgroup label="Connections" id="searchFieldConnections"></optgroup>
-              <optgroup label="Groups" id="searchFieldGroups"></optgroup>
-            </select>
-          </div>
-        </form>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-<!--         <div class="row justify-content-md-center ml-3 mt-2">
-          <label class="switch">
-            <input type="checkbox" id="3dBtn">
-            <div class="slider round"></div>
-          </label>
-        </div> -->
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-            <li class="nav-item active">
-              <a href="https://brightid.org" style="outline: none;">
-                <img width="100px" src="https://uploads-ssl.webflow.com/5e54622b3f6e65be8baf0653/5e57958e0eb38846a2658298_brightid-reversed.svg" alt="">
-              </a>
-        </div>
-      </nav>
       <div style="height: 90vh;" class="container-fluid mx-0 px-0">
         <div style="height: 100%;" id="graphDiv"></div>
         <div id="loadingoverlay">
@@ -506,13 +505,7 @@
     </div>
   </div>
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendor/script/script.js?v=1628083557"></script>
-  <script>
-  $("#menu-toggle").click(function(e) {
-    e.preventDefault();
-    $("#wrapper").toggleClass("toggled");
-  });
-  </script>
+  <script src="vendor/script/script.js"></script>
 </body>
 
 </html>
