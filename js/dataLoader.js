@@ -27,6 +27,7 @@ async function loadUsers(user, key1, password) {
     });
   }
 
+  $("#searchFieldConnections").append(new Option("Myself", user.id));
   // set the connections' name and image
   for (const conn of user.connections || []) {
     // skip conn.id === user.id to solve bugs related to users connected to themselves!
