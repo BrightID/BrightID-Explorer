@@ -52,7 +52,7 @@ function inside(point, vs) {
 }
 
 function resetLinksColor(link) {
-  const colors = { "recovery": "blue", "already known": "green", "just met": "yellow", "suspicious": "orange", "reported": "red", "filtered": "gray" };
+  const colors = { "recovery": "blue", "already known": "orange", "just met": "yellow", "suspicious": "red", "reported": "red", "filtered": "gray" };
   const level = link["history"][link["history"].length - 1][1];
   return (level in colors) ? colors[level] : "black";
 }

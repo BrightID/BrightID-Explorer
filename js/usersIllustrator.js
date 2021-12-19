@@ -41,7 +41,7 @@ function player() {
   }
 
   function linkColorByLevel(level) {
-    const colors = { "recovery": "blue", "already known": "green", "just met": "yellow", "suspicious": "orange", "reported": "red", "filtered": "gray" };
+    const colors = { "recovery": "blue", "already known": "orange", "just met": "yellow", "suspicious": "red", "reported": "red", "filtered": "gray" };
     return colors[level];
   }
 

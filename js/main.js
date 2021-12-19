@@ -464,7 +464,7 @@ function alert(alertTitle, alertBody) {
 }
 
 function updateLegend(index) {
-  const connectionLevels = {"suspicious": "orange", "just met": "yellow", "filtered": "gray", "already known": "green", "recovery": "blue"};
+  const connectionLevels = {"suspicious": "red", "just met": "yellow", "filtered": "gray", "already known": "orange", "recovery": "blue"};
   const selectedLevels = Object.keys(connectionLevels).slice(index, 5);
   $("#legendLinks").empty();
   selectedLevels.forEach((level) => {
