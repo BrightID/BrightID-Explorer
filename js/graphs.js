@@ -68,6 +68,18 @@ function resetNodesColor(n, fade=false) {
   return color;
 }
 
+function resetNodesVal(n) {
+  if (selectedVerification == "Bitu") {
+    return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20)**.5;
+  } else if (selectedVerification == "Seed") {
+    return ("Seed" in n.verifications ? 20 : 3)**.5;
+  } else if (selectedVerification == "SeedConnected") {
+    return Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20)**.5;
+  } else if (selectedVerification == "SocialRecoverySetup") {
+    return ("SocialRecoverySetup" in n.verifications ? 20 : 3)**.5;
+  }
+}
+
 function move(x, y, z) {
   if (mode3D) {
     const distance = 40;
@@ -170,7 +182,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
     .nodeColor(resetNodesColor)
     .graphData(data)
     .nodeId("id")
-    .nodeVal(n => Math.min(Math.max(3*n.verifications?.Bitu?.score || 1, 3), 20) ** .5)
+    .nodeVal(resetNodesVal)
     .nodeLabel("id")
     .linkSource("source")
     .linkTarget("target")
@@ -240,7 +252,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility) {
     .nodeOpacity(1)
     .nodeLabel(n => n.id)
     .nodeId("id")
-    .nodeVal(n => Math.min(Math.max(3*n.verifications?.Bitu?.score || 1, 3), 20) ** .5)
+    .nodeVal(resetNodesVal)
     .linkWidth(linkWidth)
     .linkSource("source")
     .linkTarget("target")
