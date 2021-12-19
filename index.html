@@ -34,37 +34,42 @@
     <button class="btn btn-primary" id="menuToggle">
       <i id="menuToggleIcon" class="fas fa-bars"></i>
     </button>
-    <button class="ml-5 btn btn-primary" id="resetBtn">
-      Reset
-    </button>
-    <form class="form-inline ml-3">
-      <div id="searchbox">
-        <select name="searchfield" id="searchField" class="searchfield">
-          <optgroup label="Verifications" id="searchFieldVerifications">
-            <option value="Bitu">Bitu</option>
-            <option value="Seed">Seed</option>
-            <option value="SeedConnected">Seed connected</option>
-            <option value="SocialRecoverySetup">Social recovery setup</option>
-          </optgroup>
-          <optgroup label="Regions" id="searchFieldRegions">
-            <option value="Complete Graph">Complete graph</option>
-          </optgroup>
-          <optgroup label="Connections" id="searchFieldConnections"></optgroup>
-          <optgroup label="Groups" id="searchFieldGroups"></optgroup>
-        </select>
-      </div>
-    </form>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-<!--         <div class="row justify-content-md-center ml-3 mt-2">
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li>
+          <form class="form-inline ml-3">
+            <div id="searchbox">
+              <select name="searchfield" id="searchField" class="searchfield">
+                <optgroup label="Verifications" id="searchFieldVerifications">
+                  <option value="Bitu">Bitu</option>
+                  <option value="Seed">Seed</option>
+                  <option value="SeedConnected">Seed connected</option>
+                  <option value="SocialRecoverySetup">Social recovery setup</option>
+                </optgroup>
+                <optgroup label="Regions" id="searchFieldRegions">
+                  <option value="Complete Graph">Complete graph</option>
+                </optgroup>
+                <optgroup label="Connections" id="searchFieldConnections"></optgroup>
+                <optgroup label="Groups" id="searchFieldGroups"></optgroup>
+              </select>
+            </div>
+          </form>
+        </li>
+      </ul>
+    </div>
+    <!--<div class="row justify-content-md-center ml-3 mt-2">
       <label class="switch">
         <input type="checkbox" id="3dBtn">
         <div class="slider round"></div>
       </label>
-    </div> -->
+    </div>  -->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li>
+          <button class="btn btn-primary mr-5 mt-1" id="resetBtn">
+            Reset
+          </button>
+        </li>
         <li class="nav-item active">
           <a href="https://brightid.org" style="outline: none;">
             <img width="100px" src="https://uploads-ssl.webflow.com/5e54622b3f6e65be8baf0653/5e57958e0eb38846a2658298_brightid-reversed.svg" alt="">
@@ -72,7 +77,7 @@
         </li>
       </ul>
     </div>
-      </nav>
+  </nav>
   <div class="d-flex toggled" id="wrapper">
     <div class="bg-dark" id="sidebar-wrapper" style="height: 100vh; width: 35vw;">
       <div id="sidebarMenu" class="list-group list-group-flush sidebar" style="height: 90vh">
