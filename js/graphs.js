@@ -61,8 +61,8 @@ function resetNodesColor(n, fade=false) {
   let color;
   if (fade) color = fadedColor;
   else if (n.selected) color = "red";
-  else if (selectedVerification == "Bitu" && n.verifications && selectedVerification in n.verifications && n.verifications.Bitu.score > 0) color = "green";
-  else if (selectedVerification != "Bitu" && n.verifications && selectedVerification in n.verifications) color = "green";
+  else if (selectedVerification == "Bitu" && n.verifications && selectedVerification in n.verifications && n.verifications.Bitu.score > 0) color = "blue";
+  else if (selectedVerification != "Bitu" && n.verifications && selectedVerification in n.verifications) color = "blue";
   else color = "orange";
   n.color = color;
   return color;
