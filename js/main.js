@@ -441,11 +441,14 @@ function selectNode(node, showDetails, focus) {
 }
 
 function updateStatistics() {
-  let bituVerifieds = seedVerifieds = seedConnectedVerifieds = socialRecoverySetupVerifieds = 0;
+  let bituVerifieds = bituVerifiedsHighScore = seedVerifieds = seedConnectedVerifieds = socialRecoverySetupVerifieds = 0;
   Object.values(allNodes).forEach((node) => {
     if (node.verifications) {
       if ("Bitu" in node.verifications && node.verifications.Bitu.score > 0) {
         bituVerifieds++;
+        if (node.verifications.Bitu.score >= 10) {
+          bituVerifiedsHighScore++;
+        }
       }
       if ("Seed" in node.verifications) {
         seedVerifieds++;
@@ -461,6 +464,7 @@ function updateStatistics() {
   });
   $("#numNodes").html(Object.keys(allNodes).length);
   $("#bituVerifieds").html(bituVerifieds);
+  $("#bituVerifiedsHighScore").html(bituVerifiedsHighScore);
   $("#seedVerifieds").html(seedVerifieds);
   $("#seedConnectedVerifieds").html(seedConnectedVerifieds);
   $("#socialRecoverySetupVerifieds").html(socialRecoverySetupVerifieds);
