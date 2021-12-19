@@ -1,6 +1,5 @@
-var selectedLinkWidth = 0.4;
-var linkWidth = 0.3;
-var arrowLength = 4;
+var linkWidth = 0.1;
+var arrowLength = 2;
 var fadedColor = "rgba(204, 204, 204, 1)";
 var selectedNode = undefined;
 var autoLoginDone = false;

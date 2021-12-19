@@ -10,11 +10,11 @@ function drawGraph() {
   const predefinedPosition = $("#predefinedPosition").is(":checked");
   if ($("#3dBtn").is(":checked")) {
     setPosition(predefinedPosition ? "3d" : "noPositions");
-    drawGraph3d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility, false);
+    drawGraph3d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility);
   } else {
-    const positions = predefinedPosition ? "2d" : "noPositions"
+    const positions = predefinedPosition ? "2d" : "noPositions";
     setPosition(positions);
-    drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility, false);
+    drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility);
     Graph.zoom(0, 2000);
   }
 }
@@ -52,7 +52,7 @@ function inside(point, vs) {
 }
 
 function resetLinksColor(link) {
-  const colors = { "recovery": "blue", "already known": "green", "just met": "yellow", "suspicious": "orange", "reported": "red", "filtered": "gray" }
+  const colors = { "recovery": "blue", "already known": "green", "just met": "yellow", "suspicious": "orange", "reported": "red", "filtered": "gray" };
   const level = link["history"][link["history"].length - 1][1];
   return (level in colors) ? colors[level] : "black";
 }
@@ -153,7 +153,7 @@ function updateGraphData(index) {
   });
 }
 
-function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
+function drawGraph2d(data, cooldownTime, linkVisibility) {
   // to fix an issue
   for (let l of data.links) {
     if (!l.__indexColor) {
@@ -161,26 +161,17 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
     }
   }
 
-  if(linkVisibility) {
-    linkDirectionalArrowLength = 2;
-    linkWidth = .1;
-  } else {
-    linkDirectionalArrowLength = arrowLength;
-    linkWidth = linkWidth;
-  }
-
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem)
+    .linkVisibility(false)
     .cooldownTime(cooldownTime)
     .enableNodeDrag(false)
-    .linkColor(resetLinksColor)
     .nodeColor(resetNodesColor)
     .graphData(data)
     .nodeId("id")
     .nodeVal(n => Math.min(Math.max(3*n.verifications?.Bitu?.score || 1, 3), 20) ** .5)
     .nodeLabel("id")
-    .linkWidth(linkWidth)
     .linkSource("source")
     .linkTarget("target")
     .onNodeClick((node) => {
@@ -188,7 +179,6 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
         selectNode(node, true, false);
       }
     })
-    .linkVisibility(subgraph || linkVisibility)
     .onBackgroundClick((evt) => {
       if (evt.ctrlKey) {
         const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
@@ -205,7 +195,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
       Graph.linkWidth(linkWidth)
         .nodeColor(resetNodesColor)
         .linkColor(resetLinksColor)
-        .linkDirectionalArrowLength(6);
+        .linkDirectionalArrowLength(arrowLength);
     })
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject((n, ctx) => {
@@ -226,8 +216,11 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
         ctx.restore();
       }
     })
+    .linkColor(resetLinksColor)
+    .linkWidth(linkWidth)
     .linkDirectionalArrowLength(arrowLength)
     .onEngineStop(async () => {
+      Graph.linkVisibility(linkVisibility);
       if ((await localforage.getItem("explorer_backup_data")) && !autoLoginDone) {
         loadInfo();
       }
@@ -235,7 +228,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
   updateStatistics();
 }
 
-function drawGraph3d(data, cooldownTime, linkVisibility, subgraph) {
+function drawGraph3d(data, cooldownTime, linkVisibility) {
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph3D()(elem)
@@ -256,7 +249,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility, subgraph) {
         selectNode(node, true, false);
       }
     })
-    .linkVisibility(subgraph || linkVisibility)
+    .linkVisibility(linkVisibility)
     .onBackgroundClick(() => {
       for (const id in graphNodes) {
         graphNodes[id].selected = false;
@@ -265,7 +258,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility, subgraph) {
       Graph.linkWidth(linkWidth)
         .nodeColor(resetNodesColor)
         .linkColor(resetLinksColor)
-        .linkDirectionalArrowLength(6);
+        .linkDirectionalArrowLength(arrowLength);
     })
     .linkDirectionalArrowLength(arrowLength)
   updateStatistics();
