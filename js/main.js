@@ -488,7 +488,7 @@ function openCollapsible(selectedId, reopen) {
         accordion[id] = false;
       }
     })
-  } else if (accordion[selectedId]  && !reopen) {
+  } else if (accordion[selectedId] && !reopen) {
     $(`#${selectedId}`).addClass("hiden");
     accordion[selectedId] = false;
   }

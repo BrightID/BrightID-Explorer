@@ -64,24 +64,7 @@ function resetNodesColor(n, fade=false) {
   else if (selectedVerification == "Bitu" && n.verifications && selectedVerification in n.verifications && n.verifications.Bitu.score > 0) color = "green";
   else if (selectedVerification != "Bitu" && n.verifications && selectedVerification in n.verifications) color = "green";
   else color = "orange";
-  Graph.nodeCanvasObject((n, ctx) => {
-    const size = 30;
-    if (n.img) {
-      ctx.lineWidth = 5;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, true);
-      ctx.clip();
-      ctx.strokeStyle = color;
-      try {
-        ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
-      } catch (err) {
-        console.log("Error in drawImage: ", err)
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
-  })
+  n.color = color;
   return color;
 }
 
@@ -225,6 +208,24 @@ function drawGraph2d(data, cooldownTime, linkVisibility, subgraph) {
         .linkDirectionalArrowLength(6);
     })
     .nodeCanvasObjectMode(() => "after")
+    .nodeCanvasObject((n, ctx) => {
+      let size = 30;
+      if (n.img) {
+        ctx.lineWidth = 5;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, true);
+        ctx.clip();
+        ctx.strokeStyle = n.color;
+        try {
+          ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
+        } catch (err) {
+          console.log("Error in drawImage: ", err)
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    })
     .linkDirectionalArrowLength(arrowLength)
     .onEngineStop(async () => {
       if ((await localforage.getItem("explorer_backup_data")) && !autoLoginDone) {
