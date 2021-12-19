@@ -441,20 +441,29 @@ function selectNode(node, showDetails, focus) {
 }
 
 function updateStatistics() {
-  const graphData = Graph.graphData();
-  let numVerifieds = numSeeds = 0;
-  graphData.nodes.forEach((node) => {
-    if (node.verifications && "BrightID" in node.verifications) {
-      numVerifieds++;
+  let bituVerifieds = seedVerifieds = seedConnectedVerifieds = socialRecoverySetupVerifieds = 0;
+  Object.values(allNodes).forEach((node) => {
+    if (node.verifications) {
+      if ("Bitu" in node.verifications && node.verifications.Bitu.score > 0) {
+        bituVerifieds++;
+      }
+      if ("Seed" in node.verifications) {
+        seedVerifieds++;
+      }
+      if ("SeedConnected" in node.verifications) {
+        seedConnectedVerifieds++;
+      }
+      if ("SocialRecoverySetup" in node.verifications) {
+        socialRecoverySetupVerifieds++;
+      }
     }
-    if (node.node_type == "Seed") {
-      numSeeds++;
-    }
+
   });
-  $("#numNodes").html(graphData.nodes.length);
-  $("#numVerifieds").html(numVerifieds);
-  $("#numSeeds").html(numSeeds);
-  $("#averageConnection").html(Math.ceil(graphData.links.length / graphData.nodes.length));
+  $("#numNodes").html(Object.keys(allNodes).length);
+  $("#bituVerifieds").html(bituVerifieds);
+  $("#seedVerifieds").html(seedVerifieds);
+  $("#seedConnectedVerifieds").html(seedConnectedVerifieds);
+  $("#socialRecoverySetupVerifieds").html(socialRecoverySetupVerifieds);
 }
 
 function alert(alertTitle, alertBody) {
