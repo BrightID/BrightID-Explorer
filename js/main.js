@@ -683,4 +683,21 @@ $(document).ready(function () {
     }
   });
 
+  var graphDiv = document.getElementById('graphDiv');
+  var mc = new Hammer(graphDiv);
+  mc.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+  let openPan = false;
+  mc.on("panstart", function(ev) {
+    Graph.linkVisibility(false);
+    openPan = true;
+  });
+  mc.on("panend", function(ev) {
+    openPan = false;
+    setTimeout(function() {
+      if (!openPan) {
+        const linkVisibility = $("#linkVisibility").is(":checked") && $("#levelsRange").val() > 2;
+        Graph.linkVisibility(linkVisibility); 
+      }
+    }, 3000);
+  });
 });
