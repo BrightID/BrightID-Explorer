@@ -74,6 +74,33 @@ function showGroup() {
   selectGroup($("#groups").val(), true);
 }
 
+function drawGroupSubgraph() {
+  const id =$("#groupIdText").val();
+  console.log('ID', id)
+  const subgraphData = getGroupGraphData(id);
+  drawSubgraph(Object.values(subgraphData.nodes), subgraphData.links)
+}
+
+function getGroupGraphData(id) {
+  const group = groups[id];
+  const nodes = {};
+  const links = [];
+  $("#groupMembersCount").html(group.members.length);
+  $("#members").empty().append(new Option("", "none"));
+  for (const member of group.members) {
+    nodes[member] = allNodes[member];
+    Object.keys(allNodes[member].neighbors).forEach(n => {
+      nodes[n] = allNodes[n];
+    });
+  }
+  for (const link of graphLinks) {
+    if (link.source.id in nodes && link.target.id in nodes) {
+      links.push(link);
+    }
+  }
+  return { nodes, links }
+}
+
 function selectGroup(id, showDetails) {
   $("#groupQuotaContainer").hide();
   $("#groupNameContainer").hide();
@@ -82,6 +109,7 @@ function selectGroup(id, showDetails) {
   $("#groupDetailsContent").show();
 
   $("#groupIdText").html(id);
+  $("#groupIdText").val(id);
   $("#groupIdField").val(id);
 
   const group = groups[id];
@@ -106,16 +134,11 @@ function selectGroup(id, showDetails) {
     $("#groupImg").attr("src", "");
   }
 
-  const subgraphNodes = {};
-  const subgraphLinks = [];
+  const subgraphData = getGroupGraphData(id);
   $("#groupMembersCount").html(group.members.length);
   $("#members").empty().append(new Option("", "none"));
   for (const member of group.members) {
     $("#members").append(new Option(allNodes[member].name || member, member));
-    subgraphNodes[member] = allNodes[member];
-    Object.keys(allNodes[member].neighbors).forEach(n => {
-      subgraphNodes[n] = allNodes[n];
-    });
   }
   if (group.seedConnected.length > 0) {
     $("#seedConectedCount").html(group.seedConnected.length);
@@ -125,19 +148,14 @@ function selectGroup(id, showDetails) {
     }
     $("#groupSeedConnectedDiv").show();
   }
-  for (const link of graphLinks) {
-    if (link.source.id in subgraphNodes && link.target.id in subgraphNodes) {
-      subgraphLinks.push(link);
-    }
-  }
 
   Graph.nodeColor(n => {
     if (group.members.includes(n.id)) return 'blue';
-    if (n.id in subgraphNodes) return 'orange';
+    if (n.id in subgraphData.nodes) return 'orange';
     return 'gray';
   });
 
-  Graph.linkColor(l => subgraphLinks.includes(l) ? resetLinksColor(l) : fadedColor);
+  Graph.linkColor(l => subgraphData.links.includes(l) ? resetLinksColor(l) : fadedColor);
 
   if (showDetails) {
     openCollapsible("groupDetails", true);
@@ -702,4 +720,7 @@ $(document).ready(function () {
       }
     }, 3000);
   });
+
+  $("#drawSubgraphBtn").click(drawGroupSubgraph);
+
 });
