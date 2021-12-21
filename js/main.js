@@ -547,7 +547,7 @@ $(document).ready(function () {
         }
         if (!regions[region].includes(group.id)) {
           regions[region].push(group.id);
-          $("#searchFieldRegions").append(new Option(region, region));
+          $("#searchFieldSeedGroups").append(new Option(region, region));
         }
       }
     });
