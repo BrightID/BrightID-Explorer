@@ -18,6 +18,8 @@ var graphLinks = [];
 var Graph;
 var positions = { "status": "", "2d": {}, "3d": {} };
 var selectedVerification = "Bitu";
+var selectedLevels;
+
 
 var areaPoints = [];
 $(document).keyup(function (e) {
@@ -88,9 +90,9 @@ function selectGroup(id, showDetails) {
     mainGraph = true;
   }
 
-  if (!group.seed) {
-    Graph.linkColor(fadedColor);
-    Graph.nodeColor(n => group.members.includes(n.id) ? resetNodesColor(n) : resetNodesColor(n, true));
+  if (group.seed) {
+    $("#groupQuota").html(group.quota);
+    $("#groupQuotaContainer").show();
   }
 
   if (group.region || group.name) {
@@ -111,44 +113,44 @@ function selectGroup(id, showDetails) {
   for (const member of group.members) {
     $("#members").append(new Option(allNodes[member].name || member, member));
     subgraphNodes[member] = allNodes[member];
+    Object.keys(allNodes[member].neighbors).forEach(n => {
+      subgraphNodes[n] = allNodes[n];
+    });
   }
-
   if (group.seedConnected.length > 0) {
     $("#seedConectedCount").html(group.seedConnected.length);
     $("#seedConnected").empty().append(new Option("", "none"));
     for (const u of group.seedConnected) {
       $("#seedConnected").append(new Option(allNodes[u].name || u, u));
-      subgraphNodes[u] = allNodes[u];
     }
     $("#groupSeedConnectedDiv").show();
-    for (const link of graphLinks) {
-      if (link.source.id in subgraphNodes && link.target.id in subgraphNodes) {
-        subgraphLinks.push(link);
-      }
+  }
+  for (const link of graphLinks) {
+    if (link.source.id in subgraphNodes && link.target.id in subgraphNodes) {
+      subgraphLinks.push(link);
     }
   }
 
-  if (group.seed) {
-    mainGraph = false;
-    $("#groupQuota").html(group.quota);
-    $("#groupQuotaContainer").show();
-    drawSubgraph(Object.values(subgraphNodes), subgraphLinks);
-  }
+  Graph.nodeColor(n => {
+    if (group.members.includes(n.id)) return 'blue';
+    if (n.id in subgraphNodes) return 'orange';
+    return 'gray';
+  });
+
+  Graph.linkColor(l => subgraphLinks.includes(l) ? resetLinksColor(l) : fadedColor);
 
   if (showDetails) {
     openCollapsible("groupDetails", true);
   }
 
-  if (!group.seed) {
-    let sumX = 0;
-    let sumY = 0;
-    for (const member of group.members) {
-      sumX += allNodes[member].x;
-      sumY += allNodes[member].y;
-    }
-    const n = group.members.length;
-    move(sumX / n, sumY / n, .2);
+  let sumX = 0;
+  let sumY = 0;
+  for (const member of group.members) {
+    sumX += allNodes[member].x;
+    sumY += allNodes[member].y;
   }
+  const n = group.members.length;
+  move(sumX / n, sumY / n, .5);
 }
 
 function selectVerification(verification) {
