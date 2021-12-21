@@ -91,7 +91,7 @@ function selectGroup(id, showDetails) {
   }
 
   if (group.seed) {
-    $("#groupQuota").html(group.quota);
+    $("#groupQuota").html(`${group.all_quota} / ${group.quota}`);
     $("#groupQuotaContainer").show();
   }
 

@@ -159,6 +159,7 @@ def get_groups_data(users, groups_used_quota):
         if group.get('seed', False):
             quota = max(0, group.get('quota', DEFAULT_QUOTA) -
                         groups_used_quota.get(g, 0))
+            group_dic['all_quota'] = group.get('quota', DEFAULT_QUOTA)
             group_dic['quota'] = quota
             groups_quota[g] = quota
         group_dics.append(group_dic)
