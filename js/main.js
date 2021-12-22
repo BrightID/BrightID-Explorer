@@ -84,12 +84,12 @@ function getGroupGraphData(id) {
   const group = groups[id];
   const nodes = {};
   const links = [];
-  $("#groupMembersCount").html(group.members.length);
-  $("#members").empty().append(new Option("", "none"));
   for (const member of group.members) {
     nodes[member] = allNodes[member];
     Object.keys(allNodes[member].neighbors).forEach(n => {
-      nodes[n] = allNodes[n];
+      if (n in graphNodes) {
+        nodes[n] = allNodes[n];
+      }
     });
   }
   for (const link of graphLinks) {
