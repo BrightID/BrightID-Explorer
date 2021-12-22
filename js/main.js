@@ -76,7 +76,6 @@ function showGroup() {
 
 function drawGroupSubgraph() {
   const id =$("#groupIdText").val();
-  console.log('ID', id)
   const subgraphData = getGroupGraphData(id);
   drawSubgraph(Object.values(subgraphData.nodes), subgraphData.links)
 }
@@ -152,7 +151,7 @@ function selectGroup(id, showDetails) {
   Graph.nodeColor(n => {
     if (group.members.includes(n.id)) return 'blue';
     if (n.id in subgraphData.nodes) return 'orange';
-    return 'gray';
+    return fadedColor;
   });
 
   Graph.linkColor(l => subgraphData.links.includes(l) ? resetLinksColor(l) : fadedColor);

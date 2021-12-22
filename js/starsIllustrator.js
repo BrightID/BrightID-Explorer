@@ -25,18 +25,23 @@ function starsPlayer() {
     if (playerSettingChangedSI) {
       fromDate = new Date($("#fromDateSI").val()).getTime();
       toDate = new Date($("#toDateSI").val()).getTime() + 24 * 60 * 60 * 1000;
+      $("#levelsRange").val(1);
+      $("#connectionLevel").html("Just met");
+      $("#linkVisibility").prop( "checked", false );
+      drawGraph();
       graphLinks.forEach((l) => {
+        const timestamp = l.history[l.history.length - 1][0]
         if (l.source?.node_type != "Seed" ||
           l.level == "reported" ||
-          l.timestamp < fromDate ||
-          l.timestamp > toDate
+          timestamp < fromDate ||
+          timestamp > toDate
         ) {
           return;
         }
         if (!(l.source.id in allConnected)) {
           allConnected[l.source.id] = {};
         }
-        allConnected[l.source.id][l.target.id] = l.timestamp;
+        allConnected[l.source.id][l.target.id] = timestamp;
       });
       sortedKeys = Object.keys(allConnected);
       sortedKeys.sort(function (a, b) {
@@ -51,8 +56,8 @@ function starsPlayer() {
       }
       step = 0;
       $("#dateSI").html("&nbsp;");
-      Graph.nodeColor(n => fadedColor);
-      Graph.linkVisibility(link => false);
+      Graph.nodeColor(fadedColor);
+      Graph.linkVisibility(false);
       delay = $("#delaySI").val() * 1000;
       if (toDate - fromDate == 24 * 60 * 60 * 1000) {
         stepLength = 60 * 60 * 1000;
@@ -157,12 +162,11 @@ function starsPlayer() {
 
     function setSize(n) {
       if (n.id in colored && fromDate <= colored[n.id]["timestamp"] && colored[n.id]["timestamp"] <= to) {
-        return 30;
+        return 50;
       } else {
-        return 2;
+        return 1;
       }
     }
-
     Graph.nodeColor(setColor);
     Graph.nodeVal(setSize);
   }
