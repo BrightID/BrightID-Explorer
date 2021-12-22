@@ -166,6 +166,7 @@ function updateGraphData(index) {
 }
 
 function drawGraph2d(data, cooldownTime, linkVisibility) {
+  let moving = false;
   // to fix an issue
   for (let l of data.links) {
     if (!l.__indexColor) {
@@ -236,7 +237,19 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
       if ((await localforage.getItem("explorer_backup_data")) && !autoLoginDone) {
         loadInfo();
       }
-    });
+    })
+    .onZoom(() => {
+      moving = true;
+      Graph.linkVisibility(false);
+    })
+    .onZoomEnd(async () => {
+      moving = false;
+      setTimeout(() => {
+        if (!moving) {
+          Graph.linkVisibility(linkVisibility); 
+        }
+      }, 3000);
+    })
   updateStatistics();
 }
 
