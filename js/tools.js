@@ -61,7 +61,7 @@ function bitu() {
     const mainComponent = new Set(getMainComponent2(filteredIds));
 
     scores = {}
-    mainComponent.forEach(v => scores[v] = {"linksNum": 0, "score": 0, "directReports": {}, "indirectReports": {}});
+    mainComponent.forEach(v => scores[v] = {"linksNum": 0, "score": 0, "directReports": {}, "indirectReports": {}, "reportedConnections": {}});
     Object.values(allLinks).forEach(l => {
       const s = l.source?.id || l.source;
       const t = l.target?.id || l.target;
@@ -98,6 +98,7 @@ function bitu() {
 
       if (Object.keys(scores[t]["directReports"]).length > 0) {
         scores[s]["indirectReports"][t] = -indirectPenalty * Object.keys(scores[t]["directReports"]).length;
+        scores[s]["reportedConnections"][t] = Object.keys(scores[t]["directReports"]);
         scores[s]["score"] -= indirectPenalty * Object.keys(scores[t]["directReports"]).length;
       }
     });
