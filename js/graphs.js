@@ -166,7 +166,6 @@ function updateGraphData(index) {
 }
 
 function drawGraph2d(data, cooldownTime, linkVisibility) {
-  let moving = false;
   // to fix an issue
   for (let l of data.links) {
     if (!l.__indexColor) {
@@ -238,11 +237,12 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
         loadInfo();
       }
     })
-    .onZoom(() => {
+  Graph.moving = false;
+  Graph.onZoom(() => {
       moving = true;
       Graph.linkVisibility(false);
     })
-    .onZoomEnd(async () => {
+    .onZoomEnd(() => {
       moving = false;
       setTimeout(() => {
         if (!moving) {
