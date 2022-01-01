@@ -38,13 +38,7 @@ function getMainComponent2(filteredIds) {
       mainComponent.push(v);
       checked[v] = true;
       for (const neighbor of Object.keys(allNodes[v].neighbors)) {
-        const outConns = allNodes[v].neighbors[neighbor]["to"];
-        const inConns = allNodes[v].neighbors[neighbor]["from"];
-        const tLevel = outConns.length > 0 ? outConns[outConns.length - 1][1] : null;
-        const fLevel = inConns.length > 0 ? inConns[inConns.length - 1][1] : null;
-        if (["already known", "recovery"].includes(tLevel) && ["already known", "recovery"].includes(fLevel)) {
-          checkList.push(neighbor);
-        }
+        checkList.push(neighbor);
       }
     }
   }
