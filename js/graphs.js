@@ -231,6 +231,9 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
     .linkColor(resetLinksColor)
     .linkWidth(linkWidth)
     .linkDirectionalArrowLength(arrowLength)
+    .onEngineTick(async () => {
+      Graph.linkVisibility(false);
+    })
     .onEngineStop(async () => {
       Graph.linkVisibility(linkVisibility);
       if ((await localforage.getItem("explorer_backup_data")) && !autoLoginDone) {
