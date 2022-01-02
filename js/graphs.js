@@ -326,9 +326,7 @@ async function logPositions2d(type) {
           if (!("x" in node) || !("y" in node)) {
             return;
           }
-          if (Date.now() - 10 * 24 * 60 * 60 * 1000 > node.createdAt) {
-            pos[node.id] = { x: node.x, y: node.y };
-          }
+          pos[node.id] = { x: node.x, y: node.y };
         });
         console.log(`nodes: ${Object.keys(pos).length}`);
         console.log(pos);
