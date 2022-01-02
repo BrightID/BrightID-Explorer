@@ -3,7 +3,7 @@ function drawGraph() {
   const levelIndex = $("#levelsRange").val();
   const linkVisibility = $("#linkVisibility").is(":checked") && levelIndex > 2;
   if ($("#linkVisibility").is(":checked") && levelIndex <= 2) {
-    console.log("You can't see the edges in this level")
+    console.log("You can't see the edges in this level");
   }
   updateGraphData(levelIndex);
   updateLegend(levelIndex);
@@ -13,7 +13,7 @@ function drawGraph() {
     drawGraph3d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility);
   } else {
     const positions = predefinedPosition ? "2d" : "noPositions";
-    setPosition(positions);
+    setPosition(positions, levelIndex);
     drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility);
     Graph.zoom(0, 2000);
   }
@@ -95,29 +95,40 @@ function move(x, y, z) {
   }
 }
 
-function setPosition(type) {
+function setPosition(type, levelIndex) {
+  for (let n of Object.values(graphNodes)) {
+    delete n.fx;
+    delete n.fy;
+    delete n.fz;
+  }
+
   if (type == "noPositions") {
     if (positions["status"] != "noPosition") {
       for (let n of Object.values(graphNodes)) {
         delete n.x;
         delete n.y;
         delete n.z;
-        delete n.fx;
-        delete n.fy;
-        delete n.fz;
       }
       positions["status"] = "noPosition";
     }
   } else if (type == "2d") {
-    if (positions["status"] != "2d") {
+    if (levelIndex && levelIndex < 3) {
+      updateGraphData(3);
       for (let n of Object.values(graphNodes)) {
         if (n.id in positions["2d"]) {
-          n.x = positions["2d"][n.id].x;
-          n.y = positions["2d"][n.id].y;
+          n.fx = positions["2d"][n.id].x;
+          n.fy = positions["2d"][n.id].y;
         }
       }
-      positions["status"] = "2d";
+      updateGraphData(levelIndex);
     }
+    for (let n of Object.values(graphNodes)) {
+      if (n.id in positions["2d"]) {
+        n.x = positions["2d"][n.id].x;
+        n.y = positions["2d"][n.id].y;
+      }
+    }
+    positions["status"] = "2d";
   } else if (type == "3d") {
     if (positions["status"] != "3d") {
       for (let n of Object.values(graphNodes)) {
@@ -293,16 +304,18 @@ function drawGraph3d(data, cooldownTime, linkVisibility) {
 }
 
 async function logPositions2d(type) {
-  let fixed = [];
+  let loopNo;
+  let loopTime;
   if (type == "a") {
     updateGraphData(3);
     updateLegend(3);
     setPosition("2d");
+    loopNo = 10;
+    loopTime = 110000;
   } else if (type == "j") {
     updateGraphData(3);
     updateLegend(3);
     setPosition("2d");
-    fixed = Object.keys(graphNodes);
     for (let n of Object.values(graphNodes)) {
       if (n.id in positions["2d"]) {
         n.fx = n.x;
@@ -311,16 +324,18 @@ async function logPositions2d(type) {
     }
     updateGraphData(1);
     updateLegend(1);
+    loopNo = 1;
+    loopTime = 1100000;
   } else {
     console.log("type should be a (already Known) or j (just met)");
     return;
   }
-  for (let i = 0; i <= 10; i++) {
+  for (let i = 0; i <= loopNo; i++) {
     draw(i);
   }
   function draw(i) {
     setTimeout(function () {
-      if (i == 10) {
+      if (i == loopNo) {
         const pos = {};
         Object.values(graphNodes).forEach(node => {
           if (!("x" in node) || !("y" in node)) {
@@ -334,7 +349,7 @@ async function logPositions2d(type) {
         console.log(`setPositions2d ${i}`);
         drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, 100000, false);
       }
-    }, 110000 * i);
+    }, loopTime * i);
   }
 }
 
