@@ -525,6 +525,31 @@ function openCollapsible(selectedId, reopen) {
   }
 }
 
+function checkExpression(exprString) {
+  const expr = exprEval.Parser.parse(exprString);
+  const verifieds = [];
+  for (let n of Object.values(graphNodes)) {
+    try {
+      if (expr.evaluate(n.verifications)) {
+        verifieds.push(n.id);
+      }
+    } catch (err) {
+      // console.log(err)
+    }
+  }
+  if (verifieds.length > 0) {
+    Graph.nodeColor(n => {
+      if (verifieds.includes(n.id)) return 'blue';
+      return 'orange';
+    });
+    Graph.nodeVal(n => {
+      if (verifieds.includes(n.id)) return 20 ** .5;
+      return 3 ** .5;
+    });
+    alert("Info:", `There are ${verifieds.length} verified users`);
+  }
+}
+
 $(document).ready(function () {
   $("#loadingoverlay").fadeIn();
   let dataFileAddr;
@@ -619,7 +644,7 @@ $(document).ready(function () {
     } else if (regions[id] || id == "Complete Graph") {
       selectRegion(id);
     } else {
-      return;
+      checkExpression(id);
     }
   });
 
