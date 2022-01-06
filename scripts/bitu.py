@@ -15,7 +15,8 @@ INDIRECT_PENALTY = 1
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 BUCKET_NAME = "brightid-explorer"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(dir_path, "google.json")
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
+    dir_path, "google.json")
 client = storage.Client()
 bucket = client.get_bucket(BUCKET_NAME)
 
@@ -58,10 +59,13 @@ def get_main_component():
         if v not in checked and v not in filtered_ids:
             main_component.append(v)
             checked[v] = True
-            for neighbor in list(graph.neighbors(v)):
-                check_list.append(neighbor)
-            for neighbor in list(graph.predecessors(v)):
-                check_list.append(neighbor)
+            allNeighbors = set(list(graph.neighbors(v)) +
+                               list(graph.predecessors(v)))
+            for neighbor in allNeighbors:
+                c1 = graph.edges.get([v, neighbor], {}).get("level") in ["already known", "recovery"]
+                c2 = graph.edges.get([neighbor, v], {}).get("level") in ["already known", "recovery"]
+                if c1 and c2:
+                    check_list.append(neighbor)
     for node in list(graph):
         if node not in main_component or node in filtered_ids:
             graph.remove_node(node)
