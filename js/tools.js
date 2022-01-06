@@ -38,7 +38,13 @@ function getMainComponent2(filteredIds) {
       mainComponent.push(v);
       checked[v] = true;
       for (const neighbor of Object.keys(allNodes[v].neighbors)) {
-        checkList.push(neighbor);
+        const outConns = allNodes[v].neighbors[neighbor]["to"];
+        const inConns = allNodes[v].neighbors[neighbor]["from"];
+        const tLevel = outConns.length > 0 ? outConns[outConns.length - 1][1] : null;
+        const fLevel = inConns.length > 0 ? inConns[inConns.length - 1][1] : null;
+        if (["already known", "recovery"].includes(tLevel) && ["already known", "recovery"].includes(fLevel)) {
+          checkList.push(neighbor);
+        }
       }
     }
   }
@@ -98,9 +104,9 @@ function bitu() {
     });
 
     // visualizing result
-    updateGraphData(0);
+    updateGraphData(3);
     setPosition("2d");
-    drawGraph2d({ nodes: Object.values(allNodes), links: Object.values(allLinks) }, 0, false, false);
+    drawGraph2d({ nodes: Object.values(graphNodes), links: Object.values(graphLinks) }, 0, false, false);
     Graph
       .linkVisibility(l => mainComponent.has(l.source.id) && mainComponent.has(l.target.id) && ["already known", "recovery"].includes(l.history[l.history.length - 1][1]))
       .nodeVal(n => Math.min(Math.max(3*scores[n.id]?.score || 1, 3), 20)**.5)
@@ -114,5 +120,20 @@ function bitu() {
         ...scores[user]
       }
     }));
+  });
+}
+
+function showMainComponent() {
+  $.getJSON("/filtered_ids.json", function (result) {
+    const filteredIds = new Set(result);
+    const mainComponent = new Set(getMainComponent2(filteredIds));
+    Graph
+      .linkVisibility(false)
+      .nodeVal(2)
+      .nodeColor(n => {
+        if (n.node_type == "Seed") return "Green";
+        else if (mainComponent.has(n.id)) return "blue";
+        else return "black";
+      })
   });
 }
