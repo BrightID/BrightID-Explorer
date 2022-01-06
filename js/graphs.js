@@ -187,6 +187,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem)
+    .minZoom(0.009)
     .linkVisibility(false)
     .cooldownTime(cooldownTime)
     .enableNodeDrag(false)
