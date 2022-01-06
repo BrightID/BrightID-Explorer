@@ -256,12 +256,6 @@ function selectNodes(nodes) {
   $("#userDetailsPlaceHolder").hide();
   $("#neighborsContainer").hide();
   $("#neighborContainer").hide();
-  const selectedNodesText = nodes.join("\n");
-  navigator.clipboard.writeText(selectedNodesText).then(function() {
-    alert("Info:", "Selected nodes' id were copied to the clipboard.");
-  }, function(err) {
-    console.error("Async: Could not copy text: ", err);
-  });
 
   const highlightNodes = new Set();
   nodes.forEach(id => {
@@ -277,14 +271,32 @@ function selectNodes(nodes) {
     });
   });
 
+  const outboundNeighbors = new Set();
+  let inboundConns = 0;
+  let outboundConns = 0;
   const highlightLinks = new Set();
   graphLinks.forEach(l => {
     if (!nodes.includes(l.source.id) && !nodes.includes(l.target.id)) {
       return;
     }
+    if (!nodes.includes(l.source.id) && nodes.includes(l.target.id)) {
+      outboundNeighbors.add(l.source.id);
+    } else if (nodes.includes(l.source.id) && !nodes.includes(l.target.id)) {
+      outboundNeighbors.add(l.target.id);
+      outboundConns += 1;
+    } else {
+      inboundConns += 1;
+    }
     if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
       highlightLinks.add(l);
     }
+  });
+
+  const selectedNodesText = nodes.join("\n");
+  navigator.clipboard.writeText(selectedNodesText).then(function() {
+    alert("Info:", `Selected nodes: ${nodes.length}</br>Outbound neighbors: ${outboundNeighbors.size}</br>Outbound connections: ${outboundConns}</br>Inbound connections: ${inboundConns}</br>selected nodes' id were copied to the clipboard.`);
+  }, function(err) {
+    console.error("Async: Could not copy text: ", err);
   });
 
   Graph.linkVisibility(l => (highlightLinks.has(l) ? true : false))
