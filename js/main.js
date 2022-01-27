@@ -262,8 +262,8 @@ function selectNodes(nodes) {
     highlightNodes.add(id);
     const node = allNodes[id];
     Object.keys(node.neighbors).forEach(n1 => {
-      const tLevel = node.neighbors[n1]["to"].length > 0 ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1] : null
-      const fLevel = node.neighbors[n1]["from"].length > 0 ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1] : null
+      const tLevel = node.neighbors[n1]["to"].length > 0 ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1] : null;
+      const fLevel = node.neighbors[n1]["from"].length > 0 ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1] : null;
       if (!selectedLevels.includes(tLevel) || !selectedLevels.includes(fLevel)) {
         return;
       }
@@ -271,6 +271,7 @@ function selectNodes(nodes) {
     });
   });
 
+  const activeMembers = new Set();
   const outboundNeighbors = new Set();
   let inboundConns = 0;
   let outboundConns = 0;
@@ -279,14 +280,20 @@ function selectNodes(nodes) {
     if (!nodes.includes(l.source.id) && !nodes.includes(l.target.id)) {
       return;
     }
-    if (!nodes.includes(l.source.id) && nodes.includes(l.target.id)) {
-      outboundNeighbors.add(l.source.id);
-    } else if (nodes.includes(l.source.id) && !nodes.includes(l.target.id)) {
-      outboundNeighbors.add(l.target.id);
-      outboundConns += 1;
-    } else {
+    let level = l["history"][l["history"].length - 1][1];
+    if (nodes.includes(l.source.id) && nodes.includes(l.target.id)) {
       inboundConns += 1;
+    } else {
+      outboundConns += 1;
+      if (!nodes.includes(l.source.id) && nodes.includes(l.target.id)) {
+        activeMembers.add(l.target.id);
+        outboundNeighbors.add(l.source.id);
+      } else if (nodes.includes(l.source.id) && !nodes.includes(l.target.id)) {
+        activeMembers.add(l.source.id);
+        outboundNeighbors.add(l.target.id);
+      }
     }
+
     if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
       highlightLinks.add(l);
     }
@@ -294,7 +301,7 @@ function selectNodes(nodes) {
 
   const selectedNodesText = nodes.join("\n");
   navigator.clipboard.writeText(selectedNodesText).then(function() {
-    alert("Info:", `Selected nodes: ${nodes.length}</br>Outbound neighbors: ${outboundNeighbors.size}</br>Outbound connections: ${outboundConns}</br>Inbound connections: ${inboundConns}</br>selected nodes' id were copied to the clipboard.`);
+    alert("Info:", `Selected nodes: ${nodes.length}</br>Active nodes: ${activeMembers.size}</br>Outbound neighbors: ${outboundNeighbors.size}</br>Outbound connections: ${outboundConns / 2}</br>Inbound connections: ${inboundConns / 2}</br>selected nodes' id were copied to the clipboard.`);
   }, function(err) {
     console.error("Async: Could not copy text: ", err);
   });
@@ -550,16 +557,11 @@ function checkExpression(exprString) {
     }
   }
   if (verifieds.length > 0) {
-    Graph.nodeColor(n => {
-      if (verifieds.includes(n.id)) return 'blue';
-      return 'orange';
-    });
-    Graph.nodeVal(n => {
-      if (verifieds.includes(n.id)) return 20 ** .5;
-      return 3 ** .5;
-    });
+    Graph.nodeColor(n => verifieds.includes(n.id) ? 'blue' : 'orange');
+    Graph.nodeVal(n => verifieds.includes(n.id) ? 20 ** .5 : 3 ** .5);
     alert("Info:", `There are ${verifieds.length} verified users`);
   }
+  return;
 }
 
 $(document).ready(function () {
