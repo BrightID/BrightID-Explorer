@@ -20,7 +20,6 @@ var positions = { "status": "", "2d": {}, "3d": {} };
 var selectedVerification = "Bitu";
 var selectedLevels;
 
-
 var areaPoints = [];
 $(document).keyup(function (e) {
   if (e.keyCode != 17) {
@@ -75,7 +74,7 @@ function showGroup() {
 }
 
 function drawGroupSubgraph() {
-  const id =$("#groupIdText").val();
+  const id = $("#groupIdText").val();
   const subgraphData = getGroupGraphData(id);
   drawSubgraph(Object.values(subgraphData.nodes), subgraphData.links)
 }
@@ -248,70 +247,6 @@ function getConnText(neighbor, fData, tData) {
   return text;
 }
 
-function selectNodes(nodes) {
-  $("#userDetailsContent").show();
-  $("#seedData").hide();
-  $("#userNameContainer").hide();
-  $("#userRecoveryContainer").hide();
-  $("#userDetailsPlaceHolder").hide();
-  $("#neighborsContainer").hide();
-  $("#neighborContainer").hide();
-
-  const highlightNodes = new Set();
-  nodes.forEach(id => {
-    highlightNodes.add(id);
-    const node = allNodes[id];
-    Object.keys(node.neighbors).forEach(n1 => {
-      const tLevel = node.neighbors[n1]["to"].length > 0 ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1] : null;
-      const fLevel = node.neighbors[n1]["from"].length > 0 ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1] : null;
-      if (!selectedLevels.includes(tLevel) || !selectedLevels.includes(fLevel)) {
-        return;
-      }
-      highlightNodes.add(n1);
-    });
-  });
-
-  const activeMembers = new Set();
-  const outboundNeighbors = new Set();
-  let inboundConns = 0;
-  let outboundConns = 0;
-  const highlightLinks = new Set();
-  graphLinks.forEach(l => {
-    if (!nodes.includes(l.source.id) && !nodes.includes(l.target.id)) {
-      return;
-    }
-    let level = l["history"][l["history"].length - 1][1];
-    if (nodes.includes(l.source.id) && nodes.includes(l.target.id)) {
-      inboundConns += 1;
-    } else {
-      outboundConns += 1;
-      if (!nodes.includes(l.source.id) && nodes.includes(l.target.id)) {
-        activeMembers.add(l.target.id);
-        outboundNeighbors.add(l.source.id);
-      } else if (nodes.includes(l.source.id) && !nodes.includes(l.target.id)) {
-        activeMembers.add(l.source.id);
-        outboundNeighbors.add(l.target.id);
-      }
-    }
-
-    if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
-      highlightLinks.add(l);
-    }
-  });
-
-  const selectedNodesText = nodes.join("\n");
-  navigator.clipboard.writeText(selectedNodesText).then(function() {
-    alert("Info:", `Selected nodes: ${nodes.length}</br>Active nodes: ${activeMembers.size}</br>Outbound neighbors: ${outboundNeighbors.size}</br>Outbound connections: ${outboundConns / 2}</br>Inbound connections: ${inboundConns / 2}</br>selected nodes' id were copied to the clipboard.`);
-  }, function(err) {
-    console.error("Async: Could not copy text: ", err);
-  });
-
-  Graph.linkVisibility(l => (highlightLinks.has(l) ? true : false))
-    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true))
-    .linkDirectionalArrowLength(l => highlightLinks.has(l) ? 6 : 2)
-    .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor);
-}
-
 function selectNode(node, showDetails, focus) {
   $("#userDetailsContent").show();
   $("#seedData").hide();
@@ -372,7 +307,7 @@ function selectNode(node, showDetails, focus) {
         allNeighbors.push([...nt, "out", n]);
       }
     });
-    allNeighbors.sort((a, b) => a[0] - b[0] );
+    allNeighbors.sort((a, b) => a[0] - b[0]);
     for (const n2 of allNeighbors) {
       const text = `${allNodes[n2[3]]?.name || n2[3]} | ${n2[2]} | ${n2[1] == "reported" ? "reported" : n2[1][0].toUpperCase()} | ${new Date(n2[0]).toJSON().split(".")[0].replace("T", " ")}`
       $("#neighborsHistory").append(new Option(text, n2[3]));
@@ -515,7 +450,7 @@ function alert(alertTitle, alertBody) {
 }
 
 function updateLegend(index) {
-  const connectionLevels = {"suspicious": "red", "just met": "yellow", "filtered": "gray", "already known": "orange", "recovery": "blue"};
+  const connectionLevels = { "suspicious": "red", "just met": "yellow", "filtered": "gray", "already known": "orange", "recovery": "blue" };
   const selectedLevels = Object.keys(connectionLevels).slice(index, 5);
   $("#legendLinks").empty();
   selectedLevels.forEach((level) => {
@@ -523,7 +458,7 @@ function updateLegend(index) {
   });
 }
 
-const accordion = {"loginDetails": false, "graphDetails": false, "userDetails": false, "groupDetails": false, "statisticsDetails":false, "userIllustratorDetails": false, "starsIllustrator": false};
+const accordion = { "loginDetails": false, "graphDetails": false, "userDetails": false, "groupDetails": false, "statisticsDetails": false, "userIllustratorDetails": false, "starsIllustrator": false };
 function openCollapsible(selectedId, reopen) {
   if ($("#wrapper").hasClass("toggled")) {
     $("#wrapper").removeClass("toggled");
@@ -730,7 +665,7 @@ $(document).ready(function () {
 
   $("#logoutForm").hide();
 
-  $("#menuToggle").click(function(e) {
+  $("#menuToggle").click(function (e) {
     e.preventDefault();
     if ($("#wrapper").hasClass("toggled")) {
       $("#menuToggleIcon").addClass("fa-times");
@@ -742,5 +677,4 @@ $(document).ready(function () {
   });
 
   $("#drawSubgraphBtn").click(drawGroupSubgraph);
-
 });

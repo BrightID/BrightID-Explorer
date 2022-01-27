@@ -57,26 +57,34 @@ function resetLinksColor(link) {
   return (level in colors) ? colors[level] : "black";
 }
 
-function resetNodesColor(n, fade=false) {
+function resetNodesColor(n, fade = false) {
   let color;
-  if (fade) color = fadedColor;
-  else if (n.selected) color = "red";
-  else if (selectedVerification == "Bitu" && n.verifications && selectedVerification in n.verifications && n.verifications.Bitu.score > 0) color = "blue";
-  else if (selectedVerification != "Bitu" && n.verifications && selectedVerification in n.verifications) color = "blue";
-  else color = "orange";
-  n.color = color;
+  if (bituVerifieds.length != 0) {
+    if (fade) color = fadedColor;
+    else if (n.selected) color = "red";
+    else if (n.bituVerified) color = "blue";
+    else color = "orange";
+    n.color = color;
+  } else {
+    if (fade) color = fadedColor;
+    else if (n.selected) color = "red";
+    else if (selectedVerification == "Bitu" && n.verifications && selectedVerification in n.verifications && n.verifications.Bitu.score > 0) color = "blue";
+    else if (selectedVerification != "Bitu" && n.verifications && selectedVerification in n.verifications) color = "blue";
+    else color = "orange";
+    n.color = color;
+  }
   return color;
 }
 
 function resetNodesVal(n) {
   if (selectedVerification == "Bitu") {
-    return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20)**.5;
+    return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
   } else if (selectedVerification == "Seed") {
-    return ("Seed" in n.verifications ? 20 : 3)**.5;
+    return ("Seed" in n.verifications ? 20 : 3) ** .5;
   } else if (selectedVerification == "SeedConnected") {
-    return Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20)**.5;
+    return Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20) ** .5;
   } else if (selectedVerification == "SocialRecoverySetup") {
-    return ("SocialRecoverySetup" in n.verifications ? 20 : 3)**.5;
+    return ("SocialRecoverySetup" in n.verifications ? 20 : 3) ** .5;
   }
 }
 
@@ -254,14 +262,14 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
     })
   Graph.moving = false;
   Graph.onZoom(() => {
-      moving = true;
-      Graph.linkVisibility(false);
-    })
+    moving = true;
+    Graph.linkVisibility(false);
+  })
     .onZoomEnd(() => {
       moving = false;
       setTimeout(() => {
         if (!moving) {
-          Graph.linkVisibility(linkVisibility); 
+          Graph.linkVisibility(linkVisibility);
         }
       }, 3000);
     })
