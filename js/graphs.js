@@ -334,7 +334,7 @@ async function logPositions2d(type) {
     updateGraphData(1);
     updateLegend(1);
     loopNo = 1;
-    loopTime = 1100000;
+    loopTime = 300000;
   } else {
     console.log("type should be a (already Known) or j (just met)");
     return;
