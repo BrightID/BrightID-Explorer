@@ -5,7 +5,6 @@ import time
 import shutil
 import tarfile
 import requests
-import networkx as nx
 
 BACKUP_URL = 'https://explorer.brightid.org/backups/brightid.tar.gz'
 DEFAULT_QUOTA = 50
@@ -67,11 +66,14 @@ def get_links():
                 'inbound': {k: 0 for k in connection_levels},
                 'recoveries': []
             }
-        users_statistics[link['source']]['outbound'][link['history'][-1][1]] += 1
-        users_statistics[link['target']]['inbound'][link['history'][-1][1]] += 1
+        users_statistics[link['source']
+                         ]['outbound'][link['history'][-1][1]] += 1
+        users_statistics[link['target']
+                         ]['inbound'][link['history'][-1][1]] += 1
 
         if link['history'][-1][1] == 'recovery':
-            users_statistics[link['source']]['recoveries'].append(link['target'])
+            users_statistics[link['source']
+                             ]['recoveries'].append(link['target'])
 
     return list(links.values()), users_statistics
 
