@@ -3,7 +3,8 @@ function drawGraph() {
   const levelIndex = $("#levelsRange").val();
   const linkVisibility = $("#linkVisibility").is(":checked") && levelIndex > 2;
   if ($("#linkVisibility").is(":checked") && levelIndex <= 2) {
-    console.log("You can't see the edges in this level");
+    $("#linkVisibility").prop( "checked", false );
+    alert("You can't see the edges in this level");
   }
   updateGraphData(levelIndex);
   updateLegend(levelIndex);
@@ -62,7 +63,7 @@ function resetNodesColor(n, fade = false) {
   if (bituVerifieds.length != 0) {
     if (fade) color = fadedColor;
     else if (n.selected) color = "red";
-    else if (n.bituVerified) color = "blue";
+    else if (n.hasBitu) color = "blue";
     else color = "orange";
     n.color = color;
   } else {
@@ -77,14 +78,25 @@ function resetNodesColor(n, fade = false) {
 }
 
 function resetNodesVal(n) {
-  if (selectedVerification == "Bitu") {
-    return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
-  } else if (selectedVerification == "Seed") {
-    return ("Seed" in n.verifications ? 20 : 3) ** .5;
-  } else if (selectedVerification == "SeedConnected") {
-    return Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20) ** .5;
-  } else if (selectedVerification == "SocialRecoverySetup") {
-    return ("SocialRecoverySetup" in n.verifications ? 20 : 3) ** .5;
+  let color;
+  if (bituVerifieds.length != 0) {
+    if (boldMood == 0) {
+      return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
+    } else if (boldMood == 1) {
+      return n.hasBitu ? 20 : 1;
+    } else if (boldMood == 2) {
+      return n.hasBitu ? 1 : 20;
+    }
+  } else {
+    if (selectedVerification == "Bitu") {
+      return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
+    } else if (selectedVerification == "Seed") {
+      return ("Seed" in n.verifications ? 20 : 3) ** .5;
+    } else if (selectedVerification == "SeedConnected") {
+      return Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20) ** .5;
+    } else if (selectedVerification == "SocialRecoverySetup") {
+      return ("SocialRecoverySetup" in n.verifications ? 20 : 3) ** .5;
+    }
   }
 }
 

@@ -1,5 +1,7 @@
 var selectedNodes = [];
 var bituVerifieds = [];
+const directPenalty = 5;
+const indirectPenalty = 1;
 
 function getMainComponent() {
   const mainNode = "AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA";
@@ -29,8 +31,6 @@ function getMainComponent() {
 }
 
 function bitu() {
-  const directPenalty = 5;
-  const indirectPenalty = 1;
   scores = {}
   const verifieds = new Set(bituVerifieds)
   verifieds.forEach(v => scores[v] = { "linksNum": 0, "score": 0, "directReports": {}, "indirectReports": {}, "reportedConnections": {} });
@@ -96,16 +96,6 @@ function bitu() {
 
 function selectNodes(nodes) {
   selectedNodes = nodes;
-  if (bituVerifieds.length == 0) {
-    const mainComponent = new Set(getMainComponent());
-    mainComponent.forEach(v => {
-      let n = allNodes[v];
-      if (n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.score > 0) {
-        bituVerifieds.push(v);
-        n.bituVerified = true;
-      }
-    });
-  }
   $("#userDetailsContent").show();
   $("#seedData").hide();
   $("#userNameContainer").hide();
@@ -182,7 +172,7 @@ function addToBituVerifieds() {
   selectedNodes.forEach(id => {
     if (!(bituVerifieds.includes(id))) {
       bituVerifieds.push(id);
-      allNodes[id].bituVerified = true;
+      allNodes[id].hasBitu = true;
     }
   });
   console.log(`add ${selectedNodes.length} nodes. verifieds: ${bituVerifieds.length}`);
@@ -193,7 +183,88 @@ function removeFromBituVerifieds() {
     return selectedNodes.indexOf(id) < 0;
   });
   selectedNodes.forEach(id => {
-    allNodes[id].bituVerified = false;
+    allNodes[id].hasBitu = false;
   });
   console.log(`remove ${selectedNodes.length} nodes. verifieds: ${bituVerifieds.length}`);
+}
+
+function drawBituVersion() {
+  $("#linkVisibility").prop( "checked", false );
+  updateGraphData(3);
+  setPosition("2d", 3);
+  const data = { nodes: Object.values(graphNodes), links: graphLinks };
+
+  const mainComponent = new Set(getMainComponent());
+  mainComponent.forEach(v => {
+    let n = allNodes[v];
+    n.mainComponent = true;
+    n.label = 'N';
+    if (n.verifications && "Bitu" in n.verifications) {
+      if (n.verifications.Bitu.score != 0) {
+        bituVerifieds.push(v);
+        n.hasBitu = true;
+        n.label = n.verifications.Bitu.score;
+      } else if (n.verifications.Bitu.score == 0) {
+        n1 = Object.keys(n.verifications.Bitu.directReports).length;
+        n2 = Object.keys(n.verifications.Bitu.indirectReports).length;
+        if (n.verifications.Bitu.linksNum - ((n1 * directPenalty) + (n2 * indirectPenalty)) == 0) {
+          bituVerifieds.push(v);
+          n.hasBitu = true;
+          n.label = n.verifications.Bitu.score;
+        }
+      }
+    }
+  });
+
+  // to fix an issue
+  for (let l of data.links) {
+    if (!l.__indexColor) {
+      l.__indexColor = resetLinksColor(l);
+    }
+  }
+
+  $("#graphDiv").empty();
+  const elem = document.getElementById("graphDiv");
+  Graph = ForceGraph()(elem)
+    .minZoom(0.01)
+    .nodeLabel("label")
+    .linkVisibility(false)
+    .nodeVisibility(n => n.mainComponent || false)
+    .cooldownTime(10000)
+    .enableNodeDrag(false)
+    .nodeColor(resetNodesColor)
+    .graphData(data)
+    .nodeId("id")
+    .nodeVal(resetNodesVal)
+    .linkSource("source")
+    .linkTarget("target")
+    .onNodeClick((node) => {
+      if (!node.selected) {
+        selectNode(node, true, false);
+      }
+    })
+    .onBackgroundClick((evt) => {
+      if (evt.ctrlKey) {
+        const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
+        var rect = document.getElementById("graphDiv").getBoundingClientRect();
+        drawCoordinates(p.x, p.y, 5 / (Graph.zoom() ** .5));
+        areaPoints.push([p.x, p.y]);
+        return;
+      }
+
+      for (const id in graphNodes) {
+        graphNodes[id].selected = false;
+      }
+      selectedNode = undefined;
+      Graph.linkWidth(linkWidth)
+        .nodeColor(resetNodesColor)
+        .linkColor(resetLinksColor)
+        .linkDirectionalArrowLength(arrowLength);
+    })
+    .linkColor(resetLinksColor)
+    .linkWidth(linkWidth)
+    .linkDirectionalArrowLength(arrowLength)
+  Graph.moving = false;
+  updateStatistics();
+  Graph.zoom(0, 3000);
 }

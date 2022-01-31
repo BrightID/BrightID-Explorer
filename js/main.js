@@ -19,6 +19,7 @@ var Graph;
 var positions = { "status": "", "2d": {}, "3d": {} };
 var selectedVerification = "Bitu";
 var selectedLevels;
+var boldMood = 0;
 
 var areaPoints = [];
 $(document).keyup(function (e) {
@@ -38,6 +39,22 @@ $(document).keyup(function (e) {
   }
   areaPoints = [];
 })
+
+$(document).keydown(function(e) {
+  if (e.keyCode == 49 && e.shiftKey) {
+    if ($("#linkVisibility").is(":checked")) {
+      $("#linkVisibility").prop( "checked", false );
+      Graph.linkVisibility(false);
+    } else {
+    $("#linkVisibility").prop( "checked", true );
+    Graph.linkVisibility(true);
+    }
+  }
+  if (e.keyCode == 50 && e.shiftKey) {
+    boldMood = (boldMood += 1) % 3;
+    Graph.nodeVal(resetNodesVal);
+  }
+});
 
 function showUser() {
   const node = allNodes[$("#seedConnected").val()];
@@ -399,7 +416,7 @@ function selectNode(node, showDetails, focus) {
     }
   });
 
-  Graph.linkVisibility(l => (!highlightLinks.has(l) && !$("#linkVisibility").is(":checked")) ? false : true)
+  Graph.linkVisibility(l => highlightLinks.has(l) ? true : false)
     .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true))
     .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
     .linkDirectionalArrowLength(l => highlightLinks.has(l) ? arrowLength : 1)
