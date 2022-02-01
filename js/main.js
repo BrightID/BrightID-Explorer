@@ -369,7 +369,7 @@ function selectNode(node, showDetails, focus) {
         value = seedGroups.join(", ");
       } else if (key == "raw_rank") {
         value = value.toFixed(2);
-      } else if (["directReports", "indirectReports"].includes(key)) {
+      } else if (["directReports", "indirectReports", "reportedConnections"].includes(key)) {
         let temp = "{ ";
         for (let k of Object.keys(value)) {
           temp += `${allNodes[k].name || k}: ${value[k]}, `;
