@@ -32,7 +32,7 @@ function getMainComponent() {
 
 function bitu() {
   scores = {}
-  const verifieds = new Set(bituVerifieds)
+  const verifieds = new Set(bituVerifieds);
   verifieds.forEach(v => scores[v] = { "linksNum": 0, "score": 0, "directReports": {}, "indirectReports": {}, "reportedConnections": {} });
   Object.values(allLinks).forEach(l => {
     const s = l.source?.id || l.source;
@@ -207,7 +207,9 @@ function drawBituVersion() {
       } else if (n.verifications.Bitu.score == 0) {
         n1 = Object.keys(n.verifications.Bitu.directReports).length;
         n2 = Object.keys(n.verifications.Bitu.indirectReports).length;
-        if (n.verifications.Bitu.linksNum - ((n1 * directPenalty) + (n2 * indirectPenalty)) == 0) {
+        const directPenalties = Object.values(n.verifications.Bitu.directReports).reduce((partialSum, a) => partialSum + a, 0);
+        const indirectPenalties = Object.values(n.verifications.Bitu.indirectReports).reduce((partialSum, a) => partialSum + a, 0);
+        if (n.verifications.Bitu.linksNum + directPenalties + indirectPenalties == 0) {
           bituVerifieds.push(v);
           n.hasBitu = true;
           n.label = n.verifications.Bitu.score;
