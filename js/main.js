@@ -376,6 +376,12 @@ function selectNode(node, showDetails, focus) {
         }
         temp += "}"
         value = temp;
+      } else if (key == "releaseTime") {
+        const d = new Date(value);
+        details.push(`release: ${d.getDate()} / ${d.getMonth()} / ${d.getFullYear()}`);
+        const nd = new Date(d.getTime() + (7 * 24 * 60 * 60 * 1000));
+        details.push(`next release: ${nd.getDate()} / ${nd.getMonth()} / ${nd.getFullYear()}`);
+        continue;
       }
       details.push(`${key}: ${value}`);
     }
