@@ -79,6 +79,7 @@ function bitu() {
   updateGraphData(3);
   setPosition("2d");
   drawGraph2d({ nodes: Object.values(graphNodes), links: Object.values(graphLinks) }, 0, false, false);
+  var releaseTime = new Date().getTime();
   Graph
     .linkVisibility(l => verifieds.has(l.source.id) && verifieds.has(l.target.id) && ["already known", "recovery"].includes(l.history[l.history.length - 1][1]))
     .nodeVal(n => Math.min(Math.max(3 * scores[n.id]?.score || 1, 3), 20) ** .5)
@@ -89,6 +90,7 @@ function bitu() {
     return {
       name: 'Bitu',
       user,
+      releaseTime,
       ...scores[user]
     }
   }));
