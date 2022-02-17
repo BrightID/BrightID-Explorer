@@ -120,6 +120,10 @@ def bitu():
     scores = {v: {"name": "Bitu", "user": v, "linksNum": 0, "score": 0, "tempScore": 0, "directReports": {
     }, "indirectReports": {}, "reportedConnections": {}} for v in main_component.nodes}
     for l in main_component.edges:
+        # skip the edges that the target already hasn't had Bitu verification
+        if eligibles.get(l[1], {}).get("score", 0) < 1:
+            continue
+
         level = main_component.edges[l]["level"]
         if level not in ["already known", "recovery"]:
             continue
@@ -134,6 +138,10 @@ def bitu():
             scores[l[0]]["tempScore"] -= DIRECT_PENALTY
 
     for l in main_component.edges:
+        # skip the edges that the target already hasn't had Bitu verification
+        if eligibles.get(l[1], {}).get("score", 0) < 1:
+            continue
+
         level = main_component.edges[l]["level"]
         if level not in ["already known", "recovery"]:
             continue
