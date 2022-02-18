@@ -378,9 +378,9 @@ function selectNode(node, showDetails, focus) {
         value = temp;
       } else if (key == "releaseTime") {
         const d = new Date(value);
-        details.push(`release: ${d.getDate()} / ${d.getMonth()} / ${d.getFullYear()}`);
+        details.push(`release: ${d.getDate()} / ${d.getMonth() + 1} / ${d.getFullYear()}`);
         const nd = new Date(d.getTime() + (7 * 24 * 60 * 60 * 1000));
-        details.push(`next release: ${nd.getDate()} / ${nd.getMonth()} / ${nd.getFullYear()}`);
+        details.push(`next release: ${nd.getDate()} / ${nd.getMonth() + 1} / ${nd.getFullYear()}`);
         continue;
       }
       details.push(`${key}: ${value}`);
@@ -456,11 +456,16 @@ function updateStatistics() {
         socialRecoverySetupVerifieds++;
       }
     }
-
   });
+  const d = new Date(allNodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"]["verifications"]["Bitu"]["releaseTime"]);
+  const rleaseDate = `${d.getDate()} / ${d.getMonth() + 1}`;
+  const nd = new Date(d.getTime() + (7 * 24 * 60 * 60 * 1000));
+  const nextRleaseDate = `${nd.getDate()} / ${nd.getMonth() + 1}`;
   $("#numNodes").html(Object.keys(allNodes).length);
   $("#bituVerifieds").html(bituVerifieds);
   $("#bituVerifiedsHighScore").html(bituVerifiedsHighScore);
+  $("#rleaseDate").html(rleaseDate);
+  $("#nextRleaseDate").html(nextRleaseDate);
   $("#seedVerifieds").html(seedVerifieds);
   $("#seedConnectedVerifieds").html(seedConnectedVerifieds);
   $("#socialRecoverySetupVerifieds").html(socialRecoverySetupVerifieds);
