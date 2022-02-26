@@ -7,15 +7,44 @@ import {
   forceCenter,
 } from "d3-force";
 import fs from "fs";
-import data from "./brightid.json";
+import zlib from "zlib";
 
 const TICKS = 50;
-const ITERATIONS = 100;
+const ITERATIONS = 10;
 
 const nodes = [];
 const links = [];
 
-const init = () => {
+const readGzJson = async (fname) => {
+  return new Promise(function (resolve, reject) {
+    let d = "";
+    fs.createReadStream(fname)
+      .pipe(zlib.createGunzip())
+      .on("data", function (data) {
+        // console.log(1, data.toString());
+        d += data.toString();
+      })
+      .on("error", reject)
+      .on("end", function () {
+        resolve(JSON.parse(d));
+      });
+  });
+};
+
+const writeGzJson = async (data, fname) => {
+  return new Promise(function (resolve, reject) {
+    const gz = zlib.createGzip();
+    gz.pipe(fs.createWriteStream(fname));
+    gz.on("error", reject);
+    gz.on("finish", resolve);
+    gz.write(JSON.stringify(data));
+    gz.end();
+  });
+};
+
+const init = async () => {
+  const data = await readGzJson("../brightid.json.gz");
+  const currentPos = await readGzJson("../positions2d-released.json.gz");
   const allLinks = {};
   const nodesSet = new Set();
   data.links.forEach((l) => {
@@ -42,7 +71,14 @@ const init = () => {
     nodesSet.add(t);
   });
   Array.from(nodesSet).forEach((n) => {
-    nodes.push({ id: n });
+    nodes.push({
+      id: n,
+      x: currentPos[n] ? currentPos[n].x : 0,
+      y: currentPos[n] ? currentPos[n].y : 0,
+    });
+    if (!currentPos[n]) {
+      console.log("new node", n);
+    }
   });
 };
 
@@ -58,8 +94,8 @@ const run = () => {
     .tick(TICKS);
 };
 
-const main = () => {
-  init();
+const main = async () => {
+  await init();
   for (let i = 0; i < ITERATIONS; i++) {
     console.log(`iteration ${i + 1}/${ITERATIONS}`);
     run();
@@ -68,7 +104,7 @@ const main = () => {
   nodes.forEach((n) => {
     positions[n.id] = { x: n.x, y: n.y };
   });
-  fs.writeFile("positions2d.json", JSON.stringify(positions), () => {});
+  await writeGzJson(positions, "../positions2d.json.gz");
 };
 
 main();
