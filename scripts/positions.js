@@ -10,8 +10,10 @@ import fs from "fs";
 import zlib from "zlib";
 
 const TICKS = 50;
-const ITERATIONS = 10;
-
+const ITERATIONS = 20;
+const DATA_FILE = "../brightid.json.gz";
+const POS_READ = "../positions2d-released.json.gz";
+const POS_WRITE = "../positions2d.json.gz";
 const nodes = [];
 const links = [];
 
@@ -21,7 +23,6 @@ const readGzJson = async (fname) => {
     fs.createReadStream(fname)
       .pipe(zlib.createGunzip())
       .on("data", function (data) {
-        // console.log(1, data.toString());
         d += data.toString();
       })
       .on("error", reject)
@@ -43,8 +44,8 @@ const writeGzJson = async (data, fname) => {
 };
 
 const init = async () => {
-  const data = await readGzJson("../brightid.json.gz");
-  const currentPos = await readGzJson("../positions2d-released.json.gz");
+  const data = await readGzJson(DATA_FILE);
+  const currentPos = await readGzJson(POS_READ);
   const allLinks = {};
   const nodesSet = new Set();
   data.links.forEach((l) => {
@@ -104,7 +105,7 @@ const main = async () => {
   nodes.forEach((n) => {
     positions[n.id] = { x: n.x, y: n.y };
   });
-  await writeGzJson(positions, "../positions2d.json.gz");
+  await writeGzJson(positions, POS_WRITE);
 };
 
 main();
