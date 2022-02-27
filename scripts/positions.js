@@ -10,7 +10,7 @@ import fs from "fs";
 import zlib from "zlib";
 
 const TICKS = 50;
-const ITERATIONS = 20;
+const ITERATIONS = 10;
 const DATA_FILE = "../brightid.json.gz";
 const POS_READ = "../positions2d-released.json.gz";
 const POS_WRITE = "../positions2d.json.gz";
