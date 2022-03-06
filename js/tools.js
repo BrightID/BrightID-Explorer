@@ -107,9 +107,13 @@ function selectNodes(nodes) {
   $("#neighborContainer").hide();
 
   const highlightNodes = new Set();
+  sumX = 0;
+  sumY = 0;
   nodes.forEach(id => {
     highlightNodes.add(id);
     const node = allNodes[id];
+    sumX += node.x;
+    sumY += node.y;
     Object.keys(node.neighbors).forEach(n1 => {
       const tLevel = node.neighbors[n1]["to"].length > 0 ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1] : null;
       const fLevel = node.neighbors[n1]["from"].length > 0 ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1] : null;
@@ -119,6 +123,7 @@ function selectNodes(nodes) {
       highlightNodes.add(n1);
     });
   });
+  console.log("center: ", Math.round(sumX / nodes.length), Math.round(sumY / nodes.length));
 
   const activeMembers = new Set();
   const outboundNeighbors = new Set();
@@ -165,7 +170,11 @@ function selectNodes(nodes) {
   });
 
   Graph.linkVisibility(l => (highlightLinks.has(l) ? true : false))
-    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true))
+    .nodeColor(n => {
+      if (selectedNodes.indexOf(n.id) > -1) return 'red';
+      else if (highlightNodes.has(n.id)) return resetNodesColor(n);
+      else return resetNodesColor(n, true);
+    })
     .linkDirectionalArrowLength(l => highlightLinks.has(l) ? 6 : 2)
     .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor);
 }
@@ -191,7 +200,7 @@ function removeFromBituVerifieds() {
 }
 
 function drawBituVersion() {
-  $("#linkVisibility").prop( "checked", false );
+  $("#linkVisibility").prop("checked", false);
   updateGraphData(3);
   setPosition("2d", 3);
   const data = { nodes: Object.values(graphNodes), links: graphLinks };
@@ -271,4 +280,94 @@ function drawBituVersion() {
   Graph.moving = false;
   updateStatistics();
   Graph.zoom(0, 3000);
+}
+
+function check_a_point(center, r) {
+  let centerNode = graphNodes[center];
+  let subGraph =
+    Object.values(graphNodes).forEach(n => {
+      if (distance(centerNode, n) < r) {
+
+      }
+      if (dist < r) {
+        return true;
+      }
+      return false;
+
+    });
+}
+
+function distance(n1, n2) {
+  return ((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2) ** .5
+}
+
+function colorByClusters() {
+  Graph.nodeColor(n => n?.cluster ? resetNodesColor(n, false, true) : resetNodesColor(n, true, false))
+  Graph.nodeVal(n => n?.cluster ? (n.cluster[0] % 10) * 10 : 1)
+  Graph.nodeLabel(n => (n.cluster || [].join(',')))
+}
+
+function colorByBituEligibled() {
+  const mainComponent = new Set(getMainComponent());
+
+  Graph.nodeColor(n => n?.eligibled ? resetNodesColor(n, false, false) : resetNodesColor(n, true, false))
+  Graph.nodeVal(n => n?.eligibled ? 20 : 10)
+  Graph.nodeLabel(n => n.cluster || [].join(','))
+  Graph.linkVisibility(false)
+  // Graph.nodeVisibility(n => mainComponent.indexOf(n) > -1 ? true : false)
+}
+
+function twoClusters(c1, c2) {
+  Graph.nodeColor(n => {
+    if (n.cluster == c1) return "orange"
+    else if (n.cluster == c2) return "blue"
+    else return fadedColor
+  })
+  Graph.linkVisibility(l => {
+    // if (l.source.cluster == c1 && l.target.cluster == c2) return true
+    if (l.source.cluster == c2 && l.target.cluster != c2) return true
+    else false
+  })
+  Graph.nodeVal(n => {
+    if (n.cluster == c1) return 50
+    else if (n.cluster == c2) return 50
+    else return 1
+  })
+  Graph.linkWidth(1)
+}
+
+
+function oneCluster(c1) {
+  Graph.nodeColor(n => {
+    if (n.cluster?.includes(c1)) return "blue";
+    else return fadedColor;
+  })
+  Graph.linkVisibility(l => {
+    if (l.source.cluster && l.source.cluster.includes(c1) && l.target.cluster && !l.target.cluster.includes(c1)) return true;
+    else false;
+  })
+  Graph.nodeVal(n => {
+    if (n.cluster?.includes(c1)) return 20;
+    else return 5;
+  })
+  Graph.linkWidth(1);
+}
+
+function show_centers() {
+  $.get('circles.json', function (data) {
+    var canvas = document.getElementsByTagName("canvas")[0];
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+    for (var i = data.length - 1; i >= 0; i--) {
+      ctx.beginPath();
+      ctx.arc(data[i][0][0], data[i][0][1], data[i][1], 0, Math.PI * 2, false);
+      ctx.fill();
+    }
+    ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+    for (var i = data.length - 1; i >= 0; i--) {
+      ctx.beginPath();
+      ctx.arc(data[i][0][0], data[i][0][1], data[i][2], 0, Math.PI * 2, false);
+      ctx.fill();
+    }
+  })
 }

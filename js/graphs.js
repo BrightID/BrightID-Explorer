@@ -3,7 +3,7 @@ function drawGraph() {
   const levelIndex = $("#levelsRange").val();
   const linkVisibility = $("#linkVisibility").is(":checked") && levelIndex > 2;
   if ($("#linkVisibility").is(":checked") && levelIndex <= 2) {
-    $("#linkVisibility").prop( "checked", false );
+    $("#linkVisibility").prop("checked", false);
     alert("You can't see the edges in this level");
   }
   updateGraphData(levelIndex);
@@ -58,9 +58,13 @@ function resetLinksColor(link) {
   return (level in colors) ? colors[level] : "black";
 }
 
-function resetNodesColor(n, fade = false) {
+colors = ["#332288", "#117733", "#44AA99", "#88CCEE", "#DDCC77", "#CC6677", "#AA4499", "#882255", "#000000", "#F1FF09"]
+function resetNodesColor(n, fade = false, clusters = false) {
   let color;
-  if (bituVerifieds.length != 0) {
+  if (clusters) {
+    if (n.cluster == 1000000) color = "#FFFFFF";
+    else color = colors[n.cluster % colors.length];
+  } else if (bituVerifieds.length != 0) {
     if (fade) color = fadedColor;
     else if (n.selected) color = "red";
     else if (n.hasBitu) color = "blue";
