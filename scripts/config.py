@@ -1,0 +1,16 @@
+BITU_VERIFIEDS_FILE = 'https://explorer.brightid.org/history/bitu_verified.json'
+BACKUP_URL = 'https://explorer.brightid.org/backups/brightid.tar.gz'
+FILTER_FILES_DIR = './suspicious_conns'
+POSITIONS2D_FILE = '../positions2d.json'
+CENTER_NODES_FILE = './center_nodes.json'
+CIRCLES_FILE = '../circles.json'
+RAR_ADDR = '/tmp/brightid.tar.gz'
+BACKUP_ADDR = '/tmp/brightid/dump'
+BITU_ELIGIBLES_FILE = '/tmp/bitu_eligibles.json'
+CLUSTERS_FILE = '/tmp/clusters.json'
+LAST_SUSPICIOUS_CONNS_CHECK = './last_suspicious_conns_check'
+DEFAULT_QUOTA = 50
+DIRECT_PENALTY = 5
+INDIRECT_PENALTY = 1
+ARANGO_SERVER_ENDPOINT = 'http://localhost:8529'
+ARANGO_DB_NAME = '_system'

@@ -1,50 +1,31 @@
-import os
 import json
 import gzip
 import time
-import shutil
-import tarfile
-import requests
+from arango import ArangoClient
+import utils
+import config
 
-BACKUP_URL = 'https://explorer.brightid.org/backups/brightid.tar.gz'
-DEFAULT_QUOTA = 50
-rar_addr = '/tmp/brightid.tar.gz'
-backup_addr = '/tmp/brightid/dump'
-
+db = ArangoClient(hosts=config.ARANGO_SERVER_ENDPOINT).db(
+    config.ARANGO_DB_NAME)
 now = time.time()
 one_year_ago = int(now - 365 * 24 * 3600) * 1000
 one_year_ago -= one_year_ago % (24 * 3600 * 1000)
 one_week_ago = int(now - 7 * 24 * 3600) * 1000
 one_week_ago -= one_week_ago % (3600 * 1000)
-filter_files_dir = './suspicious_conns'
-
-
-def read_filtered_conns():
-    suspicious_conns = {}
-    if not os.path.exists(filter_files_dir):
-        os.makedirs(filter_files_dir)
-    files = os.listdir(filter_files_dir)
-    for file in files:
-        with open(os.path.join(filter_files_dir, file), 'r') as f:
-            for l in json.loads(f.read()):
-                suspicious_conns[tuple(l)] = True
-    return suspicious_conns
 
 
 def get_links():
-    suspicious_conns = read_filtered_conns()
     connection_levels = ('reported', 'suspicious',
                          'just met', 'already known', 'recovery', 'filtered')
     links = {}
     users_statistics = {}
-    connections_history = records('connectionsHistory')
-    for c in connections_history:
-        if c['level'] in ['recovery', 'already known']:
-            if (c['_from'], c['_to']) in suspicious_conns:
-                c['level'] = 'filtered'
+    suspicious_conns = utils.read_suspicious_conns()
+    for c in db['connectionsHistory']:
         f = c['_from'].replace('users/', '')
         t = c['_to'].replace('users/', '')
         k = f'{f}{t}'
+        if k in suspicious_conns:
+            c['level'] = 'filtered'
         if k not in links:
             links[k] = {'source': f, 'target': t, 'history': []}
         links[k]['history'].append([c['timestamp'], c['level']])
@@ -105,12 +86,12 @@ def get_seeds_data(users, seed_connections):
 
 def get_seed_groups_data(users):
     regions = {}
-    for group in records('groups'):
+    for group in db['groups']:
         g = group['_id'].replace('groups/', '')
         regions[g] = group.get('region', g)
     seed_connections = {}
     seed_group_connections = {}
-    for c in records('connections'):
+    for c in db['connections']:
         if c['level'] not in ('just met', 'already known', 'recovery'):
             continue
         f = c['_from'].replace('users/', '')
@@ -153,21 +134,20 @@ def get_seed_groups_data(users):
 def get_groups_data(users, groups_used_quota):
     group_dics = []
     groups_quota = {}
-    groups = records('groups')
-    for group in groups:
+    for group in db['groups']:
         g = group['_id'].replace('groups/', '')
         group_dic = {'id': g, 'seed': group.get(
             'seed', False), 'region': group.get('region', None)}
         if group.get('seed', False):
-            quota = max(0, group.get('quota', DEFAULT_QUOTA) -
+            quota = max(0, group.get('quota', config.DEFAULT_QUOTA) -
                         groups_used_quota.get(g, 0))
-            group_dic['all_quota'] = group.get('quota', DEFAULT_QUOTA)
+            group_dic['all_quota'] = group.get('quota', config.DEFAULT_QUOTA)
             group_dic['quota'] = quota
             groups_quota[g] = quota
         group_dics.append(group_dic)
     # def group_sorter(
     #     g): return groups_quota[g] if groups_quota[g] > 0 else 1000000
-    for user_group in records('usersInGroups'):
+    for user_group in db['usersInGroups']:
         u = user_group['_from'].replace('users/', '')
         g = user_group['_to'].replace('groups/', '')
         if u not in users:
@@ -183,16 +163,15 @@ def get_groups_data(users, groups_used_quota):
 
 
 def get_verifications_block():
-    variables = records('variables')
-    hashes = json.loads(
-        next(filter(lambda v: v['_key'] == 'VERIFICATIONS_HASHES', variables))['hashes'])
+    hashes = json.loads(next(filter(
+        lambda v: v['_key'] == 'VERIFICATIONS_HASHES', db['variables']))['hashes'])
     return sorted([int(block) for block in hashes])[-1]
 
 
 def get_verifications_data(users):
     groups_used_quota = {}
     v_block = get_verifications_block()
-    for v in records('verifications'):
+    for v in db['verifications']:
         if v['block'] != v_block:
             continue
         u = v['user']
@@ -214,40 +193,12 @@ def get_verifications_data(users):
 
 
 def get_users():
-    recs = records('users')
     users = {}
-    for r in recs:
+    for r in db['users']:
         u = r['_id'].replace('users/', '')
         users[u] = {'id': u, 'createdAt': r['createdAt'], 'groups': [
         ], 'verifications': {}, 'seed_groups': [], 'quota': 0}
     return users
-
-
-def records(table):
-    fnames = os.listdir(backup_addr)
-    fname = next(filter(lambda fn: fn.startswith(
-        f'{table}_') and fn.endswith('.data.json'), fnames))
-    recs = []
-    with open(os.path.join(backup_addr, fname), 'r') as f:
-        for line in f.read().split('\n'):
-            if not line.strip():
-                continue
-            rec = json.loads(line)
-            if rec['type'] == 2300:
-                recs.append(rec['data'])
-            elif rec['type'] == 2302 and rec['data'] in recs:
-                recs.remove(rec['data'])
-    return recs
-
-
-def read_backup():
-    backup = requests.get(BACKUP_URL)
-    with open(rar_addr, 'wb') as f:
-        f.write(backup.content)
-    shutil.rmtree(backup_addr, ignore_errors=True)
-    tarf = tarfile.open(rar_addr, mode='r|gz')
-    tarf.extractall('/tmp/brightid/')
-    tarf.close()
 
 
 def load_from_backup():
@@ -272,10 +223,25 @@ def load_from_backup():
     return ret
 
 
+def clustering(json_graph):
+    with open(config.CLUSTERS_FILE, 'r') as f:
+        clusters = json.loads(f.read())
+    for node in json_graph['nodes']:
+        if node['id'] in clusters:
+            node['cluster'] = clusters[node['id']]
+    with open(config.BITU_ELIGIBLES_FILE, 'r') as f:
+        eligibles = json.loads(f.read())
+    for node in json_graph['nodes']:
+        if node['id'] in eligibles:
+            node['eligibled'] = True
+    return json_graph
+
+
 def main():
-    print('Updating the graph explorer data. ', time.ctime())
-    read_backup()
+    print('\nUpdating the graph explorer data ... ')
+    # utils.read_backup_file()
     json_graph = load_from_backup()
+    json_graph = clustering(json_graph)
     with gzip.open('../brightid.json.gz', 'w') as f:
         f.write(json.dumps(json_graph).encode('utf-8'))
 

@@ -1,2 +1,3 @@
 requests
 google-cloud-storage
+python-arango==5.4.0
