@@ -1,7 +1,7 @@
 BITU_VERIFIEDS_FILE = 'https://explorer.brightid.org/history/bitu_verified.json'
 BACKUP_URL = 'https://explorer.brightid.org/backups/brightid.tar.gz'
 FILTER_FILES_DIR = './suspicious_conns'
-POSITIONS2D_FILE = '../positions2d.json'
+POSITIONS2D_FILE = '../positions2d.json.gz'
 CENTER_NODES_FILE = './center_nodes.json'
 CIRCLES_FILE = '../circles.json'
 RAR_ADDR = '/tmp/brightid.tar.gz'

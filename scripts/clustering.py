@@ -1,4 +1,5 @@
 import json
+import gzip
 import requests
 import community
 import networkx as nx
@@ -8,14 +9,14 @@ import config
 
 db = ArangoClient(hosts=config.ARANGO_SERVER_ENDPOINT).db(
     config.ARANGO_DB_NAME)
-with open(config.POSITIONS2D_FILE, 'r') as f:
+with gzip.open(config.POSITIONS2D_FILE, 'rb') as f:
     pos2d = json.loads(f.read())
 
 zones = {
-    'z0': {'center': (0, 0), 'r1': 500, 'r2': 3000, 'resolution': .5, 'verifieds': set(), 'nodes': set()},
-    'z1': {'center': (0, 0), 'r1': 150, 'r2': 1500, 'resolution': .15, 'verifieds': set(), 'nodes': set()},
-    'z2': {'center': (0, 0), 'r1': 3000, 'r2': 7000, 'resolution': .2, 'verifieds': set(), 'nodes': set()},
-    'z3': {'center': (0, 0), 'r1': 1000, 'r2': 5000, 'resolution': .5, 'verifieds': set(), 'nodes': set()},
+    'z0': {'center': (0, 0), 'r1': 400, 'r2': 3000, 'resolution': .3, 'verifieds': set(), 'nodes': set()},
+    'z1': {'center': (0, 0), 'r1': 150, 'r2': 1500, 'resolution': .3, 'verifieds': set(), 'nodes': set()},
+    'z2': {'center': (0, 0), 'r1': 3000, 'r2': 7000, 'resolution': .3, 'verifieds': set(), 'nodes': set()},
+    'z3': {'center': (0, 0), 'r1': 1300, 'r2': 5000, 'resolution': .3, 'verifieds': set(), 'nodes': set()},
 }
 
 
@@ -71,7 +72,12 @@ def load_graph():
             continue
         if (connections.get(f'{t}{f}', {}).get('level') not in ['recovery', 'already known']):
             continue
-        graph.add_edge(f, t)
+        if f not in pos2d or t not in pos2d:
+            weight = 1
+        else:
+            d = distance_of((pos2d[f]['x'], pos2d[f]['y']), (pos2d[t]['x'], pos2d[t]['y']))
+            weight = max(1, 1000 / max(1, d))
+        graph.add_edge(f, t, weight=weight)
     main_component = sorted([comp for comp in nx.connected_components(
         graph)], key=lambda l: len(l), reverse=True)[0]
     for node in list(graph):
@@ -126,10 +132,17 @@ def clustering_graph(graph):
     return cluster_members
 
 
-def check_connectivity(graph, verifieds, cluster_members, cluster):
+def check_connectivity(graph, verifieds, cluster_members, cluster, zone):
     verified_neighbors = set()
     cluster_connectivity = 0
     cluster_members = cluster_members - verifieds
+    zone = zones[zone]
+    if len(cluster_members) == 0:
+        return False
+    cluster_center = center_of(cluster_members)
+    distance = distance_of(cluster_center, zone['center'])
+    multiplier = 2 * zone['r1'] / distance
+    # print("######", zone['r1'], distance, multiplier, 7 * multiplier, 4 * multiplier)
     for node in cluster_members:
         temp = verifieds.intersection(set(graph.neighbors(node)))
         if temp:
@@ -140,9 +153,9 @@ def check_connectivity(graph, verifieds, cluster_members, cluster):
     for n in verified_neighbors:
         verified_connectivity += len(
             verifieds.intersection(set(graph.neighbors(n))))**.5
-    if cluster_connectivity and verified_connectivity and len(cluster_members) / cluster_connectivity < 7 and len(cluster_members) / verified_connectivity < 5:
-        return True
-    return False
+    passed_cluster_connectivity = cluster_connectivity and len(cluster_members) / cluster_connectivity < 20 * multiplier
+    passed_verified_connectivity = verified_connectivity and len(cluster_members) / verified_connectivity < 8 * multiplier
+    return passed_cluster_connectivity and passed_verified_connectivity
 
 
 def get_eligible_nodes(graph, cluster_members):
@@ -164,7 +177,7 @@ def get_eligible_nodes(graph, cluster_members):
             for cluster in clusters_distance:
                 if cluster in verified_clusters:
                     continue
-                if check_connectivity(graph, zone_eligibles, cluster_members[cluster], cluster):
+                if check_connectivity(graph, zone_eligibles, cluster_members[cluster], cluster, zone):
                     zone_eligibles.update(cluster_members[cluster])
                     verified_clusters.append(cluster)
             if len(zone_eligibles) == before:
