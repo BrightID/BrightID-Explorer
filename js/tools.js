@@ -215,7 +215,7 @@ function drawBituVersion() {
         bituVerifieds.push(v);
         n.hasBitu = true;
         n.label = n.verifications.Bitu.score;
-      } else if (n.verifications.Bitu.score == 0) {
+      } else if (n.verifications.Bitu.score == 0 && n.verifications.Bitu.releaseTime != 0) {
         n1 = Object.keys(n.verifications.Bitu.directReports).length;
         n2 = Object.keys(n.verifications.Bitu.indirectReports).length;
         const directPenalties = Object.values(n.verifications.Bitu.directReports).reduce((partialSum, a) => partialSum + a, 0);
@@ -290,11 +290,28 @@ function colorByClusters() {
 
 function colorByBituEligibled() {
   const mainComponent = new Set(getMainComponent());
-  Graph.nodeColor(n => n?.eligibled ? resetNodesColor(n, false, false) : resetNodesColor(n, true, false))
-  Graph.nodeVal(n => n?.eligibled ? 20 : 10)
+  Graph.nodeColor(n => {
+    let auto_eligibled = n?.eligibled;
+    let manual_eligibled = n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.linksNum > 0;
+    if (auto_eligibled && manual_eligibled) return "green";
+    if (auto_eligibled && !manual_eligibled) return "blue";
+    if (!auto_eligibled && manual_eligibled) return "orange";
+    if (!auto_eligibled && !manual_eligibled) return fadedColor;
+  })
+  Graph.nodeVal(n => {
+    let auto_eligibled = n?.eligibled;
+    let manual_eligibled = n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.linksNum > 0;
+    if (auto_eligibled && manual_eligibled) return 10;
+    if (auto_eligibled && !manual_eligibled) return 10;
+    if (!auto_eligibled && manual_eligibled) return 10;
+    if (!auto_eligibled && !manual_eligibled) return 5;
+  })
   Graph.nodeLabel(n => n.cluster || [].join(','))
   Graph.linkVisibility(false)
   // Graph.nodeVisibility(n => mainComponent.indexOf(n) > -1 ? true : false)
+  console.log("Green: True eligibles");
+  console.log("Blue: Added to eligibles");
+  console.log("Orange: Removed from eligibles");
 }
 
 function selectTwoClusters(c1, c2) {
