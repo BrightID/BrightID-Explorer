@@ -377,10 +377,15 @@ function selectNode(node, showDetails, focus) {
         temp += "}"
         value = temp;
       } else if (key == "releaseTime") {
-        const d = new Date(value);
-        details.push(`release: ${d.getDate()} / ${d.getMonth() + 1} / ${d.getFullYear()}`);
+        const d = new Date(allNodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"]["verifications"]["Bitu"]["releaseTime"]);
+        let releaseDate = `${d.getDate()}/${d.getMonth() + 1}`;
         const nd = new Date(d.getTime() + (7 * 24 * 60 * 60 * 1000));
-        details.push(`next release: ${nd.getDate()} / ${nd.getMonth() + 1} / ${nd.getFullYear()}`);
+        const nextReleaseDate = `${nd.getDate()}/${nd.getMonth() + 1}`;
+        if (value == 0) {
+          releaseDate = '__'
+        }
+        details.push(`release: ${releaseDate}`);
+        details.push(`next release: ${nextReleaseDate}`);
         continue;
       }
       details.push(`${key}: ${value}`);
@@ -458,14 +463,14 @@ function updateStatistics() {
     }
   });
   const d = new Date(allNodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"]["verifications"]["Bitu"]["releaseTime"]);
-  const rleaseDate = `${d.getDate()} / ${d.getMonth() + 1}`;
+  const releaseDate = `${d.getDate()}/${d.getMonth() + 1}`;
   const nd = new Date(d.getTime() + (7 * 24 * 60 * 60 * 1000));
-  const nextRleaseDate = `${nd.getDate()} / ${nd.getMonth() + 1}`;
+  const nextReleaseDate = `${nd.getDate()}/${nd.getMonth() + 1}`;
   $("#numNodes").html(Object.keys(allNodes).length);
   $("#bituVerifieds").html(bituVerifieds);
   $("#bituVerifiedsHighScore").html(bituVerifiedsHighScore);
-  $("#rleaseDate").html(rleaseDate);
-  $("#nextRleaseDate").html(nextRleaseDate);
+  $("#releaseDate").html(releaseDate);
+  $("#nextReleaseDate").html(nextReleaseDate);
   $("#seedVerifieds").html(seedVerifieds);
   $("#seedConnectedVerifieds").html(seedConnectedVerifieds);
   $("#socialRecoverySetupVerifieds").html(socialRecoverySetupVerifieds);
