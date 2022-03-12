@@ -282,25 +282,6 @@ function drawBituVersion() {
   Graph.zoom(0, 3000);
 }
 
-function check_a_point(center, r) {
-  let centerNode = graphNodes[center];
-  let subGraph =
-    Object.values(graphNodes).forEach(n => {
-      if (distance(centerNode, n) < r) {
-
-      }
-      if (dist < r) {
-        return true;
-      }
-      return false;
-
-    });
-}
-
-function distance(n1, n2) {
-  return ((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2) ** .5
-}
-
 function colorByClusters() {
   Graph.nodeColor(n => n?.cluster ? resetNodesColor(n, false, true) : resetNodesColor(n, true, false))
   Graph.nodeVal(n => n?.cluster ? (n.cluster[0] % 10) * 10 : 1)
@@ -309,7 +290,6 @@ function colorByClusters() {
 
 function colorByBituEligibled() {
   const mainComponent = new Set(getMainComponent());
-
   Graph.nodeColor(n => n?.eligibled ? resetNodesColor(n, false, false) : resetNodesColor(n, true, false))
   Graph.nodeVal(n => n?.eligibled ? 20 : 10)
   Graph.nodeLabel(n => n.cluster || [].join(','))
@@ -317,7 +297,7 @@ function colorByBituEligibled() {
   // Graph.nodeVisibility(n => mainComponent.indexOf(n) > -1 ? true : false)
 }
 
-function twoClusters(c1, c2) {
+function selectTwoClusters(c1, c2) {
   Graph.nodeColor(n => {
     if (n.cluster == c1) return "orange"
     else if (n.cluster == c2) return "blue"
@@ -337,23 +317,23 @@ function twoClusters(c1, c2) {
 }
 
 
-function oneCluster(c1) {
+function selectCluster(c) {
   Graph.nodeColor(n => {
-    if (n.cluster?.includes(c1)) return "blue";
+    if (n.cluster?.includes(c)) return "blue";
     else return fadedColor;
   })
   Graph.linkVisibility(l => {
-    if (l.source.cluster && l.source.cluster.includes(c1) && l.target.cluster && !l.target.cluster.includes(c1)) return true;
+    if (l.source.cluster && l.source.cluster.includes(c) && l.target.cluster && !l.target.cluster.includes(c)) return true;
     else false;
   })
   Graph.nodeVal(n => {
-    if (n.cluster?.includes(c1)) return 20;
+    if (n.cluster?.includes(c)) return 20;
     else return 5;
   })
   Graph.linkWidth(1);
 }
 
-function show_centers() {
+function draw_circles() {
   $.get('circles.json', function (data) {
     var canvas = document.getElementsByTagName("canvas")[0];
     var ctx = canvas.getContext("2d");
@@ -370,4 +350,25 @@ function show_centers() {
       ctx.fill();
     }
   })
+}
+
+function distance(n1, n2) {
+  return ((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2) ** .5;
+}
+
+function selectCenterNodes(centerNode, r) {
+  centerNode = graphNodes[centerNode];
+  const nodes = [];
+  Object.values(graphNodes).forEach(n => {
+    if (distance(centerNode, n) < r) {
+      nodes.push(n.id);
+    }
+  });
+  const selectedNodesText = nodes.join("\n");
+  console.log(nodes)
+  Graph.nodeColor(n => {
+    if (nodes.indexOf(n.id) > -1) return 'red';
+    else return resetNodesColor(n, true);
+  })
+    .linkVisibility(false)
 }
