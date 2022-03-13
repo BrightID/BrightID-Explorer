@@ -215,7 +215,7 @@ function drawBituVersion() {
         bituVerifieds.push(v);
         n.hasBitu = true;
         n.label = n.verifications.Bitu.score;
-      } else if (n.verifications.Bitu.score == 0 && n.verifications.Bitu.releaseTime != 0) {
+      } else if (n.verifications.Bitu.score == 0 && n.verifications.Bitu.linksNum != 0) {
         n1 = Object.keys(n.verifications.Bitu.directReports).length;
         n2 = Object.keys(n.verifications.Bitu.indirectReports).length;
         const directPenalties = Object.values(n.verifications.Bitu.directReports).reduce((partialSum, a) => partialSum + a, 0);
