@@ -344,12 +344,12 @@ function selectNode(node, showDetails, focus) {
 
   let verificationsString = "";
   for (const name in node.verifications) {
-    if (node.verifications[name].app) {
+    if (node.verifications[name].app || node.verifications[name].expression) {
       continue;
     }
     const details = [];
     for (let [key, value] of Object.entries(node.verifications[name])) {
-      if (["timestamp", "hash", "block"].includes(key)) {
+      if (["timestamp", "hash", "block", "communities"].includes(key)) {
         continue;
       } else if (!value && key == "friend") {
         continue;
