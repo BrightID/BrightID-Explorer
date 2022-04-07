@@ -547,8 +547,8 @@ $(document).ready(function () {
       location2dFileAddr = `/history/${folderName}/positions2d.json`;
     }
   } else {
-    dataFileAddr = "brightid.json";
-    location2dFileAddr = "positions2d.json";
+    dataFileAddr = "/brightid.json";
+    location2dFileAddr = "/positions2d.json";
   }
 
   $.get(location2dFileAddr, function (data) {
@@ -650,7 +650,8 @@ $(document).ready(function () {
       location.reload();
     });
   });
-  $("#login").click(loadInfo);
+  $("#connectBrightidBtn").click(importBrightID);
+  $("#syncBrightidBtn").click(syncBrightID);
   $("#showGroup").click(showGroup);
   $("#showMember").click(showMember);
   $("#showUser").click(showUser);

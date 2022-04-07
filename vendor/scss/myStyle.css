@@ -225,3 +225,12 @@ option {
   margin-left: 0.5rem !important;
   color: #fff !important;
 }
+
+.qrcodeblock {
+  display: flex;
+  justify-content: center;
+}
+
+.qrcodeblock img {
+  border: 5px solid white;
+}

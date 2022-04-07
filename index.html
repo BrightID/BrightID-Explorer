@@ -22,10 +22,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/expr-eval/2.0.2/bundle.min.js"
     integrity="sha512-TNliDPFdpL1W1sP7v9WzHUxTAY+PN7wRiHqJzntb4HpaJ0HlreSm0tzbA8MU7EBEoPTYgEtB+ZpbBB2yQQu49g=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.2/nacl-fast.min.js"
+    integrity="sha512-aLSwsdjU35MF6PERT7Pic3+X6qL7O+Us8hYQl/gjrPoV4JXUNoCF2Ys3/vfJSiBW1QNxz2WTr4tEo5VcOdHt/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/base64-js@1.5.1/base64js.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="//unpkg.com/force-graph"></script>
   <script src="//unpkg.com/3d-force-graph"></script>
+  <script src="js/login.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/dataLoader.js"></script>
   <script src="js/graphs.js"></script>
   <script src="js/tools.js"></script>
   <script src="js/usersIllustrator.js"></script>
@@ -91,18 +96,17 @@
           Login
         </a>
         <div class="hiden menu-item-body" id="loginDetails">
-          <div id="loginForm">
-            <div class="input-group-sm ">
-              <input id="code" type="text" name="id" class="form-control m-2" height="10px" placeholder="Explorer Code"
-                aria-label="text-small" aria-describedby="inputGroup-sizing-sm">
+          <div id="qrCodeForm" class="text-center">
+            <div id="qrcode" class="qrcodeblock text-center"></div>
+            <div id="waitingSpinner" class="hiden">
+              <img src="/img/spinner.gif" />
             </div>
-            <div class="input-group-sm">
-              <input id="password" type="password" name="password" class="form-control m-2" height="10px"
-                placeholder="Backup Password" aria-label="text-small" aria-describedby="inputGroup-sizing-sm">
-            </div>
-            <div class="row justify-content-md-center">
-              <button id="login" class="btn btn-primary align-center">Login</button>
-            </div>
+            <p id="loginStatus" class="text-center text-white mt-2"></p>
+
+          </div>
+          <div id="loginForm" class="row justify-content-md-center mt-3" id="login">
+            <p class="text-center text-white mt-2">Connect your BrightID to upload your data</p>
+            <button id="connectBrightidBtn" class="btn btn-primary align-center">Connect BrightID</button>
           </div>
           <div id="logoutForm">
             <div class="text-center">
@@ -110,7 +114,9 @@
             </div>
             <div id="logoutFormUserName" class="text-center text-white mt-2" style="font-size: 25px;"></div>
             <div class="row justify-content-md-center mt-3">
-              <button id="logoutBtn" class="btn btn-primary align-center">Logout</button>
+              <button id="logoutBtn" class="btn btn-primary align-left">Logout</button>
+              <button id="syncBrightidBtn" class="btn btn-primary align-right ml-3"
+                title="get new connections">Sync</button>
             </div>
           </div>
         </div>
@@ -329,7 +335,7 @@
                 <div class="card-header"><i class="fas fa-check-circle mr-2"></i>Bitu</div>
                 <div class="card-body text-dark justify-center">
                   <h4 class="text-center" id="bituVerifieds"></h4>
-                  <p  class="text-center" style="font-size:9px">
+                  <p class="text-center" style="font-size:9px">
                     +10 score: <span id="bituVerifiedsHighScore"></span><br>
                     release: <span id="releaseDate"></span>
                     <span class="pl-3">

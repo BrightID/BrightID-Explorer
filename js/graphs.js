@@ -272,8 +272,8 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
     })
     .onEngineStop(async () => {
       Graph.linkVisibility(linkVisibility);
-      if ((await localforage.getItem("explorer_backup_data")) && !autoLoginDone) {
-        loadInfo();
+      if ((await localforage.getItem("brightid_has_imported")) && !autoLoginDone) {
+        loadPersonalData();
       }
     })
   Graph.moving = false;
