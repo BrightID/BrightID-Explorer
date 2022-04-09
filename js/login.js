@@ -141,6 +141,7 @@ const createSyncQR = async (brightID, signingKey, lastSyncTime) => {
   return { channelId, aesKey, signingKey, qrString };
 };
 
+let channels = {};
 const readChannel = async (data) => {
   let completed = false;
   const { channelId, aesKey, signingKey } = data;
@@ -149,8 +150,12 @@ const readChannel = async (data) => {
   if (dataIds.length > 2) {
     $("#qrcode").hide();
     clearInterval(counterIntervalID);
-    $("#loginStatus").hide();
     $("#waitingSpinner").show();
+    if (!(channelId in channels)) {
+      channels[channelId] = { "all": 0, "received": 0 }
+    }
+    channels[channelId]["all"] += dataIds.length;
+    $("#loginStatus").text(`received ${channels[channelId]["received"]} of ${channels[channelId]["all"]}`);
   }
   const uploader = (id) => id.replace("completed_", "").split(":")[1];
   for (const dataId of dataIds) {
@@ -183,6 +188,10 @@ const readChannel = async (data) => {
     }
     if (!(["sig_data", "data"].includes(dataId)) && !(dataId.startsWith("sig_completed_"))) {
       await apiCall(`/${channelId}/${dataId}`, "DELETE");
+    }
+    if (channelId in channels) {
+      channels[channelId]["received"] += 1;
+      $("#loginStatus").text(`received ${channels[channelId]["received"]} of ${channels[channelId]["all"]}`);
     }
   }
   if (completed) {
