@@ -3,6 +3,7 @@ const baseURL = "http://node.brightid.org/profile";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const CountdownTimer = () => {
+  $("#loginStatus").text("15:00");
   const countDownDate = new Date().getTime() + 15 * 60 * 1000;
   counterIntervalID = setInterval(() => {
     let now = new Date().getTime();
