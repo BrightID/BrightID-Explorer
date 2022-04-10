@@ -60,7 +60,7 @@ const hash = (data) => {
 const loadPersonalData = async () => {
   autoLoginDone = true;
   const owner = await localforage.getItem("explorer_owner");
-  const ownerName = await localforage.getItem(`explorer_owner_name_${owner}`) || "";
+  const ownerName = await localforage.getItem(`explorer_owner_name_${owner}`) || "Unknow";
   const ownerImg = await localforage.getItem(`explorer_owner_img_${owner}`);
   Object.assign(allNodes[owner], { name: ownerName, img: new Image() });
   if (ownerImg) {
@@ -75,7 +75,7 @@ const loadPersonalData = async () => {
     if (!(groupId in groups)) {
       continue;
     }
-    const groupName = await localforage.getItem(`explorer_group_name_${groupId}`) || "";
+    const groupName = await localforage.getItem(`explorer_group_name_${groupId}`) || "Unknow";
 
     if (groupName) {
       $("#searchFieldGroups").append(new Option(groupName, groupId));
@@ -84,7 +84,7 @@ const loadPersonalData = async () => {
   }
 
   for (const neighbor of Object.keys(user.neighbors) || []) {
-    const neighborName = await localforage.getItem(`explorer_user_name_${neighbor}`) || "";
+    const neighborName = await localforage.getItem(`explorer_user_name_${neighbor}`) || "Unknow";
     const neighborImg = await localforage.getItem(`explorer_user_img_${neighbor}`);
 
     $("#searchFieldConnections").append(new Option(neighborName, neighbor));
