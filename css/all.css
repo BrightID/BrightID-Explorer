@@ -4642,11 +4642,11 @@ readers do not read off random characters that represent icons */
 }
 
 .spinner {
-    width: 60px;
-    height: 60px;
-    border: 4px #ddd solid;
+    width: 200px;
+    height: 200px;
+    border: 0px #ddd solid;
     border-top: 10px #2e93e6 solid;
-    border-radius: 50%;
+    border-radius: 70%;
     border-color: #ed795d;
     animation: sp-anime 0.8s infinite linear;
 }
