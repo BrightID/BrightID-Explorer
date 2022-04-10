@@ -154,11 +154,12 @@ const readChannel = async (data) => {
     if (!(channelId in channels)) {
       channels[channelId] = { "all": 0, "received": 0 }
     }
-    channels[channelId]["all"] += dataIds.length;
-    $("#loginStatus").text(`received ${channels[channelId]["received"]} of ${channels[channelId]["all"]}`);
+    channels[channelId]["all"] = dataIds.length + channels[channelId]["received"];
+    $("#loginStatus").text("");
   }
   const uploader = (id) => id.replace("completed_", "").split(":")[1];
-  for (const dataId of dataIds) {
+  for (let i = 0; i < dataIds.length; i++) {
+    const dataId = dataIds[i];
     if (dataId.startsWith("sig_completed_") && uploader(dataId) != b64ToUrlSafeB64(signingKey)) {
       completed = true;
     } else if (dataId.startsWith("sig_userinfo_")) {
@@ -188,14 +189,19 @@ const readChannel = async (data) => {
     }
     if (!(["sig_data", "data"].includes(dataId)) && !(dataId.startsWith("sig_completed_"))) {
       await apiCall(`/${channelId}/${dataId}`, "DELETE");
+      channels[channelId]["received"] += 1;
+    }
+    if (i != 0 && i % 10 == 0) {
+      let res = await apiCall(`/list/${channelId}`, "GET");
+      channels[channelId]["all"] = res.profileIds.length + channels[channelId]["received"];
     }
     if (channelId in channels) {
-      channels[channelId]["received"] += 1;
       $("#loginStatus").text(`received ${channels[channelId]["received"]} of ${channels[channelId]["all"]}`);
     }
   }
   if (completed) {
     localforage.setItem("brightid_has_imported", true);
+    $("#loginStatus").text("");
     loadPersonalData();
   } else {
     await sleep(3000);
@@ -214,13 +220,14 @@ const importBrightID = async () => {
     width: 250,
     height: 250,
   });
+  $("#qrcode").show();
   CountdownTimer();
   await readChannel(data);
 };
 
 const syncBrightID = async () => {
-  $("#logoutForm").hide();
   $("#qrCodeForm").show();
+  $("#logoutForm").hide();
   const brightID = await localforage.getItem("explorer_owner") || "";
   const signingKey = await localforage.getItem("explorer_signing_key") || "";
   const lastSyncTime = await localforage.getItem("explorer_last_sync_time");
@@ -232,6 +239,7 @@ const syncBrightID = async () => {
       width: 250,
       height: 250,
     });
+  $("#qrcode").show();
     CountdownTimer();
     await readChannel(data);
   } else {
