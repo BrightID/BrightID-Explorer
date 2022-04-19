@@ -118,7 +118,9 @@
   height: 34px;
 }
 
-.switch input {display:none;}
+.switch input {
+  display: none;
+}
 
 .slider {
   position: absolute;
@@ -130,7 +132,7 @@
   background-color: #ed795d;
   -webkit-transition: .4s;
   transition: .4s;
-   border-radius: 34px;
+  border-radius: 34px;
 }
 
 .slider:before {
@@ -146,36 +148,34 @@
   border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: #2ab934;
 }
 
-input:focus + .slider {
+input:focus+.slider {
   box-shadow: 0 0 1px #2196F3;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   -webkit-transform: translateX(26px);
   -ms-transform: translateX(26px);
   transform: translateX(55px);
 }
 
-.slider:after
-{
- content:'2D';
- color: black;
- display: block;
- position: absolute;
- transform: translate(-50%,-50%);
- top: 50%;
- left: 50%;
- font-size: 20px;
- font-family: Verdana, sans-serif;
+.slider:after {
+  content: '2D';
+  color: black;
+  display: block;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  font-size: 20px;
+  font-family: Verdana, sans-serif;
 }
 
-input:checked + .slider:after
-{
-  content:'3D';
+input:checked+.slider:after {
+  content: '3D';
 }
 
 input[type=range] {
@@ -235,45 +235,45 @@ option {
   border: 5px solid white;
 }
 
-.player-buttons{
+.player-buttons {
   cursor: pointer;
   padding-left: .5em;
   color: white !important;
 }
 
 #loadingoverlay {
-    position: fixed;
-    top: 0;
-    z-index: 100;
-    width: 100%;
-    height: 100%;
-    display: none;
-    background: rgba(0,0,0,0.6);
+  position: fixed;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  display: none;
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .cv-spinner {
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .spinner {
-    width: 200px;
-    height: 200px;
-    border: 0px #ddd solid;
-    border-top: 10px #2e93e6 solid;
-    border-radius: 70%;
-    border-color: #ed795d;
-    animation: sp-anime 0.8s infinite linear;
+  width: 200px;
+  height: 200px;
+  border: 0px #ddd solid;
+  border-top: 10px #2e93e6 solid;
+  border-radius: 70%;
+  border-color: #ed795d;
+  animation: sp-anime 0.8s infinite linear;
 }
 
 @keyframes sp-anime {
-    0% {
-        transform: rotate(0deg);
-    }
+  0% {
+    transform: rotate(0deg);
+  }
 
-    100% {
-        transform: rotate(359deg);
-    }
+  100% {
+    transform: rotate(359deg);
+  }
 }
