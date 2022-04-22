@@ -26,14 +26,13 @@ function getMainComponent() {
     }
   }
   console.log(`Main Component length: ${mainComponent.length}`);
-  // console.log("Main Component: ", mainComponent)
   return mainComponent;
 }
 
 function bitu() {
   scores = {}
   const verifieds = new Set(bituVerifieds);
-  verifieds.forEach(v => scores[v] = { "linksNum": 0, "score": 0, "directReports": {}, "indirectReports": {}, "reportedConnections": {} });
+  verifieds.forEach(v => scores[v] = { "linksNum": 0, "confirmedScore": 0, "directReports": {}, "indirectReports": {}, "reportedConnections": {} });
   Object.values(allLinks).forEach(l => {
     const s = l.source?.id || l.source;
     const t = l.target?.id || l.target;
@@ -49,10 +48,10 @@ function bitu() {
     const otherSideLevel = ol?.history[ol.history.length - 1][1];
     if (["already known", "recovery"].includes(otherSideLevel)) {
       scores[s]["linksNum"] += 1;
-      scores[s]["score"] += 1;
+      scores[s]["confirmedScore"] += 1;
     } else if (["suspicious", "reported"].includes(otherSideLevel)) {
       scores[s]["directReports"][t] = -directPenalty;
-      scores[s]["score"] -= directPenalty;
+      scores[s]["confirmedScore"] -= directPenalty;
     }
   });
 
@@ -71,7 +70,7 @@ function bitu() {
     if (Object.keys(scores[t]["directReports"]).length > 0) {
       scores[s]["indirectReports"][t] = -indirectPenalty * Object.keys(scores[t]["directReports"]).length;
       scores[s]["reportedConnections"][t] = Object.keys(scores[t]["directReports"]);
-      scores[s]["score"] -= indirectPenalty * Object.keys(scores[t]["directReports"]).length;
+      scores[s]["confirmedScore"] -= indirectPenalty * Object.keys(scores[t]["directReports"]).length;
     }
   });
 
@@ -82,8 +81,8 @@ function bitu() {
   var releaseTime = new Date().getTime();
   Graph
     .linkVisibility(l => verifieds.has(l.source.id) && verifieds.has(l.target.id) && ["already known", "recovery"].includes(l.history[l.history.length - 1][1]))
-    .nodeVal(n => Math.min(Math.max(3 * scores[n.id]?.score || 1, 3), 20) ** .5)
-    .nodeColor(n => (scores[n.id]?.score || 0) > 0 ? "blue" : "red")
+    .nodeVal(n => Math.min(Math.max(3 * scores[n.id]?.confirmedScore || 1, 3), 20) ** .5)
+    .nodeColor(n => (scores[n.id]?.confirmedScore || 0) > 0 ? "blue" : "red")
     .linkDirectionalArrowLength(2)
     .linkWidth(.1);
   console.log(Object.keys(scores).map(user => {
@@ -283,32 +282,58 @@ function drawBituVersion() {
 }
 
 function colorByClusters() {
-  Graph.nodeColor(n => n?.cluster ? resetNodesColor(n, false, true) : resetNodesColor(n, true, false))
-  Graph.nodeVal(n => n?.cluster ? (n.cluster[0] % 10) * 10 : 1)
-  Graph.nodeLabel(n => (n.cluster || [].join(',')))
+  Graph.nodeColor(n => n?.cluster ? resetNodesColor(n, false, true) : resetNodesColor(n, true, false));
+  Graph.nodeVal(n => n?.cluster ? resetNodesVal(n, true) : 1);
+  Graph.nodeLabel(n => n.cluster);
 }
 
 function colorByBituEligibled() {
   const mainComponent = new Set(getMainComponent());
   Graph.nodeColor(n => {
-    let auto_eligibled = n?.eligibled;
-    let manual_eligibled = n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.linksNum > 0;
-    if (auto_eligibled && manual_eligibled) return "green";
-    if (auto_eligibled && !manual_eligibled) return "blue";
-    if (!auto_eligibled && manual_eligibled) return "orange";
-    if (!auto_eligibled && !manual_eligibled) return fadedColor;
-  })
+    const autoEligibled = n.bituEligibled;
+    const manualEligibled = n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.linksNum > 0;
+    if (autoEligibled && manualEligibled) return "green";
+    if (autoEligibled && !manualEligibled) return "blue";
+    if (!autoEligibled && manualEligibled) return "orange";
+    if (!autoEligibled && !manualEligibled) return fadedColor;
+  });
   Graph.nodeVal(n => {
-    let auto_eligibled = n?.eligibled;
-    let manual_eligibled = n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.linksNum > 0;
-    if (auto_eligibled && manual_eligibled) return 10;
-    if (auto_eligibled && !manual_eligibled) return 10;
-    if (!auto_eligibled && manual_eligibled) return 10;
-    if (!auto_eligibled && !manual_eligibled) return 5;
-  })
-  Graph.nodeLabel(n => n.cluster || [].join(','))
-  Graph.linkVisibility(false)
-  // Graph.nodeVisibility(n => mainComponent.indexOf(n) > -1 ? true : false)
+    const autoEligibled = n.bituEligibled;
+    const manualEligibled = n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.linksNum > 0;
+    if (autoEligibled && manualEligibled) return 10;
+    if (autoEligibled && !manualEligibled) return 10;
+    if (!autoEligibled && manualEligibled) return 10;
+    if (!autoEligibled && !manualEligibled) return 5;
+  });
+  Graph.nodeLabel(n => n.cluster);
+  Graph.linkVisibility(false);
+  Graph.nodeVisibility(n => mainComponent.has(n) > -1 ? true : false);
+
+  let autoEligibledCount = 0;
+  let manualEligibledCount = 0;
+  let trueEligibledCount = 0;
+  let falseEligibledCount = 0;
+  Object.values(graphNodes).forEach(n => {
+    const autoEligibled = n.bituEligibled;
+    let manualEligibled = n.verifications && "Bitu" in n.verifications && n.verifications.Bitu.linksNum > 0;
+    if (autoEligibled && manualEligibled) {
+      trueEligibledCount += 1;
+      autoEligibledCount += 1;
+      manualEligibledCount += 1;
+    }
+    if (autoEligibled && !manualEligibled) {
+      falseEligibledCount += 1;
+      autoEligibledCount += 1;
+    }
+    if (!autoEligibled && manualEligibled) {
+      manualEligibledCount += 1;
+    }
+  });
+  console.log(`manualEligibled: ${manualEligibledCount}`);
+  console.log(`autoEligibled: ${autoEligibledCount}`);
+  console.log(`trueEligibled: ${trueEligibledCount}\t ${trueEligibledCount * 100 / manualEligibledCount} %`);
+  console.log(`falseEligibled: ${falseEligibledCount}\t ${falseEligibledCount * 100 / manualEligibledCount} %`);
+
   console.log("Green: True eligibles");
   console.log("Blue: Added to eligibles");
   console.log("Orange: Removed from eligibles");
@@ -316,76 +341,33 @@ function colorByBituEligibled() {
 
 function selectTwoClusters(c1, c2) {
   Graph.nodeColor(n => {
-    if (n.cluster == c1) return "orange"
-    else if (n.cluster == c2) return "blue"
-    else return fadedColor
-  })
-  Graph.linkVisibility(l => {
-    // if (l.source.cluster == c1 && l.target.cluster == c2) return true
-    if (l.source.cluster == c2 && l.target.cluster != c2) return true
-    else false
-  })
-  Graph.nodeVal(n => {
-    if (n.cluster == c1) return 50
-    else if (n.cluster == c2) return 50
-    else return 1
-  })
-  Graph.linkWidth(1)
-}
-
-
-function selectCluster(c) {
-  Graph.nodeColor(n => {
-    if (n.cluster?.includes(c)) return "blue";
+    if (n.cluster == c1) return "orange";
+    else if (n.cluster == c2) return "blue";
     else return fadedColor;
-  })
+  });
   Graph.linkVisibility(l => {
-    if (l.source.cluster && l.source.cluster.includes(c) && l.target.cluster && !l.target.cluster.includes(c)) return true;
+    if ([c1, c2].includes(l.source.cluster) && [c1, c2].includes(l.target.cluster)) return true;
     else false;
-  })
+  });
   Graph.nodeVal(n => {
-    if (n.cluster?.includes(c)) return 20;
-    else return 5;
-  })
+    if ([c1, c2].includes(n.cluster)) return 50;
+    else return 1;
+  });
   Graph.linkWidth(1);
 }
 
-function draw_circles() {
-  $.get('circles.json', function (data) {
-    var canvas = document.getElementsByTagName("canvas")[0];
-    var ctx = canvas.getContext("2d");
-    ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
-    for (var i = data.length - 1; i >= 0; i--) {
-      ctx.beginPath();
-      ctx.arc(data[i][0][0], data[i][0][1], data[i][1], 0, Math.PI * 2, false);
-      ctx.fill();
-    }
-    ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
-    for (var i = data.length - 1; i >= 0; i--) {
-      ctx.beginPath();
-      ctx.arc(data[i][0][0], data[i][0][1], data[i][2], 0, Math.PI * 2, false);
-      ctx.fill();
-    }
-  })
-}
-
-function distance(n1, n2) {
-  return ((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2) ** .5;
-}
-
-function selectCenterNodes(centerNode, r) {
-  centerNode = graphNodes[centerNode];
-  const nodes = [];
-  Object.values(graphNodes).forEach(n => {
-    if (distance(centerNode, n) < r) {
-      nodes.push(n.id);
-    }
-  });
-  const selectedNodesText = nodes.join("\n");
-  console.log(nodes)
+function selectOneCluster(c) {
   Graph.nodeColor(n => {
-    if (nodes.indexOf(n.id) > -1) return 'red';
-    else return resetNodesColor(n, true);
-  })
-    .linkVisibility(false)
+    if (n.cluster == c) return "blue";
+    else return fadedColor;
+  });
+  Graph.linkVisibility(l => {
+    if (l.source.cluster == c && l.target.cluster != c) return true;
+    else false;
+  });
+  Graph.nodeVal(n => {
+    if (n.cluster == c) return 20;
+    else return 5;
+  });
+  Graph.linkWidth(1);
 }
