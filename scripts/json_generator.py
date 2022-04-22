@@ -201,50 +201,38 @@ def get_users():
     return users
 
 
-def load_from_backup():
-    ret = {}
+def run():
+    print('\nUpdating the graph explorer data ... ')
+    json_graph = {}
 
     users = get_users()
 
     groups_used_quota = get_verifications_data(users)
-    ret['groups'] = get_groups_data(users, groups_used_quota)
+    json_graph['groups'] = get_groups_data(users, groups_used_quota)
 
     seed_groups_data = get_seed_groups_data(users)
-    ret['seed_groups_hourly'] = seed_groups_data['hourly']
-    ret['seed_groups_daily'] = seed_groups_data['daily']
+    json_graph['seed_groups_hourly'] = seed_groups_data['hourly']
+    json_graph['seed_groups_daily'] = seed_groups_data['daily']
     seed_connections = seed_groups_data['seed_connections']
 
     seeds_data = get_seeds_data(users, seed_connections)
-    ret['seeds_hourly'] = seeds_data['hourly']
-    ret['seeds_daily'] = seeds_data['daily']
+    json_graph['seeds_hourly'] = seeds_data['hourly']
+    json_graph['seeds_daily'] = seeds_data['daily']
 
-    ret['nodes'] = list(users.values())
-    ret['links'], ret['users_statistics'] = get_links()
-    return ret
+    json_graph['nodes'] = list(users.values())
+    json_graph['links'], json_graph['users_statistics'] = get_links()
 
-
-def clustering(json_graph):
-    with open(config.CLUSTERS_FILE, 'r') as f:
+    with open(config.BITU_ELIGIBLES_FILE, 'r') as f:
         clusters = json.loads(f.read())
     for node in json_graph['nodes']:
-        if node['id'] in clusters:
-            node['cluster'] = clusters[node['id']]
-    with open(config.BITU_ELIGIBLES_FILE, 'r') as f:
-        eligibles = json.loads(f.read())
-    for node in json_graph['nodes']:
-        if node['id'] in eligibles:
-            node['eligibled'] = True
-    return json_graph
+        node['cluster'] = clusters.get(node['id'], '')
+        node['bituEligibled'] = node['id'] in clusters
+    with gzip.open(config.BRIGHTID_JSON_FILE, 'w') as f:
+        f.write(json.dumps(json_graph).encode('utf-8'))
 
-
-def main():
-    print('\nUpdating the graph explorer data ... ')
-    # utils.read_backup_file()
-    json_graph = load_from_backup()
-    json_graph = clustering(json_graph)
-    with gzip.open('../brightid.json.gz', 'w') as f:
+    with open('../brightid.json', 'w') as f:
         f.write(json.dumps(json_graph).encode('utf-8'))
 
 
 if __name__ == '__main__':
-    main()
+    run()
