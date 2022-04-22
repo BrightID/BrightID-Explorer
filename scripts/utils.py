@@ -5,6 +5,7 @@ import config
 import shutil
 import tarfile
 import requests
+import networkx as nx
 from arango import ArangoClient
 
 db = ArangoClient(hosts=config.ARANGO_SERVER_ENDPOINT).db(
@@ -72,19 +73,56 @@ def read_suspicious_conns():
     for k in not_suspicious:
         if k in suspicious_conns:
             del suspicious_conns[k]
-    # print(f'No. suspicious conns 2: {len(suspicious_conns)}')
+    # print(f'No. suspicious conns: {len(suspicious_conns)}')
     return suspicious_conns
 
 
 def restore_backup():
+    print('\nRestoring database backup ...')
     backup = requests.get(config.BACKUP_URL)
     with open(config.RAR_ADDR, 'wb') as f:
         f.write(backup.content)
     shutil.rmtree(config.BACKUP_ADDR, ignore_errors=True)
     tarf = tarfile.open(config.RAR_ADDR, mode='r|gz')
-    tarf.extractall('/tmp/brightid/')
+    tarf.extractall(config.BACKUP_ADDR)
     tarf.close()
     # restore snapshot
     res = os.system(
-        f"arangorestore --server.username 'root' --server.password '' --server.endpoint 'tcp://127.0.0.1:8529' --server.database '_system' --create-database true --create-collection true --import-data true --input-directory {config.BACKUP_ADDR}")
+        f"arangorestore --server.username 'root' --server.password '' --server.endpoint 'tcp://127.0.0.1:8529' --server.database '_system' --create-database true --create-collection true --import-data true --input-directory {config.BACKUP_ADDR}/dump")
     assert res == 0, 'restoring snapshot failed'
+
+
+def get_manual_verifieds():
+    bitu_verifieds_file = requests.get(config.BITU_VERIFIEDS_FILE)
+    bitu_verifieds = set()
+    for d in json.loads(bitu_verifieds_file.content):
+        if d['score'] != 0 or d['linksNum'] > 0:
+            bitu_verifieds.add(d['user'])
+    return bitu_verifieds
+
+
+def load_graph():
+    suspicious_conns = read_suspicious_conns()
+    graph = nx.Graph()
+    connections = {
+        f"{c['_from'].replace('users/', '')}{c['_to'].replace('users/', '')}": c for c in db['connections']}
+    for c in connections.values():
+        if c['level'] not in ['recovery', 'already known']:
+            continue
+        f = c['_from'].replace('users/', '')
+        t = c['_to'].replace('users/', '')
+        if f'{f}{t}' in suspicious_conns:
+            continue
+        if f'{t}{f}' in suspicious_conns:
+            continue
+        if graph.has_edge(f, t) or graph.has_edge(t, f):
+            continue
+        if (connections.get(f'{t}{f}', {}).get('level') not in ['recovery', 'already known']):
+            continue
+        graph.add_edge(f, t)
+    main_component = sorted([comp for comp in nx.connected_components(
+        graph)], key=lambda l: len(l), reverse=True)[0]
+    for node in list(graph):
+        if node not in main_component:
+            graph.remove_node(node)
+    return graph
