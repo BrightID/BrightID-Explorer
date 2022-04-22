@@ -27,7 +27,7 @@ function starsPlayer() {
       toDate = new Date($("#toDateSI").val()).getTime() + 24 * 60 * 60 * 1000;
       $("#levelsRange").val(1);
       $("#connectionLevel").html("Just met");
-      $("#linkVisibility").prop( "checked", false );
+      $("#linkVisibility").prop("checked", false);
       drawGraph();
       graphLinks.forEach((l) => {
         const timestamp = l.history[l.history.length - 1][0]
