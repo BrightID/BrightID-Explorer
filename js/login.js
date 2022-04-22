@@ -240,7 +240,7 @@ const syncBrightID = async () => {
       width: 250,
       height: 250,
     });
-  $("#qrcode").show();
+    $("#qrcode").show();
     CountdownTimer();
     await readChannel(data);
   } else {
