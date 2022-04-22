@@ -1,4 +1,4 @@
 requests
 google-cloud-storage
 python-arango==5.4.0
-python-louvain
+python-louvain=0.15
