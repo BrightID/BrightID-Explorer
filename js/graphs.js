@@ -62,8 +62,8 @@ colors = ["#332288", "#117733", "#44AA99", "#88CCEE", "#DDCC77", "#CC6677", "#AA
 function resetNodesColor(n, fade = false, clusters = false) {
   let color;
   if (clusters) {
-    if (n.cluster == 1000000) color = "#FFFFFF";
-    else color = colors[n.cluster % colors.length];
+    if (n.cluster == "") color = fadedColor;
+    else color = colors[n.cluster.replace(/^.*\D+/g, "") % colors.length];
   } else if (bituVerifieds.length != 0) {
     if (fade) color = fadedColor;
     else if (n.selected) color = "red";
@@ -81,27 +81,31 @@ function resetNodesColor(n, fade = false, clusters = false) {
   return color;
 }
 
-function resetNodesVal(n) {
-  let color;
-  if (bituVerifieds.length != 0) {
+function resetNodesVal(n, clusters = false) {
+  let val;
+  if (clusters) {
+    if (n.cluster == "") val = 1;
+    else val = (n.cluster.replace(/^.*\D+/g, "") % 10) * 10;
+  } else if (bituVerifieds.length != 0) {
     if (boldMood == 0) {
-      return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
+      val = Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
     } else if (boldMood == 1) {
-      return n.hasBitu ? 20 : 1;
+      val = n.hasBitu ? 20 : 1;
     } else if (boldMood == 2) {
-      return n.hasBitu ? 1 : 20;
+      val = n.hasBitu ? 1 : 20;
     }
   } else {
     if (selectedVerification == "Bitu") {
-      return Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
+      val = Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
     } else if (selectedVerification == "Seed") {
-      return ("Seed" in n.verifications ? 20 : 3) ** .5;
+      val = ("Seed" in n.verifications ? 20 : 3) ** .5;
     } else if (selectedVerification == "SeedConnected") {
-      return Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20) ** .5;
+      val = Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20) ** .5;
     } else if (selectedVerification == "SocialRecoverySetup") {
-      return ("SocialRecoverySetup" in n.verifications ? 20 : 3) ** .5;
+      val = ("SocialRecoverySetup" in n.verifications ? 20 : 3) ** .5;
     }
   }
+  return val;
 }
 
 function move(x, y, z) {
