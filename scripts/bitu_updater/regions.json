@@ -11,7 +11,8 @@
 			],
 			"resolution": 0.5,
 			"min_cut_power": 1.5,
-			"min_cut_multiplier": 10
+			"min_cut_multiplier": 10,
+			"priority": 1
 		},
 		"china": {
 			"members": [
@@ -23,7 +24,8 @@
 			],
 			"resolution": 0.5,
 			"min_cut_power": 1,
-			"min_cut_multiplier": 10
+			"min_cut_multiplier": 10,
+			"priority": 2
 		},
 		"world": {
 			"members": [
@@ -47,7 +49,8 @@
 					"min_cut_power": 1,
 					"min_cut_multiplier": 10
 				}
-			}
+			},
+			"priority": 3
 		}
 	}
 }
