@@ -259,7 +259,7 @@ function getConnText(neighbor, fData, tData) {
   }
   let text = `${allNodes[neighbor]?.name || neighbor} | ${tLevel} | ${fLevel} | ${connTime}`
   if (allNodes[neighbor].node_type == "Seed") {
-    text = `* ${text}`;
+    text = `🌱 ${text}`;
   }
   return text;
 }
