@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "d3-force": "^3.0.0"
+    "d3-force": "^3.0.0",
+    "d3-force-3d": "^3.0.3"
   }
 }
