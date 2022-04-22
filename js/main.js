@@ -40,14 +40,14 @@ $(document).keyup(function (e) {
   areaPoints = [];
 })
 
-$(document).keydown(function(e) {
+$(document).keydown(function (e) {
   if (e.keyCode == 49 && e.shiftKey) {
     if ($("#linkVisibility").is(":checked")) {
-      $("#linkVisibility").prop( "checked", false );
+      $("#linkVisibility").prop("checked", false);
       Graph.linkVisibility(false);
     } else {
-    $("#linkVisibility").prop( "checked", true );
-    Graph.linkVisibility(true);
+      $("#linkVisibility").prop("checked", true);
+      Graph.linkVisibility(true);
     }
   }
   if (e.keyCode == 50 && e.shiftKey) {
@@ -547,8 +547,8 @@ $(document).ready(function () {
       location2dFileAddr = `/history/${folderName}/positions2d.json`;
     }
   } else {
-    dataFileAddr = "/brightid.json";
-    location2dFileAddr = "/positions2d.json";
+    dataFileAddr = "brightid.json";
+    location2dFileAddr = "positions2d.json";
   }
 
   $.get(location2dFileAddr, function (data) {
