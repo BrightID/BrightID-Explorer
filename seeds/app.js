@@ -2,10 +2,10 @@ Highcharts.getJSON(
   '../brightid.json',
   (data) => {
     loadNames()
-    .then(() => {
-      draw(data);
-      loadGrid(data);
-    });
+      .then(() => {
+        draw(data);
+        loadGrid(data);
+      });
   }
 );
 
@@ -83,20 +83,20 @@ function draw(data) {
     },
     series
   });
-  $(document).on('click', '#hide-all', function() {
-    $.each(chart.series, function(i, ser) {
+  $(document).on('click', '#hide-all', function () {
+    $.each(chart.series, function (i, ser) {
       ser.setVisible(false, false);
     });
     chart.redraw();
   });
-  $(document).on('click', '#show-all', function() {
-    $.each(chart.series, function(i, ser) {
+  $(document).on('click', '#show-all', function () {
+    $.each(chart.series, function (i, ser) {
       ser.setVisible(true, false);
     });
     chart.redraw();
   });
-  $(document).on('click', '#show-known', function() {
-    $.each(chart.series, function(i, ser) {
+  $(document).on('click', '#show-known', function () {
+    $.each(chart.series, function (i, ser) {
       ser.setVisible(ser.userOptions.hasName || type == 'seed_groups', false);
     });
     chart.redraw();
@@ -113,15 +113,15 @@ function loadGrid(data) {
     if (period == 'daily') {
       var header = ["Name", "Quota", "Last week", "Last month", "Last year"];
       map[names[g] || g] = [
-        total(data[k][g], now - 7*24*3600*1000),
-        total(data[k][g], now - 30*24*3600*1000),
+        total(data[k][g], now - 7 * 24 * 3600 * 1000),
+        total(data[k][g], now - 30 * 24 * 3600 * 1000),
         total(data[k][g]),
       ];
     } else {
       var header = ["Name", "Quota", "Last day", "Last 2 days", "Last week"];
       map[names[g] || g] = [
-        total(data[k][g], now - 1*24*3600*1000),
-        total(data[k][g], now - 2*24*3600*1000),
+        total(data[k][g], now - 1 * 24 * 3600 * 1000),
+        total(data[k][g], now - 2 * 24 * 3600 * 1000),
         total(data[k][g]),
       ];
     }
