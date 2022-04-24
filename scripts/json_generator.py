@@ -230,9 +230,6 @@ def run():
     with gzip.open(config.BRIGHTID_JSON_FILE, 'w') as f:
         f.write(json.dumps(json_graph).encode('utf-8'))
 
-    with open('../brightid.json', 'w') as f:
-        f.write(json.dumps(json_graph).encode('utf-8'))
-
 
 if __name__ == '__main__':
     run()
