@@ -89,7 +89,7 @@ def remove_best_cut(graph, cluster, region, filtered=None):
             # concatenate cuts into single cut
             cut = set([k for cut in cuts for k in cut])
             # stops if length of cut increases by 2 compared to the previous level without accepting the new cut
-            if history and len(cut) > 3 and len(cut) - len(history[-1]) > 1:
+            if len(history) > 1 and len(cut) > 6 and len(cut) - len(history[-1]) > 1:
                 break
             # stops if a vicious circle detected without accepting the new cut
             if not cut or cut in history:
