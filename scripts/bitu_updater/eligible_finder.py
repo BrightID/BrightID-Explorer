@@ -12,6 +12,7 @@ nodes = subg = H = R = None
 
 
 def clusterify(graph, resolution, regions=None):
+    print(f'graph: {graph}, resolution: {resolution}')
     global nodes
     clusters = community.best_partition(
         graph, resolution=resolution, randomize=False)
@@ -82,7 +83,7 @@ def remove_best_cut(graph, cluster, region, filtered=None):
         history = [(k,)]
         while True:
             # finds min-cuts for cutting nodes that are still in the cluster
-            visited = [n for cut in history for n in cut]
+            visited = []
             cuts = [[n for n in min_cut(k) if n not in visited] if k in keys else (
                 k,) for k in history[-1]]
             # concatenate cuts into single cut
