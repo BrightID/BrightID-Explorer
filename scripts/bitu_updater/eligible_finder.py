@@ -48,10 +48,8 @@ def remove_attacks_from(graph, cluster, region):
         remove_best_cut(graph, c, region)
 
 
-def remove_best_cut(graph, cluster, region, filtered=None):
+def remove_best_cut(graph, cluster, region):
     global nodes, subg, H, R
-    # uses filtered to ignore including nodes that split region members in the cut
-    filtered = filtered or set([])
     keys = [n for n in nodes if nodes[n]['cluster']
             == cluster and subg.has_node(n)]
     keys.sort()
@@ -77,7 +75,6 @@ def remove_best_cut(graph, cluster, region, filtered=None):
     for k in keys[:5]:
         # replaces min-cut of each node with next level cut for nodes in that min-cut and stops this when
         # - reaches nodes that are not inside the cluster
-        # - reaches nodes that are filtered
         # - length of cut increases by 2 compared to the previous level
         # this helps to find a better and deeper cut for the node compared to the initial shallow cut
         history = [(k,)]
@@ -93,9 +90,6 @@ def remove_best_cut(graph, cluster, region, filtered=None):
                 break
             # stops if a vicious circle detected without accepting the new cut
             if not cut or cut in history:
-                break
-            # stops if there is a node in the cut that is not acceptable without accepting the new cut
-            if filtered.intersection(cut):
                 break
             history.append(cut)
             # stops if all cutting nodes are outside of the cluster after accepting the new cut by adding it to the history
@@ -121,13 +115,7 @@ def remove_best_cut(graph, cluster, region, filtered=None):
             continue
         subg_copy.remove_node(k)
         # finds the component that includes all region pre-defiend members and ignores cut members
-        component = next(filter(lambda l: all(n in l or n in cut for n in region['members']),
-                                nx.connected_components(subg_copy)), None)
-        # if cutting one of the cutting nodes break the region and put pre-defined members into
-        # different components repeat the function by filtering that node to not be included in the cut
-        if not component:
-            filtered.add(k)
-            return remove_best_cut(graph, cluster, region, filtered)
+        component = sorted(nx.connected_components(subg_copy), key=lambda l: len(l))[-1]
         # counts number of nodes that get removed by cutting the node
         stats.append((k, len(subg) - len(component)))
         # considers the main component as the graph for cutting the next node
@@ -152,8 +140,7 @@ def remove_best_cut(graph, cluster, region, filtered=None):
     for k in cut:
         if subg.has_node(k):
             subg.remove_node(k)
-    component = next(filter(lambda l: all(n in l or n in cut for n in region['members']),
-                            nx.connected_components(subg)), None)
+    component = sorted(nx.connected_components(subg), key=lambda l: len(l))[-1]
     assert component is not None
     subg = subg.subgraph(component).copy()
 
