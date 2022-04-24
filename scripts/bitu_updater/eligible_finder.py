@@ -80,9 +80,8 @@ def remove_best_cut(graph, cluster, region):
         history = [(k,)]
         while True:
             # finds min-cuts for cutting nodes that are still in the cluster
-            visited = []
-            cuts = [[n for n in min_cut(k) if n not in visited] if k in keys else (
-                k,) for k in history[-1]]
+            cuts = [[n for n in min_cut(k)] if k in keys else (k,)
+                    for k in history[-1]]
             # concatenate cuts into single cut
             cut = set([k for cut in cuts for k in cut])
             # stops if length of cut increases by 2 compared to the previous level without accepting the new cut
@@ -115,7 +114,8 @@ def remove_best_cut(graph, cluster, region):
             continue
         subg_copy.remove_node(k)
         # finds the component that includes all region pre-defiend members and ignores cut members
-        component = sorted(nx.connected_components(subg_copy), key=lambda l: len(l))[-1]
+        component = sorted(nx.connected_components(
+            subg_copy), key=lambda l: len(l))[-1]
         # counts number of nodes that get removed by cutting the node
         stats.append((k, len(subg) - len(component)))
         # considers the main component as the graph for cutting the next node
