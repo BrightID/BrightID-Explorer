@@ -332,6 +332,7 @@ function selectNode(node, showDetails, focus) {
   $("#userDetailsPlaceHolder").hide();
   $("#neighborsContainer").hide();
   $("#neighborContainer").hide();
+  $("#verificationsTree").empty();
 
   if (selectedNode) {
     selectedNode.selected = false;
