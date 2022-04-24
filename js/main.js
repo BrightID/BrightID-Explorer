@@ -264,6 +264,66 @@ function getConnText(neighbor, fData, tData) {
   return text;
 }
 
+function addVerificationsTree(node) {
+  let domString = '';
+  for (const name in node.verifications) {
+    if (node.verifications[name].app || node.verifications[name].expression) {
+      continue;
+    }
+    domString += `<li><span class="caret">${name}</span><ul class="nested">`;
+    for (let [key, value] of Object.entries(node.verifications[name])) {
+      if (["timestamp", "hash", "block", "communities", "releaseTime"].includes(key)) {
+        continue;
+      } else if (!value && key == "friend") {
+        continue;
+      } else if (["reported", "connected"].includes(key) && value.length == 0) {
+        continue;
+      } else if (key == "connected") {
+        domString += `<li><span class="caret">${key}</span><ul class="nested">`;
+        for (const groupId of value) {
+          domString += `<li>${groups[groupId].region || groupId}</li>`
+        }
+        domString += "</ul></li>";
+      } else if (key == "reported") {
+        domString += `<li><span class="caret">${key}</span><ul class="nested">`;
+        for (const groupId of value) {
+          domString += `<li>${groups[groupId].region || groupId}</li>`
+        }
+        domString += "</ul></li>";
+      } else if (["directReports", "indirectReports"].includes(key)) {
+        domString += `<li><span class="caret">${key}</span><ul class="nested">`;
+        for (let k of Object.keys(value)) {
+          domString += `<li>${allNodes[k].name || k}: ${value[k]}</li>`
+        }
+        domString += "</ul></li>";
+      } else if (key == "reportedConnections") {
+        domString += `<li><span class="caret">${key}</span><ul class="nested">`;
+        for (let k of Object.keys(value)) {
+          domString += `<li><span class="caret">${allNodes[k].name || k}</span><ul class="nested">`
+          for (let v of value[k]) {
+            domString += `<li>${allNodes[v].name || v}</li>`
+          }
+          domString += "</ul></li>";
+        }
+        domString += "</ul></li>";
+      } else {
+        domString += `<li>${key}: ${value}</li>`;
+      }
+    }
+    domString += "</ul></li>";
+  }
+  $("#verificationsTree").append(domString)
+  var toggler = document.getElementsByClassName("caret");
+  var i;
+  for (i = 0; i < toggler.length; i++) {
+    toggler[i].addEventListener("click", function () {
+      this.parentElement.querySelector(".nested").classList.toggle("active");
+      this.classList.toggle("caret-down");
+    });
+  }
+
+}
+
 function selectNode(node, showDetails, focus) {
   $("#userDetailsContent").show();
   $("#seedData").hide();
@@ -342,57 +402,7 @@ function selectNode(node, showDetails, focus) {
   //   $("#userRecoveryContainer").show();
   // }
 
-  let verificationsString = "";
-  for (const name in node.verifications) {
-    if (node.verifications[name].app || node.verifications[name].expression) {
-      continue;
-    }
-    const details = [];
-    for (let [key, value] of Object.entries(node.verifications[name])) {
-      if (["timestamp", "hash", "block", "communities"].includes(key)) {
-        continue;
-      } else if (!value && key == "friend") {
-        continue;
-      } else if (["reported", "connected"].includes(key) && value.length == 0) {
-        continue;
-      } else if (key == "connected") {
-        const seedGroups = [];
-        for (const groupId of value) {
-          seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
-        }
-        value = seedGroups.join(", ");
-      } else if (key == "reported") {
-        const seedGroups = [];
-        for (const groupId of value) {
-          seedGroups.push(groups[groupId].region ? groups[groupId].region : groupId);
-        }
-        value = seedGroups.join(", ");
-      } else if (key == "raw_rank") {
-        value = value.toFixed(2);
-      } else if (["directReports", "indirectReports", "reportedConnections"].includes(key)) {
-        let temp = "{ ";
-        for (let k of Object.keys(value)) {
-          temp += `${allNodes[k].name || k}: ${value[k]}, `;
-        }
-        temp += "}"
-        value = temp;
-      } else if (key == "releaseTime") {
-        const d = new Date(allNodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"]["verifications"]["Bitu"]["releaseTime"]);
-        let releaseDate = `${d.getDate()}/${d.getMonth() + 1}`;
-        const nd = new Date(d.getTime() + (7 * 24 * 60 * 60 * 1000));
-        const nextReleaseDate = `${nd.getDate()}/${nd.getMonth() + 1}`;
-        if (value == 0) {
-          releaseDate = '__'
-        }
-        details.push(`release: ${releaseDate}`);
-        details.push(`next release: ${nextReleaseDate}`);
-        continue;
-      }
-      details.push(`${key}: ${value}`);
-    }
-    verificationsString += `<b>${name}</b> ${details.join(", ")}<br/>`;
-  }
-  $("#verifications").html(verificationsString);
+  addVerificationsTree(node);
 
   $("#groups").empty().append(new Option("", "none"));
   $("#groupsCount").html(node.groups.length);
@@ -711,4 +721,6 @@ $(document).ready(function () {
   });
 
   $("#drawSubgraphBtn").click(drawGroupSubgraph);
+
+
 });

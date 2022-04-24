@@ -277,3 +277,42 @@ option {
     transform: rotate(359deg);
   }
 }
+
+ul,
+.tree {
+  list-style-type: none;
+}
+
+.tree {
+  margin: 0;
+  padding: 0;
+}
+
+.caret {
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  user-select: none;
+  /* Prevent text selection */
+}
+
+.caret::before {
+  content: "\2295";
+  color: white;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.caret-down::before {
+  content: "\2296";
+}
+
+.nested {
+  display: none;
+  margin: 0px;
+  padding-left: 8px;
+}
+
+.active {
+  display: block;
+}

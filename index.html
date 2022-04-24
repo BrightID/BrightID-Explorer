@@ -149,12 +149,13 @@
               <div class="title">Joined At: </div>
               <div class="value" id="nodeCreatedAt"></div>
             </div>
-            <div class="row px-4">
-              <div class="title">Verifications:</div>
-            </div>
-            <div class="text-white px-4 text-small" id="verifications"></div>
+            <ul class="tree row text-white mt-3">
+              <li><span class="caret title">Verifications:</span>
+                <ul class="nested text-small" id="verificationsTree">
+                </ul>
+            </ul>
             <div class="hiden" id="neighborsContainer">
-              <div class="row mt-2">
+              <div class="row mt-3">
                 <div class="combo-title">Connections:</div>
                 <div class="value" id="neighborsCount"></div>
               </div>
