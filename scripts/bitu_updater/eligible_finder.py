@@ -9,6 +9,7 @@ from utils import load_graph
 import config
 
 nodes = subg = H = R = None
+cuts_json = {}
 
 
 def clusterify(graph, resolution, regions=None):
@@ -152,12 +153,16 @@ def remove_best_cut(graph, cluster, region):
     H = build_auxiliary_node_connectivity(subg)
     R = build_residual_network(H, 'capacity')
 
+    removed = []
     # removes removed nodes from main graph and nodes objects
     for n in list(nodes.keys()):
         if cluster[:-1] == nodes[n]['cluster'][:-1] and not subg.has_node(n):
             del nodes[n]
             graph.remove_node(n)
-            print('removed', n, '|'.join(cut))
+            removed.append(n)
+    print(
+        f'cut: {cut} has removed {len(removed)} nodes.\nremoved nodes: {removed}')
+    cuts_json["_".join(map(str, cluster))] = {"cut": cut, "removed": removed}
 
 
 def run():
@@ -214,6 +219,9 @@ def run():
 
     with open(config.BITU_ELIGIBLES_FILE, 'w') as f:
         f.write(json.dumps({n: nodes[n]['cluster'] for n in nodes}))
+
+    with open(config.CUTS_JSON_FILE, 'w') as f:
+        f.write(json.dumps(cuts_json))
 
 
 if __name__ == '__main__':

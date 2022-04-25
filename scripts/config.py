@@ -13,3 +13,4 @@ DIRECT_PENALTY = 5
 INDIRECT_PENALTY = 1
 ARANGO_SERVER_ENDPOINT = 'http://localhost:8529'
 ARANGO_DB_NAME = '_system'
+CUTS_JSON_FILE = '../cuts.json'
