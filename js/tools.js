@@ -371,3 +371,102 @@ function selectOneCluster(c) {
   });
   Graph.linkWidth(1);
 }
+
+async function showCuts() {
+  var allCut = [];
+  var allRemoved = []
+
+  await $.get("cuts.json", function (data) {
+    cuts = data;
+    for (k of Object.keys(cuts)) {
+      allCut.push(...cuts[k]["cut"])
+      allRemoved.push(...cuts[k]["removed"])
+      console.log("allRemoved", allRemoved.length)
+    }
+  });
+
+  $("#linkVisibility").prop("checked", false);
+  updateGraphData(3);
+  setPosition("2d", 3);
+  const data = { nodes: Object.values(graphNodes), links: graphLinks };
+
+  const mainComponent = new Set(getMainComponent());
+  mainComponent.forEach(v => {
+    let n = allNodes[v];
+    n.mainComponent = true;
+    if (allCut.includes(v)) n.cut = true;
+    if (allRemoved.includes(v)) n.removed = true;
+  });
+
+  // to fix an issue
+  for (let l of data.links) {
+    if (!l.__indexColor) {
+      l.__indexColor = resetLinksColor(l);
+    }
+  }
+
+  var i = data.links.length
+  while (i--) {
+    let l = data.links[i];
+    if (allCut.includes(l.source.id) && allRemoved.includes(l.target.id)) {
+      data.links.splice(i, 1);
+    } else if (allCut.includes(l.target.id) && allRemoved.includes(l.source.id)) {
+      data.links.splice(i, 1);
+    }
+  }
+
+  $("#graphDiv").empty();
+  const elem = document.getElementById("graphDiv");
+  Graph = ForceGraph()(elem)
+    .minZoom(0.01)
+    .nodeLabel("id")
+    .linkVisibility(l => {
+      if (l.source.removed || l.target.removed) return true;
+      else return false;
+    })
+    .nodeVisibility(n => n.mainComponent || false)
+    .cooldownTime(10000)
+    .enableNodeDrag(false)
+    .nodeColor(n => {
+      if (n.cut) return "blue";
+      if (n.removed) return "red";
+      else return fadedColor;
+    })
+    .nodeVal(n => {
+      if (n.cut || n.removed) return 10;
+      else return 5;
+    })
+    .graphData(data)
+    .nodeId("id")
+    .linkSource("source")
+    .linkTarget("target")
+    .onNodeClick((node) => {
+      if (!node.selected) {
+        selectNode(node, true, false);
+      }
+    })
+    .onBackgroundClick((evt) => {
+      if (evt.ctrlKey) {
+        const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
+        var rect = document.getElementById("graphDiv").getBoundingClientRect();
+        drawCoordinates(p.x, p.y, 5 / (Graph.zoom() ** .5));
+        areaPoints.push([p.x, p.y]);
+        return;
+      }
+
+      for (const id in graphNodes) {
+        graphNodes[id].selected = false;
+      }
+      selectedNode = undefined;
+      Graph.linkWidth(linkWidth)
+        .nodeColor(resetNodesColor)
+        .linkColor(resetLinksColor)
+        .linkDirectionalArrowLength(arrowLength);
+    })
+    .linkColor(resetLinksColor)
+    .linkWidth(1)
+    .linkDirectionalArrowLength(arrowLength)
+  Graph.moving = false;
+  updateStatistics();
+  Graph.zoom(0, 3000);
+}
