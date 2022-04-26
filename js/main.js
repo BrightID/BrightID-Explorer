@@ -509,16 +509,16 @@ function openCollapsible(selectedId, reopen) {
     $("#menuToggleIcon").addClass("fa-times");
   }
   if (!accordion[selectedId]) {
-    $(`#${selectedId}`).removeClass("hiden");
+    $(`#${selectedId}`).removeClass("hidden");
     accordion[selectedId] = true;
     Object.keys(accordion).forEach((id) => {
       if (id != selectedId) {
-        $(`#${id}`).addClass("hiden");
+        $(`#${id}`).addClass("hidden");
         accordion[id] = false;
       }
     })
   } else if (accordion[selectedId] && !reopen) {
-    $(`#${selectedId}`).addClass("hiden");
+    $(`#${selectedId}`).addClass("hidden");
     accordion[selectedId] = false;
   }
 }

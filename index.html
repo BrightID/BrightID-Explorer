@@ -97,18 +97,21 @@
           <i style="font-size:16px" class="fas">&#xf105; </i>
           Login
         </a>
-        <div class="hiden menu-item-body" id="loginDetails">
-          <div id="qrCodeForm" class="text-center">
-            <div id="qrcode" class="qrcodeblock text-center"></div>
-            <div id="waitingSpinner" class="hiden">
+        <div class="hidden menu-item-body" id="loginDetails">
+          <div id="qrCodeForm" class="hidden text-center">
+            <div id="qrInfo" class="qrcodeblock text-white text-center">
+              Scan the QR code using BrightID and add the explorer to your devices list.
+            </div>
+            <div id="qrcode" class="qrcodeblock text-center mt-4"></div>
+            <div id="waitingSpinner" class="hidden">
               <img src="img/spinner.gif" />
             </div>
             <p id="loginStatus" class="text-center text-white mt-2"></p>
           </div>
           <div id="loginForm" id="login">
-            <div class="text-center text-white mt-2">Connect your BrightID to upload your data</div>
-            <div class="row justify-content-md-center mt-2">
-              <button id="connectBrightidBtn" class="btn btn-primary align-center">Connect BrightID</button>
+            <div class="text-center text-white mt-2">Login with BrightID to see your connections' names and photos in the Explorer</div>
+            <div class="row justify-content-md-center mt-4">
+              <button id="connectBrightidBtn" class="btn btn-primary align-center">Login with BrightID</button>
             </div>
           </div>
           <div id="logoutForm">
@@ -128,15 +131,15 @@
           <i style="font-size:16px" class="fas">&#xf105; </i>
           User
         </a>
-        <div class="hiden menu-item-body" id="userDetails">
+        <div class="hidden menu-item-body" id="userDetails">
           <div class="menu-item-body" id="userDetailsPlaceHolder">
             <div class="title">Select a user</div>
           </div>
-          <div class="menu-item-body hiden" id="userDetailsContent">
+          <div class="menu-item-body hidden" id="userDetailsContent">
             <div class="text-center">
               <img id="userImage" class="user-image" />
             </div>
-            <div class="row mt-2 px-4 hiden" id="userNameContainer">
+            <div class="row mt-2 px-4 hidden" id="userNameContainer">
               <div class="text-white text-center mt-3" style="font-size: 16px;" id="userName"></div>
             </div>
             <div class="row px-4">
@@ -154,7 +157,7 @@
                 <ul class="nested text-small" id="verificationsTree">
                 </ul>
             </ul>
-            <div class="hiden" id="neighborsContainer">
+            <div class="hidden" id="neighborsContainer">
               <div class="row mt-3">
                 <div class="combo-title">Connections:</div>
                 <div class="value" id="neighborsCount"></div>
@@ -164,7 +167,7 @@
                   <option value="none" selected="">None</option>
                 </select>
               </div>
-              <div class="hiden" id="neighborContainer">
+              <div class="hidden" id="neighborContainer">
                 <div class="row px-4">
                   <div class="title">Outbound Connection: </div>
                 </div>
@@ -184,7 +187,7 @@
                 <button id="selectNeighbor" class="btn btn-primary align-center mb-2">Show Neighbor</button>
               </div>
             </div>
-            <div class="hiden" id="neighborsHistoryContainer">
+            <div class="hidden" id="neighborsHistoryContainer">
               <div class="row mt-2">
                 <div class="combo-title">Connections History:</div>
               </div>
@@ -238,7 +241,7 @@
                 </tbody>
               </table>
             </div>
-            <div id="seedData" class="hiden">
+            <div id="seedData" class="hidden">
               <div class="row px-4">
                 <div class="title">No. Seed Groups: </div>
                 <div class="value" id="noSeedGroups"></div>
@@ -267,11 +270,11 @@
           <i style="font-size:16px" class="fas">&#xf105; </i>
           Group
         </a>
-        <div class="hiden menu-item-body" id="groupDetails">
+        <div class="hidden menu-item-body" id="groupDetails">
           <div class="menu-item-body" id="groupDetailsPlaceHolder">
             <div class="title">Select a group</div>
           </div>
-          <div class="hiden menu-item-body" id="groupDetailsContent">
+          <div class="hidden menu-item-body" id="groupDetailsContent">
             <div class="text-center">
               <img id="groupImg" class="group-image" />
             </div>
@@ -302,7 +305,7 @@
             <div class="row justify-content-md-center mt-2">
               <button id="showMember" class="btn btn-primary align-center mb-5">Show Member</button>
             </div>
-            <div id="groupSeedConnectedDiv" class="hiden">
+            <div id="groupSeedConnectedDiv" class="hidden">
               <div class="row">
                 <div class="combo-title">Users conected to this seed group:</div>
                 <div class="value" id="seedConectedCount"></div>
@@ -324,7 +327,7 @@
           <i style="font-size:16px" class="fas">&#xf105; </i>
           Statistics
         </a>
-        <div class="hiden menu-item-body" id="statisticsDetails">
+        <div class="hidden menu-item-body" id="statisticsDetails">
           <div class="containar">
             <div class="row justify-content-md-center ">
               <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
@@ -380,7 +383,7 @@
           <i style="font-size:16px" class="fas">&#xf105; </i>
           Users Activity Illustrator
         </a>
-        <div class="hiden menu-item-body" id="userIllustratorDetails">
+        <div class="hidden menu-item-body" id="userIllustratorDetails">
           <div class="row mt-2">
             <div class="combo-title">Highlight Connections within:</div>
           </div>
@@ -428,7 +431,7 @@
           <i style="font-size:16px" class="fas">&#xf105; </i>
           Stars Activity Illustrator
         </a>
-        <div class="hiden menu-item-body" id="starsIllustratorDetails">
+        <div class="hidden menu-item-body" id="starsIllustratorDetails">
           <div class="row mt-2">
             <div class="combo-title">Highlight connected users within:</div>
           </div>
@@ -472,7 +475,7 @@
           <i style="font-size:16px" class="fas">&#xf105; </i>
           Graph
         </a>
-        <div class="hiden menu-item-body" id="graphDetails">
+        <div class="hidden menu-item-body" id="graphDetails">
           <div class="row px-4 justify-content-md-center">
             <h5 class="text-white" id="connectionLevel">Already known</h5>
             <i class="fas fa-question-circle text-white" data-toggle="tooltip" data-placement="top"
@@ -533,7 +536,7 @@
             </ul>
           </div>
         </div>
-        <div class="my-legend hiden" id="customizedLegend">
+        <div class="my-legend hidden" id="customizedLegend">
           <div class="legend-title">Node colors</div>
           <div class="legend-scale">
             <ul class="legend-labels" id="customizedLegendUi"></ul>

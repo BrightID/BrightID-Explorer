@@ -150,6 +150,7 @@ const readChannel = async (data) => {
   const dataIds = res.profileIds;
   if (dataIds.length > 2) {
     $("#qrcode").hide();
+    $("#qrInfo").hide();
     clearInterval(counterIntervalID);
     $("#waitingSpinner").show();
     if (!(channelId in channels)) {
