@@ -374,14 +374,13 @@ function selectOneCluster(c) {
 
 async function showCuts() {
   var allCut = [];
-  var allRemoved = []
+  var allRemoved = [];
 
   await $.get("cuts.json", function (data) {
     cuts = data;
     for (k of Object.keys(cuts)) {
-      allCut.push(...cuts[k]["cut"])
-      allRemoved.push(...cuts[k]["removed"])
-      console.log("allRemoved", allRemoved.length)
+      allCut.push(...cuts[k]["cut"]);
+      allRemoved.push(...cuts[k]["removed"]);
     }
   });
 
