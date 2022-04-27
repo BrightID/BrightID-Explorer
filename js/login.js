@@ -235,6 +235,7 @@ const checkChannelState = (data) => {
     channels[channelId]["state"] == "downloading";
     clearInterval(counterIntervalID);
     $("#qrInfo").hide();
+    $("#qrcode").hide();
     $("#waitingSpinner").show();
     $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
   }
