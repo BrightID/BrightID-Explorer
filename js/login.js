@@ -1,6 +1,5 @@
 const baseURL = "http://node.brightid.org/profile";
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const channels = {};
 
 const CountdownTimer = () => {
   $("#loginStatus").text("15:00");
@@ -142,72 +141,102 @@ const createSyncQR = async (brightID, signingKey, lastSyncTime) => {
   return { channelId, aesKey, signingKey, qrString };
 };
 
-let channels = {};
-const readChannel = async (data) => {
-  let completed = false;
+const readChannel = (data) => {
   const { channelId, aesKey, signingKey } = data;
-  let res = await apiCall(`/list/${channelId}`, "GET");
-  const dataIds = res.profileIds;
-  if (dataIds.length > 2) {
-    $("#qrcode").hide();
-    $("#qrInfo").hide();
-    clearInterval(counterIntervalID);
-    $("#waitingSpinner").show();
-    if (!(channelId in channels)) {
-      channels[channelId] = { "all": 0, "received": 0 }
+
+  $.ajax({
+    contentType: "application/json; charset=utf-8",
+    url: `/profile/list/${channelId}`,
+    type: "GET",
+    headers: { "Cache-Control": "no-cache" },
+    success: function (res) {
+      for (let dataId of res.profileIds) {
+        channels[channelId]["dataIds"].add(dataId);
+      }
+    },
+    failure: function (res) {
+      console.log(res);
     }
-    channels[channelId]["all"] = dataIds.length + channels[channelId]["received"];
-    $("#loginStatus").text("");
+  });
+
+  for (let dataId of channels[channelId]["dataIds"]) {
+    if (channels[channelId]["requested"].has(dataId)) {
+      continue;
+    }
+    channels[channelId]["requested"].add(dataId);
+
+    if (!dataId.startsWith("sig_completed_") &&
+      !dataId.startsWith("sig_userinfo_") &&
+      !dataId.startsWith("connection_") &&
+      !dataId.startsWith("group_")) {
+      channels[channelId]["received"].add(dataId);
+      apiCall(`/${channelId}/${dataId}`, "DELETE");
+      continue;
+    }
+
+    if (dataId.startsWith("sig_completed_")) {
+      if (dataId.replace("completed_", "").split(":")[1] != b64ToUrlSafeB64(signingKey)) {
+        channels[channelId]["state"] = "uploadCompleted";
+      }
+      channels[channelId]["received"].add(dataId);
+      continue;
+    }
+
+    $.ajax({
+      contentType: "application/json; charset=utf-8",
+      url: `/profile/download/${channelId}/${dataId}`,
+      type: "GET",
+      headers: { "Cache-Control": "no-cache" },
+      success: function (res) {
+        channels[channelId]["received"].add(dataId);
+        $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
+        const data = decryptData(res.data, aesKey);
+        if (dataId.startsWith("sig_userinfo_")) {
+          localforage.setItem(`explorer_owner`, data.id);
+          localforage.setItem(`explorer_owner_img_${data.id}`, data.photo);
+          localforage.setItem(`explorer_owner_name_${data.id}`, data.name);
+        } else if (dataId.startsWith("connection_")) {
+          localforage.setItem(`explorer_user_img_${data.id}`, data.photo);
+          localforage.setItem(`explorer_user_name_${data.id}`, data.name);
+        } else if (dataId.startsWith("group_")) {
+          localforage.setItem(`explorer_group_name_${data.id}`, data.name);
+        }
+        apiCall(`/${channelId}/${dataId}`, "DELETE");
+      },
+      failure: function (res) {
+        channels[channelId]["requested"].delete(dataId);
+      }
+    });
   }
-  const uploader = (id) => id.replace("completed_", "").split(":")[1];
-  for (let i = 0; i < dataIds.length; i++) {
-    const dataId = dataIds[i];
-    if (dataId.startsWith("sig_completed_") && uploader(dataId) != b64ToUrlSafeB64(signingKey)) {
-      completed = true;
-    } else if (dataId.startsWith("sig_userinfo_")) {
-      res = await apiCall(`/download/${channelId}/${dataId}`, "GET");
-      const encrypted = res.data;
-      const data = decryptData(encrypted, aesKey);
-      localforage.setItem(`explorer_owner`, data.id);
-      localforage.setItem(`explorer_owner_img_${data.id}`, data.photo);
-      localforage.setItem(`explorer_owner_name_${data.id}`, data.name);
-      Object.assign(allNodes[data.id], { name: data.name, img: new Image() });
-      $("#logoutFormUserName").text(data.name);
-      allNodes[data.id].img.src = data.photo;
-      $("#logoutFormImage").attr("src", data.photo);
-    } else if (dataId.startsWith("connection_")) {
-      res = await apiCall(`/download/${channelId}/${dataId}`, "GET");
-      const encrypted = res.data;
-      const data = decryptData(encrypted, aesKey);
-      localforage.setItem(`explorer_user_img_${data.id}`, data.photo);
-      localforage.setItem(`explorer_user_name_${data.id}`, data.name);
-      Object.assign(allNodes[data.id], { name: data.name, img: new Image() });
-      allNodes[data.id].img.src = data.photo;
-    } else if (dataId.startsWith("group_")) {
-      res = await apiCall(`/download/${channelId}/${dataId}`, "GET");
-      const encrypted = res.data;
-      const data = decryptData(encrypted, aesKey);
-      localforage.setItem(`explorer_group_name_${data.id}`, data.name);
-    }
-    if (!(["sig_data", "data"].includes(dataId)) && !(dataId.startsWith("sig_completed_"))) {
-      await apiCall(`/${channelId}/${dataId}`, "DELETE");
-      channels[channelId]["received"] += 1;
-    }
-    if (i != 0 && i % 10 == 0) {
-      let res = await apiCall(`/list/${channelId}`, "GET");
-      channels[channelId]["all"] = res.profileIds.length + channels[channelId]["received"];
-    }
-    if (channelId in channels) {
-      $("#loginStatus").text(`received ${channels[channelId]["received"]} of ${channels[channelId]["all"]}`);
-    }
+};
+
+const isDownloadCompleted = (channelId) => {
+  const dataIds = channels[channelId]["dataIds"];
+  const received = channels[channelId]["received"];
+  return channels[channelId]["state"] == "uploadCompleted" && dataIds.size === received.size && [...dataIds].every(id => received.has(id));
+};
+
+const checkChannelState = (data) => {
+  const { channelId } = data;
+  if (!(channelId in channels)) {
+    channels[channelId] = { "dataIds": new Set(), "requested": new Set(), "received": new Set(), "state": "waiting" };
   }
-  if (completed) {
+  if (isDownloadCompleted(channelId)) {
+    channels[channelId]["state"] == "finished";
+    clearInterval(checkChannelStateIntervalID);
+    clearInterval(readChannelIntervalID);
     localforage.setItem("brightid_has_imported", true);
     $("#loginStatus").text("");
     loadPersonalData();
-  } else {
-    await sleep(3000);
-    await readChannel(data);
+    return;
+  }
+
+  if (channels[channelId]["state"] == "waiting" && channels[channelId]["dataIds"].size > 2) {
+    channels[channelId]["state"] == "downloading";
+    clearInterval(counterIntervalID);
+    $("#qrInfo").hide();
+    $("#waitingSpinner").show();
+    $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
   }
 };
 
@@ -224,7 +253,8 @@ const importBrightID = async () => {
   });
   $("#qrcode").show();
   CountdownTimer();
-  await readChannel(data);
+  checkChannelStateIntervalID = setInterval(function () { checkChannelState(data); }, 5000);
+  readChannelIntervalID = setInterval(function () { readChannel(data); }, 10000);
 };
 
 const syncBrightID = async () => {
@@ -243,7 +273,8 @@ const syncBrightID = async () => {
     });
     $("#qrcode").show();
     CountdownTimer();
-    await readChannel(data);
+    checkChannelStateIntervalID = setInterval(function () { checkChannelState(data); }, 5000);
+    readChannelIntervalID = setInterval(function () { readChannel(data); }, 10000);
   } else {
     localforage.clear().then(() => {
       return importBrightID();
