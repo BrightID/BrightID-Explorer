@@ -144,10 +144,6 @@ const createSyncQR = async (brightID, signingKey, lastSyncTime) => {
 const readChannel = (data) => {
   const { channelId, aesKey, signingKey } = data;
 
-  if (channels[channelId]["state"] == "waiting") {
-    return;
-  }
-
   $.ajax({
     contentType: "application/json; charset=utf-8",
     url: `/profile/list/${channelId}`,
@@ -162,6 +158,10 @@ const readChannel = (data) => {
       console.log(res);
     }
   });
+
+  if (channels[channelId]["state"] == "waiting") {
+    return;
+  }
 
   for (let dataId of channels[channelId]["dataIds"]) {
     if (channels[channelId]["requested"].has(dataId)) {
