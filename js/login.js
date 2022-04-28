@@ -242,7 +242,7 @@ const checkChannelState = (data) => {
   }
 
   if (channels[channelId]["state"] == "waiting" && channels[channelId]["dataIds"].size > 2) {
-    channels[channelId]["state"] == "downloading";
+    channels[channelId]["state"] = "downloading";
     clearInterval(counterIntervalID);
     $("#qrInfo").hide();
     $("#qrcode").hide();
@@ -285,7 +285,7 @@ const syncBrightID = async () => {
     $("#qrcode").show();
     CountdownTimer();
     checkChannelStateIntervalID = setInterval(function () { checkChannelState(data); }, 5000);
-    readChannelIntervalID = setInterval(function () { readChannel(data); }, 10000);
+    readChannelIntervalID = setInterval(function () { readChannel(data); }, 5000);
   } else {
     localforage.clear().then(() => {
       return importBrightID();
