@@ -163,7 +163,9 @@ const readChannel = (data) => {
     if (channels[channelId]["requested"].has(dataId)) {
       continue;
     }
+
     channels[channelId]["requested"].add(dataId);
+    $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
 
     if (!dataId.startsWith("sig_completed_") &&
       !dataId.startsWith("sig_userinfo_") &&
@@ -189,7 +191,6 @@ const readChannel = (data) => {
       headers: { "Cache-Control": "no-cache" },
       success: function (res) {
         channels[channelId]["received"].add(dataId);
-        $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
         const data = decryptData(res.data, aesKey);
         if (dataId.startsWith("sig_userinfo_")) {
           localforage.setItem(`explorer_owner`, data.id);
