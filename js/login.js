@@ -144,6 +144,10 @@ const createSyncQR = async (brightID, signingKey, lastSyncTime) => {
 const readChannel = (data) => {
   const { channelId, aesKey, signingKey } = data;
 
+  if (channels[channelId]["state"] == "waiting") {
+    return;
+  }
+
   $.ajax({
     contentType: "application/json; charset=utf-8",
     url: `/profile/list/${channelId}`,
