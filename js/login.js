@@ -176,6 +176,11 @@ const readChannel = (data) => {
       continue;
     }
 
+    if (dataId == "data") {
+      channels[channelId]["received"].add(dataId);
+      continue;
+    }
+
     if (dataId.startsWith("sig_completed_")) {
       if (dataId.replace("completed_", "").split(":")[1] != b64ToUrlSafeB64(signingKey)) {
         channels[channelId]["state"] = "uploadCompleted";
