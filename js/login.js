@@ -24,12 +24,11 @@ const CountdownTimer = () => {
   }, 1000);
 };
 
-const apiCall = (path, type, data) => {
+const removeData = (path) => {
   return $.ajax({
     contentType: "application/json; charset=utf-8",
     url: "/profile" + path,
-    type,
-    data,
+    type: "DELETE",
     headers: { "Cache-Control": "no-cache" },
   });
 };
@@ -57,6 +56,9 @@ const hash = (data) => {
 };
 
 const loadPersonalData = async () => {
+  $("#qrCodeForm").hide();
+  $("#loginForm").hide();
+  $("#waitingSpinner").hide();
   autoLoginDone = true;
   const owner = await localforage.getItem("explorer_owner");
   const ownerName = await localforage.getItem(`explorer_owner_name_${owner}`) || "Unknow";
@@ -93,10 +95,7 @@ const loadPersonalData = async () => {
     }
   }
 
-  $("#qrCodeForm").hide();
-  $("#loginForm").hide();
   $("#logoutForm").show();
-  $("#waitingSpinner").hide();
   selectNode(user, true);
 };
 
@@ -120,10 +119,22 @@ const createImportQR = async () => {
     }),
     "uuid": "data"
   };
-  const res = await apiCall(`/upload/${channelId}`, "POST", JSON.stringify(data));
-  qrString = `${baseURL}?aes=${aesKey}&t=3`;
-  localforage.setItem(`explorer_last_sync_time`, Date.now());
-  return { channelId, aesKey, signingKey: b64PublicKey, qrString };
+  try {
+    await $.ajax({
+      contentType: "application/json; charset=utf-8",
+      url: `/profile/upload/${channelId}`,
+      type: "POST",
+      data: JSON.stringify(data),
+      headers: { "Cache-Control": "no-cache" },
+    });
+    const qrString = `${baseURL}?aes=${aesKey}&t=3`;
+    localforage.setItem(`explorer_last_sync_time`, Date.now());
+    return { channelId, aesKey, signingKey: b64PublicKey, qrString };
+  } catch (error) {
+    $("#qrCodeForm").hide();
+    $("#loginForm").show();
+    alert("Error:", "Please check your network connection and try again.");
+  }
 };
 
 const createSyncQR = async (brightID, signingKey, lastSyncTime) => {
@@ -133,12 +144,37 @@ const createSyncQR = async (brightID, signingKey, lastSyncTime) => {
   const dataObj = { signingKey, lastSyncTime, isPrimaryDevice: false };
   const data = JSON.stringify(dataObj);
   let body = JSON.stringify({ data, uuid: "sig_data" });
-  const res = await apiCall(`/upload/${channelId}`, "POST", body);
+  try {
+    await $.ajax({
+      contentType: "application/json; charset=utf-8",
+      url: `/profile/upload/${channelId}`,
+      type: "POST",
+      data: body,
+      headers: { "Cache-Control": "no-cache" },
+    });
+  } catch (error) {
+    $("#qrCodeForm").hide();
+    $("#logoutForm").show();
+    alert("Error:", "Please check your network connection and try again.");
+  }
+
   const uuid = `sig_completed_${brightID}:${b64ToUrlSafeB64(signingKey)}`;
   body = JSON.stringify({ data: "completed", uuid });
-  const res2 = await apiCall(`/upload/${channelId}`, "POST", body);
-  qrString = `${baseURL}?aes=${aesKey}&t=4`;
-  return { channelId, aesKey, signingKey, qrString };
+  try {
+    await $.ajax({
+      contentType: "application/json; charset=utf-8",
+      url: `/profile/upload/${channelId}`,
+      type: "POST",
+      data: body,
+      headers: { "Cache-Control": "no-cache" },
+    });
+    const qrString = `${baseURL}?aes=${aesKey}&t=4`;
+    return { channelId, aesKey, signingKey, qrString };
+  } catch (error) {
+    $("#qrCodeForm").hide();
+    $("#logoutForm").show();
+    alert("Error:", "Please check your network connection and try again.");
+  }
 };
 
 const readChannel = (data) => {
@@ -169,14 +205,14 @@ const readChannel = (data) => {
     }
 
     channels[channelId]["requested"].add(dataId);
-    $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
 
     if (!dataId.startsWith("sig_completed_") &&
       !dataId.startsWith("sig_userinfo_") &&
       !dataId.startsWith("connection_") &&
       !dataId.startsWith("group_")) {
       channels[channelId]["received"].add(dataId);
-      apiCall(`/${channelId}/${dataId}`, "DELETE");
+      $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
+      removeData(`/${channelId}/${dataId}`);
       continue;
     }
 
@@ -190,6 +226,7 @@ const readChannel = (data) => {
         channels[channelId]["state"] = "uploadCompleted";
       }
       channels[channelId]["received"].add(dataId);
+      $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
       continue;
     }
 
@@ -200,6 +237,7 @@ const readChannel = (data) => {
       headers: { "Cache-Control": "no-cache" },
       success: function (res) {
         channels[channelId]["received"].add(dataId);
+        $("#loginStatus").text(`received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`);
         const data = decryptData(res.data, aesKey);
         if (dataId.startsWith("sig_userinfo_")) {
           localforage.setItem(`explorer_owner`, data.id);
@@ -211,7 +249,7 @@ const readChannel = (data) => {
         } else if (dataId.startsWith("group_")) {
           localforage.setItem(`explorer_group_name_${data.id}`, data.name);
         }
-        apiCall(`/${channelId}/${dataId}`, "DELETE");
+        removeData(`/${channelId}/${dataId}`);
       },
       failure: function (res) {
         channels[channelId]["requested"].delete(dataId);
@@ -232,7 +270,7 @@ const checkChannelState = (data) => {
     channels[channelId] = { "dataIds": new Set(), "requested": new Set(), "received": new Set(), "state": "waiting" };
   }
   if (isDownloadCompleted(channelId)) {
-    channels[channelId]["state"] == "finished";
+    channels[channelId]["state"] = "finished";
     clearInterval(checkChannelStateIntervalID);
     clearInterval(readChannelIntervalID);
     localforage.setItem("brightid_has_imported", true);
