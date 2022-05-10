@@ -279,6 +279,9 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
       if ((await localforage.getItem("brightid_has_imported")) && !autoLoginDone) {
         loadPersonalData();
       }
+      if (document.URL.indexOf('aura=') >= 0) {
+        setTimeout(() => drawAura(document.URL.split('aura=')[1]), 1000);
+      }
     })
   Graph.moving = false;
   Graph.onZoom(() => {
@@ -394,4 +397,98 @@ function logPositions3d() {
   });
   console.log(`nodes: ${Object.keys(pos).length}`);
   console.log(pos);
+}
+
+async function drawAura(fname) {
+  const { energyTransfers, ratings } = await $.ajax(`./${fname}.json`);
+  // console.log(energyTransfers, ratings);
+  graphNodes = {};
+  graphLinks = [];
+  linksMap = {}
+  energyTransfers.forEach((et) => {
+    if (et.amount == 0) {
+      return;
+    }
+    const t = new Date(et.createdAt).getTime();
+    linksMap[`${et.fromBrightId}:${et.toBrightId}`] = et;
+    graphLinks.push({
+      source: et.fromBrightId,
+      target: et.toBrightId,
+      weight: et.amount,
+      history: [[t, "already known"]],
+    });
+    graphNodes[et.fromBrightId] = allNodes[et.fromBrightId];
+    graphNodes[et.toBrightId] = allNodes[et.toBrightId];
+  });
+  ratings.forEach((r) => {
+    const n = graphNodes[r.toBrightId];
+    if (!n) return;
+    n.rating = (n.rating || 0) + parseFloat(r.rating);
+  });
+  const data = { nodes: Object.values(graphNodes), links: graphLinks };
+  $("#graphDiv").empty();
+  const elem = document.getElementById("graphDiv");
+  Graph = ForceGraph()(elem);
+  // f = Graph.d3Force('link').strength();
+  Graph.d3Force('link').strength((l) => (l.weight * .002) ** .5);
+  Graph.d3Force('link').distance((l) => (500 / l.weight) ** .5);
+  Graph
+    .nodeColor(resetNodesColor)
+    .graphData(data)
+    .nodeId("id")
+    .nodeVal((n) => (n.rating || 1) / 8)
+    .nodeLabel((n) => `${n.id}<br/>rating: ${n.rating || 0}`)
+    .linkSource("source")
+    .linkTarget("target")
+    .linkLabel((link) => {
+      const rlink = linksMap[`${link.target.id}:${link.source.id}`];
+      const source = allNodes[link.source.id]?.name || link.source.id;
+      const target = allNodes[link.target.id]?.name || link.target.id;
+      const res = `${source} -> ${target}: ${link.weight}`;
+      return rlink?.amount ?  `${res}<br/>${target} -> ${source}: ${rlink?.amount}` :  res;
+    })
+    .onNodeClick((node) => {
+      if (!node.selected) {
+        selectNode(node, true, false);
+      }
+      Graph
+        .linkWidth((l) => l.weight ** .5)
+        .linkVisibility(true);
+    })
+    .onBackgroundClick((evt) => {
+      for (const id in graphNodes) {
+        graphNodes[id].selected = false;
+      }
+      selectedNode = undefined;
+      Graph
+        .linkWidth((l) => l.weight ** .5)
+        .linkVisibility(true)
+        .nodeColor(resetNodesColor)
+        .linkColor(resetLinksColor)
+        .linkDirectionalArrowLength(arrowLength);
+    })
+    .nodeCanvasObjectMode(() => "after")
+    .nodeCanvasObject((n, ctx) => {
+      let size = 2 * ((n.rating || 1) ** .5);
+      if (n.img) {
+        ctx.lineWidth = 0;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, false);
+        ctx.clip();
+        ctx.strokeStyle = n.color;
+        try {
+          ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
+        } catch (err) {
+          console.log("Error in drawImage: ", err)
+        }
+        // ctx.stroke();
+        ctx.restore();
+      }
+    })
+    .linkColor(resetLinksColor)
+    .linkWidth((l) => l.weight ** .5)
+    .linkVisibility(true)
+    .linkDirectionalArrowLength(arrowLength)
+    .cooldownTime(10000);
 }
