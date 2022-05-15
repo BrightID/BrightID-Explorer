@@ -400,59 +400,88 @@ function logPositions3d() {
 }
 
 async function drawAura(fname) {
-  const { energyTransfers, ratings } = await $.ajax(`./${fname}.json`);
-  // console.log(energyTransfers, ratings);
+  const { energyTransfers, ratings, energy } = await $.ajax(`./${fname}.json`);
+  const ratingLinkColor = 'green';
+  const energyLinkColor = 'blue';
+
+  const ratedNodeColor = 'green'
+  const energyTransferedNodeColor = 'blue'
+
   graphNodes = {};
   graphLinks = [];
-  linksMap = {}
+  linksMap = {};
+  ratings.forEach((r) => {
+    const t = new Date(r.createdAt).getTime();
+    linksMap[`${r.fromBrightId}:${r.toBrightId}`] = {
+      source: r.fromBrightId,
+      target: r.toBrightId,
+      history: [[t, "already known"]],
+      aColor: ratingLinkColor,
+      width: 1,
+      rating: parseFloat(r.rating),
+    };
+    allNodes[r.fromBrightId]['auraRated'] = true;
+    allNodes[r.toBrightId]['auraRated'] = true;
+    graphNodes[r.fromBrightId] = allNodes[r.fromBrightId];
+    graphNodes[r.fromBrightId]['aColor'] = ratedNodeColor;
+    graphNodes[r.fromBrightId]['val'] = 1;
+    graphNodes[r.toBrightId] = allNodes[r.toBrightId];
+    graphNodes[r.toBrightId]['aColor'] = ratedNodeColor;
+    graphNodes[r.toBrightId]['val'] = 1;
+  });
+
+  const energies = [];
+  energy.forEach((e) => {
+    if (e.amount == 0) {
+      return;
+    }
+    energies.push(e.amount);
+  });
+  const maxEnergies = Math.max(...energies);
+  const minEnergies = Math.min(...energies);
+  energy.forEach((e) => {
+    if (e.amount == 0) {
+      return;
+    }
+    graphNodes[e.brightId]['aColor'] = energyTransferedNodeColor;
+    graphNodes[e.brightId]['val'] = (e.amount - minEnergies) * (10 - 2) / (maxEnergies - minEnergies) + 2;
+    graphNodes[e.brightId]['energy'] = e.amount;
+  });
+
   energyTransfers.forEach((et) => {
     if (et.amount == 0) {
       return;
     }
-    const t = new Date(et.createdAt).getTime();
-    linksMap[`${et.fromBrightId}:${et.toBrightId}`] = et;
-    graphLinks.push({
-      source: et.fromBrightId,
-      target: et.toBrightId,
-      weight: et.amount,
-      history: [[t, "already known"]],
-    });
-    graphNodes[et.fromBrightId] = allNodes[et.fromBrightId];
-    graphNodes[et.toBrightId] = allNodes[et.toBrightId];
+    linksMap[`${et.fromBrightId}:${et.toBrightId}`]['aColor'] = energyLinkColor;
+    linksMap[`${et.fromBrightId}:${et.toBrightId}`]['width'] = (et.amount - 1) * (5 - 2) / (100 - 1) + 2;
+    linksMap[`${et.fromBrightId}:${et.toBrightId}`]['energy'] = et.amount;
   });
-  ratings.forEach((r) => {
-    const n = graphNodes[r.toBrightId];
-    if (!n) return;
-    n.rating = (n.rating || 0) + parseFloat(r.rating);
-  });
+
+  graphLinks = Object.values(linksMap);
   const data = { nodes: Object.values(graphNodes), links: graphLinks };
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem);
-  // f = Graph.d3Force('link').strength();
-  Graph.d3Force('link').strength((l) => (l.weight * .002) ** .5);
-  Graph.d3Force('link').distance((l) => (500 / l.weight) ** .5);
   Graph
-    .nodeColor(resetNodesColor)
+    .nodeColor(n => n.aColor)
     .graphData(data)
     .nodeId("id")
-    .nodeVal((n) => (n.rating || 1) / 8)
-    .nodeLabel((n) => `${n.id}<br/>rating: ${n.rating || 0}`)
+    .nodeVal(n => n.val)
+    .nodeLabel(n => `${n.id}<br/>energy: ${n.energy || 0}`)
     .linkSource("source")
     .linkTarget("target")
     .linkLabel((link) => {
       const rlink = linksMap[`${link.target.id}:${link.source.id}`];
       const source = allNodes[link.source.id]?.name || link.source.id;
       const target = allNodes[link.target.id]?.name || link.target.id;
-      const res = `${source} -> ${target}: ${link.weight}`;
-      return rlink?.amount ?  `${res}<br/>${target} -> ${source}: ${rlink?.amount}` :  res;
+      return `${source} -> ${target}<br/>rank: ${link.rating || 0}<br/>energy: ${link.energy || 0}`;
     })
     .onNodeClick((node) => {
       if (!node.selected) {
         selectNode(node, true, false);
       }
       Graph
-        .linkWidth((l) => l.weight ** .5)
+        .linkWidth(l => l.width)
         .linkVisibility(true);
     })
     .onBackgroundClick((evt) => {
@@ -461,22 +490,21 @@ async function drawAura(fname) {
       }
       selectedNode = undefined;
       Graph
-        .linkWidth((l) => l.weight ** .5)
+        .nodeColor((n) => n.aColor)
         .linkVisibility(true)
-        .nodeColor(resetNodesColor)
-        .linkColor(resetLinksColor)
+        .linkColor((l) => l.aColor)
         .linkDirectionalArrowLength(arrowLength);
     })
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject((n, ctx) => {
-      let size = 2 * ((n.rating || 1) ** .5);
+      let size = 2 * ((parseFloat(n.rating) || 1) ** .5);
       if (n.img) {
         ctx.lineWidth = 0;
         ctx.save();
         ctx.beginPath();
         ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, false);
         ctx.clip();
-        ctx.strokeStyle = n.color;
+        ctx.strokeStyle = n.aColor;
         try {
           ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
         } catch (err) {
@@ -486,8 +514,8 @@ async function drawAura(fname) {
         ctx.restore();
       }
     })
-    .linkColor(resetLinksColor)
-    .linkWidth((l) => l.weight ** .5)
+    .linkColor(l => l.aColor)
+    .linkWidth(l => l.width)
     .linkVisibility(true)
     .linkDirectionalArrowLength(arrowLength)
     .cooldownTime(10000);
