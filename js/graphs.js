@@ -467,14 +467,15 @@ async function drawAura(fname) {
     .graphData(data)
     .nodeId("id")
     .nodeVal(n => n.val)
-    .nodeLabel(n => `${n.id}<br/>energy: ${n.energy || 0}`)
+    .nodeLabel(n => `${allNodes[n.id]?.name || n.id}<br/>energy: ${n.energy || 0}`)
     .linkSource("source")
     .linkTarget("target")
     .linkLabel((link) => {
-      const rlink = linksMap[`${link.target.id}:${link.source.id}`];
       const source = allNodes[link.source.id]?.name || link.source.id;
       const target = allNodes[link.target.id]?.name || link.target.id;
-      return `${source} -> ${target}<br/>rank: ${link.rating || 0}<br/>energy: ${link.energy || 0}`;
+      const res = `${source} -> ${target} rank: ${link.rating || 0} energy: ${link.energy || 0}`;
+      const rlink = linksMap[`${link.target.id}:${link.source.id}`];
+      return rlink ? `${res}<br/>${target} -> ${source}  rank: ${rlink.rating || 0} energy: ${rlink.energy || 0}` :  res;
     })
     .onNodeClick((node) => {
       if (!node.selected) {
@@ -497,12 +498,12 @@ async function drawAura(fname) {
     })
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject((n, ctx) => {
-      let size = 2 * ((parseFloat(n.rating) || 1) ** .5);
+      let size = 7 * n.val ** .5;
       if (n.img) {
         ctx.lineWidth = 0;
         ctx.save();
         ctx.beginPath();
-        ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, false);
+        ctx.arc(n.x, n.y, size / 2, 0, Math.PI * 2, true);
         ctx.clip();
         ctx.strokeStyle = n.aColor;
         try {
