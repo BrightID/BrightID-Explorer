@@ -401,10 +401,10 @@ function logPositions3d() {
 
 async function drawAura(fname) {
   const { energyTransfers, ratings, energy } = await $.ajax(`./${fname}.json`);
-  const ratingLinkColor = 'green';
+  const ratingLinkColor = 'orange';
   const energyLinkColor = 'blue';
 
-  const ratedNodeColor = 'green'
+  const ratedNodeColor = 'orange'
   const energyTransferedNodeColor = 'blue'
 
   graphNodes = {};
