@@ -428,6 +428,8 @@ async function drawAura(fname) {
     graphNodes[r.toBrightId] = allNodes[r.toBrightId];
     graphNodes[r.toBrightId]['aColor'] = ratedNodeColor;
     graphNodes[r.toBrightId]['val'] = 1;
+    allNodes[r.fromBrightId]['givenRatings'] = (allNodes[r.fromBrightId]['givenRatings'] || 0) + parseInt(r['rating']);
+    allNodes[r.toBrightId]['receivedRatings'] = (allNodes[r.toBrightId]['receivedRatings'] || 0) + parseInt(r['rating']);
   });
 
   const energies = [];
@@ -467,7 +469,7 @@ async function drawAura(fname) {
     .graphData(data)
     .nodeId("id")
     .nodeVal(n => n.val)
-    .nodeLabel(n => `${allNodes[n.id]?.name || n.id}<br/>energy: ${n.energy || 0}`)
+    .nodeLabel(n => `${allNodes[n.id]?.name || n.id}<br/>energy: ${n.energy || 0}<br/>given ratings: ${n.givenRatings || 0}<br/>received ratings: ${n.receivedRatings || 0}`)
     .linkSource("source")
     .linkTarget("target")
     .linkLabel((link) => {
