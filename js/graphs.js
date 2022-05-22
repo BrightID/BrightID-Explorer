@@ -405,32 +405,50 @@ async function drawAura(fname) {
   const ratingLinkColor = 'orange';
   const energyLinkColor = 'blue';
 
-  const ratedNodeColor = 'orange'
-  const energyTransferedNodeColor = 'blue'
+  const ratedNodeColor = 'orange';
+  const energyTransferedNodeColor = 'blue';
 
   graphNodes = {};
   graphLinks = [];
   linksMap = {};
+
   ratings.forEach((r) => {
-    const t = new Date(r.createdAt).getTime();
+    allNodes[r.fromBrightId]['givenRatings'] = (allNodes[r.fromBrightId]['givenRatings'] || 0) + 1;
+    allNodes[r.toBrightId]['receivedRatings'] = (allNodes[r.toBrightId]['receivedRatings'] || 0) + 1;
+
     linksMap[`${r.fromBrightId}:${r.toBrightId}`] = {
       source: r.fromBrightId,
       target: r.toBrightId,
-      history: [[t, "already known"]],
+      history: [[new Date(r.createdAt).getTime(), "already known"]],
       aColor: ratingLinkColor,
       width: 1,
       rating: parseFloat(r.rating),
     };
-    allNodes[r.fromBrightId]['auraRated'] = true;
-    allNodes[r.toBrightId]['auraRated'] = true;
-    graphNodes[r.fromBrightId] = allNodes[r.fromBrightId];
-    graphNodes[r.fromBrightId]['aColor'] = ratedNodeColor;
-    graphNodes[r.fromBrightId]['val'] = 1;
-    graphNodes[r.toBrightId] = allNodes[r.toBrightId];
-    graphNodes[r.toBrightId]['aColor'] = ratedNodeColor;
-    graphNodes[r.toBrightId]['val'] = 1;
-    allNodes[r.fromBrightId]['givenRatings'] = (allNodes[r.fromBrightId]['givenRatings'] || 0) + 1;
-    allNodes[r.toBrightId]['receivedRatings'] = (allNodes[r.toBrightId]['receivedRatings'] || 0) + 1;
+
+    graphNodes[r.fromBrightId] = {
+      ...allNodes[r.fromBrightId],
+      aColor: ratedNodeColor,
+      auraRated: true,
+      val: 1,
+    }
+
+    graphNodes[r.toBrightId] = {
+      ...allNodes[r.toBrightId],
+      aColor: ratedNodeColor,
+      auraRated: true,
+      val: 1,
+    }
+  });
+
+  energyTransfers.forEach((et) => {
+    if (et.amount == 0) {
+      return;
+    }
+    linksMap[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(linksMap[`${et.fromBrightId}:${et.toBrightId}`], {
+      aColor: energyLinkColor,
+      width: (et.amount - 1) * (5 - 2) / (100 - 1) + 2,
+      energy: et.amount
+    });
   });
 
   const energies = [];
@@ -446,18 +464,11 @@ async function drawAura(fname) {
     if (e.amount == 0) {
       return;
     }
-    graphNodes[e.brightId]['aColor'] = energyTransferedNodeColor;
-    graphNodes[e.brightId]['val'] = (e.amount - minEnergies) * (10 - 2) / (maxEnergies - minEnergies) + 2;
-    graphNodes[e.brightId]['energy'] = e.amount;
-  });
-
-  energyTransfers.forEach((et) => {
-    if (et.amount == 0) {
-      return;
-    }
-    linksMap[`${et.fromBrightId}:${et.toBrightId}`]['aColor'] = energyLinkColor;
-    linksMap[`${et.fromBrightId}:${et.toBrightId}`]['width'] = (et.amount - 1) * (5 - 2) / (100 - 1) + 2;
-    linksMap[`${et.fromBrightId}:${et.toBrightId}`]['energy'] = et.amount;
+    graphNodes[e.brightId] = Object.assign(graphNodes[e.brightId], {
+      aColor: energyTransferedNodeColor,
+      val: (e.amount - minEnergies) * (10 - 2) / (maxEnergies - minEnergies) + 2,
+      energy: e.amount
+    });
   });
 
   graphLinks = Object.values(linksMap);
