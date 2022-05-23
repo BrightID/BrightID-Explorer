@@ -399,22 +399,23 @@ function logPositions3d() {
   console.log(pos);
 }
 
+const ratingLinkColor = 'orange';
+const energyLinkColor = 'blue';
+const ratedNodeColor = 'orange';
+const energyTransferedNodeColor = 'blue';
 async function drawAura(fname) {
   const { energyTransfers, ratings, energy } = await $.ajax({url: `./${fname}.json`, cache: false});
-
-  const ratingLinkColor = 'orange';
-  const energyLinkColor = 'blue';
-
-  const ratedNodeColor = 'orange';
-  const energyTransferedNodeColor = 'blue';
+  updateAuraLegend();
 
   graphNodes = {};
   graphLinks = [];
   linksMap = {};
 
   ratings.forEach((r) => {
-    allNodes[r.fromBrightId]['givenRatings'] = (allNodes[r.fromBrightId]['givenRatings'] || 0) + 1;
-    allNodes[r.toBrightId]['receivedRatings'] = (allNodes[r.toBrightId]['receivedRatings'] || 0) + 1;
+    allNodes[r.fromBrightId]['outgoingRatings'] = (allNodes[r.fromBrightId]['outgoingRatings'] || 0) + 1;
+    allNodes[r.toBrightId]['incomingRatings'] = (allNodes[r.toBrightId]['incomingRatings'] || 0) + 1;
+    allNodes[r.fromBrightId]['givenRatings'] = (allNodes[r.fromBrightId]['givenRatings'] || 0) + parseFloat(r.rating);
+    allNodes[r.toBrightId]['rating'] = (allNodes[r.toBrightId]['rating'] || 0) + parseFloat(r.rating);
 
     linksMap[`${r.fromBrightId}:${r.toBrightId}`] = {
       source: r.fromBrightId,
@@ -428,14 +429,12 @@ async function drawAura(fname) {
     graphNodes[r.fromBrightId] = {
       ...allNodes[r.fromBrightId],
       aColor: ratedNodeColor,
-      auraRated: true,
       val: 1,
     }
 
     graphNodes[r.toBrightId] = {
       ...allNodes[r.toBrightId],
       aColor: ratedNodeColor,
-      auraRated: true,
       val: 1,
     }
   });
@@ -447,7 +446,7 @@ async function drawAura(fname) {
     linksMap[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(linksMap[`${et.fromBrightId}:${et.toBrightId}`], {
       aColor: energyLinkColor,
       width: (et.amount - 1) * (5 - 2) / (100 - 1) + 2,
-      energy: et.amount
+      energy: et.amount,
     });
   });
 
@@ -481,7 +480,7 @@ async function drawAura(fname) {
     .graphData(data)
     .nodeId("id")
     .nodeVal(n => n.val)
-    .nodeLabel(n => `${allNodes[n.id]?.name || n.id}<br/>energy: ${n.energy || 0}<br/>outgoing ratings: ${n.givenRatings || 0}<br/>incoming ratings: ${n.receivedRatings || 0}`)
+    .nodeLabel(n => `${allNodes[n.id]?.name || n.id}<br/>energy: ${n.energy || 0}<br/>outgoing ratings: ${n.outgoingRatings || 0}<br/>incoming ratings: ${n.incomingRatings || 0}`)
     .linkSource("source")
     .linkTarget("target")
     .linkLabel((link) => {
@@ -534,4 +533,53 @@ async function drawAura(fname) {
     .linkVisibility(true)
     .linkDirectionalArrowLength(arrowLength)
     .cooldownTime(10000);
+}
+
+function updateAuraLegend(index) {
+  $("#legendNodes").empty();
+  $(`<li><a href="#" id="ratingNodes" onclick="drawAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`).appendTo("#legendNodes");
+  $(`<li><a href="#" id="energyNodes" onclick="drawAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`).appendTo("#legendNodes");
+
+  $("#legendLinks").empty();
+  $(`<li><span style="background:${ratingLinkColor};"></span>rating</li>`).appendTo("#legendLinks");
+  $(`<li><span style="background:${energyLinkColor};"></span>energy transfer</li>`).appendTo("#legendLinks");
+}
+
+const auraView = {"rating": true, "energy": true}
+async function drawAuraView(type) {
+  auraView[type] = !auraView[type];
+  $("#ratingNodes").css("color", auraView.rating ? "black" : "#d49a9a");
+  $("#energyNodes").css("color", auraView.energy ? "black" : "#d49a9a");
+
+  Graph
+    .nodeVisibility(n => auraView.energy && n.energy ? true : auraView.rating && n.rating ? true : false)
+    .linkVisibility(l => auraView.energy && l.energy ? true : auraView.rating && l.rating ? true : false)
+    .nodeLabel(n => {
+      let label = `${allNodes[n.id]?.name || n.id}`;
+      if (auraView.energy && n.energy) label += `<br/>energy: ${n.energy || 0}`;
+      if (auraView.rating && n.rating) label += `<br/>outgoing ratings: ${n.outgoingRatings || 0}<br/>incoming ratings: ${n.incomingRatings || 0}`;
+      return label;
+    })
+    .linkLabel(l => {
+      const source = allNodes[l.source.id]?.name || l.source.id;
+      const target = allNodes[l.target.id]?.name || l.target.id;
+      let label = `${source} -> ${target}`;
+      if (auraView.energy && l.energy) label += ` energy: ${l.energy || 0}`;
+      if (auraView.rating && l.rating) label += ` rank: ${l.rating || 0}`;
+      const rl = linksMap[`${l.target.id}:${l.source.id}`];
+      if (rl) label += `<br/>${target} -> ${source}`;
+      if (rl && auraView.energy && l.energy) label += ` energy: ${rl.energy || 0}`;
+      if (rl && auraView.rating && l.rating) label += ` rank: ${rl.rating || 0}`;
+      return label;
+    })
+    .nodeColor(n => {
+      if (auraView.rating && auraView.energy) return n.aColor;
+      if (auraView.rating) return ratedNodeColor;
+      if (auraView.energy) return energyTransferedNodeColor;
+    })
+    .linkColor(l => {
+      if (auraView.rating && auraView.energy) return l.aColor;
+      if (auraView.rating) return ratingLinkColor;
+      if (auraView.energy) return energyLinkColor;
+    })
 }
