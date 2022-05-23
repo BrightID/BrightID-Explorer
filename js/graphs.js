@@ -11,11 +11,19 @@ function drawGraph() {
   const predefinedPosition = $("#predefinedPosition").is(":checked");
   if ($("#3dBtn").is(":checked")) {
     setPosition(predefinedPosition ? "3d" : "noPositions");
-    drawGraph3d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility);
+    drawGraph3d(
+      { nodes: Object.values(graphNodes), links: graphLinks },
+      cooldownTime,
+      linkVisibility
+    );
   } else {
     const positions = predefinedPosition ? "2d" : "noPositions";
     setPosition(positions, levelIndex);
-    drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, cooldownTime, linkVisibility);
+    drawGraph2d(
+      { nodes: Object.values(graphNodes), links: graphLinks },
+      cooldownTime,
+      linkVisibility
+    );
     Graph.zoom(0, 2000);
   }
 }
@@ -40,25 +48,46 @@ function drawCoordinates(x, y, size) {
 }
 
 function inside(point, vs) {
-  var x = point[0], y = point[1];
+  var x = point[0],
+    y = point[1];
   var inside = false;
   for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-    var xi = vs[i][0], yi = vs[i][1];
-    var xj = vs[j][0], yj = vs[j][1];
-    var intersect = ((yi > y) != (yj > y))
-      && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    var xi = vs[i][0],
+      yi = vs[i][1];
+    var xj = vs[j][0],
+      yj = vs[j][1];
+    var intersect =
+      yi > y != yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
     if (intersect) inside = !inside;
   }
   return inside;
 }
 
 function resetLinksColor(link) {
-  const colors = { "recovery": "blue", "already known": "orange", "just met": "yellow", "suspicious": "red", "reported": "red", "filtered": "gray" };
+  const colors = {
+    recovery: "blue",
+    "already known": "orange",
+    "just met": "yellow",
+    suspicious: "red",
+    reported: "red",
+    filtered: "gray",
+  };
   const level = link["history"][link["history"].length - 1][1];
-  return (level in colors) ? colors[level] : "black";
+  return level in colors ? colors[level] : "black";
 }
 
-colors = ["#332288", "#117733", "#44AA99", "#88CCEE", "#DDCC77", "#CC6677", "#AA4499", "#882255", "#000000", "#F1FF09"]
+colors = [
+  "#332288",
+  "#117733",
+  "#44AA99",
+  "#88CCEE",
+  "#DDCC77",
+  "#CC6677",
+  "#AA4499",
+  "#882255",
+  "#000000",
+  "#F1FF09",
+];
 function resetNodesColor(n, fade = false, clusters = false) {
   let color;
   if (clusters) {
@@ -73,8 +102,19 @@ function resetNodesColor(n, fade = false, clusters = false) {
   } else {
     if (fade) color = fadedColor;
     else if (n.selected) color = "red";
-    else if (selectedVerification == "Bitu" && n.verifications && selectedVerification in n.verifications && n.verifications.Bitu.score > 0) color = "blue";
-    else if (selectedVerification != "Bitu" && n.verifications && selectedVerification in n.verifications) color = "blue";
+    else if (
+      selectedVerification == "Bitu" &&
+      n.verifications &&
+      selectedVerification in n.verifications &&
+      n.verifications.Bitu.score > 0
+    )
+      color = "blue";
+    else if (
+      selectedVerification != "Bitu" &&
+      n.verifications &&
+      selectedVerification in n.verifications
+    )
+      color = "blue";
     else color = "orange";
     n.color = color;
   }
@@ -88,7 +128,7 @@ function resetNodesVal(n, clusters = false) {
     else val = (n.cluster.replace(/^.*\D+/g, "") % 10) * 10;
   } else if (bituVerifieds.length != 0) {
     if (boldMood == 0) {
-      val = Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
+      val = Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** 0.5;
     } else if (boldMood == 1) {
       val = n.hasBitu ? 20 : 1;
     } else if (boldMood == 2) {
@@ -96,13 +136,15 @@ function resetNodesVal(n, clusters = false) {
     }
   } else {
     if (selectedVerification == "Bitu") {
-      val = Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** .5;
+      val = Math.min(Math.max(n.verifications?.Bitu?.score || 1, 3), 20) ** 0.5;
     } else if (selectedVerification == "Seed") {
-      val = ("Seed" in n.verifications ? 20 : 3) ** .5;
+      val = ("Seed" in n.verifications ? 20 : 3) ** 0.5;
     } else if (selectedVerification == "SeedConnected") {
-      val = Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20) ** .5;
+      val =
+        Math.min(Math.max(n.verifications?.SeedConnected?.rank || 1, 3), 20) **
+        0.5;
     } else if (selectedVerification == "SocialRecoverySetup") {
-      val = ("SocialRecoverySetup" in n.verifications ? 20 : 3) ** .5;
+      val = ("SocialRecoverySetup" in n.verifications ? 20 : 3) ** 0.5;
     }
   }
   return val;
@@ -113,10 +155,11 @@ function move(x, y, z) {
     const distance = 40;
     const distRatio = 1 + distance / Math.hypot(x, y, z);
 
-    Graph.cameraPosition({ x: x * distRatio, y: y * distRatio, z: z * distRatio }, { x, y, z }, // lookAt ({ x, y, z })
+    Graph.cameraPosition(
+      { x: x * distRatio, y: y * distRatio, z: z * distRatio },
+      { x, y, z }, // lookAt ({ x, y, z })
       3000 // ms transition duration
     );
-
   } else {
     Graph.centerAt(x + 200, y);
     Graph.zoom(z, 2000);
@@ -174,22 +217,31 @@ function setPosition(type, levelIndex) {
 function updateGraphData(index) {
   graphNodes = {};
   graphLinks = [];
-  const connectionLevels = ["suspicious", "just met", "filtered", "already known", "recovery"];
+  const connectionLevels = [
+    "suspicious",
+    "just met",
+    "filtered",
+    "already known",
+    "recovery",
+  ];
   selectedLevels = connectionLevels.slice(index, 5);
 
-  Object.values(allLinks).forEach(l => {
+  Object.values(allLinks).forEach((l) => {
     const timestamp = l["history"][l["history"].length - 1][0];
     const level = l["history"][l["history"].length - 1][1];
 
-    if (!(selectedLevels.includes(level))) {
+    if (!selectedLevels.includes(level)) {
       return;
     }
 
     const s = l.source?.id || l.source;
     const t = l.target?.id || l.target;
-    const otherSideLevel = allLinks[`${t}${s}`]?.history[allLinks[`${t}${s}`]["history"].length - 1][1];
+    const otherSideLevel =
+      allLinks[`${t}${s}`]?.history[
+        allLinks[`${t}${s}`]["history"].length - 1
+      ][1];
     if (!selectedLevels.includes("just met")) {
-      if (!(selectedLevels.includes(otherSideLevel))) {
+      if (!selectedLevels.includes(otherSideLevel)) {
         return;
       }
     }
@@ -235,7 +287,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
       if (evt.ctrlKey) {
         const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
         var rect = document.getElementById("graphDiv").getBoundingClientRect();
-        drawCoordinates(p.x, p.y, 5 / (Graph.zoom() ** .5));
+        drawCoordinates(p.x, p.y, 5 / Graph.zoom() ** 0.5);
         areaPoints.push([p.x, p.y]);
         return;
       }
@@ -262,7 +314,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
         try {
           ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
         } catch (err) {
-          console.log("Error in drawImage: ", err)
+          console.log("Error in drawImage: ", err);
         }
         ctx.stroke();
         ctx.restore();
@@ -276,26 +328,28 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
     })
     .onEngineStop(async () => {
       Graph.linkVisibility(linkVisibility);
-      if ((await localforage.getItem("brightid_has_imported")) && !autoLoginDone) {
+      if (
+        (await localforage.getItem("brightid_has_imported")) &&
+        !autoLoginDone
+      ) {
         loadPersonalData();
       }
-      if (document.URL.indexOf('aura=') >= 0) {
-        setTimeout(() => drawAura(document.URL.split('aura=')[1]), 1000);
+      if (document.URL.indexOf("aura=") >= 0) {
+        setTimeout(() => drawAura(document.URL.split("aura=")[1]), 1000);
       }
-    })
+    });
   Graph.moving = false;
   Graph.onZoom(() => {
     moving = true;
     Graph.linkVisibility(false);
-  })
-    .onZoomEnd(() => {
-      moving = false;
-      setTimeout(() => {
-        if (!moving) {
-          Graph.linkVisibility(linkVisibility);
-        }
-      }, 3000);
-    })
+  }).onZoomEnd(() => {
+    moving = false;
+    setTimeout(() => {
+      if (!moving) {
+        Graph.linkVisibility(linkVisibility);
+      }
+    }, 3000);
+  });
   updateStatistics();
 }
 
@@ -309,7 +363,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility) {
     .nodeColor(resetNodesColor)
     .graphData(data)
     .nodeOpacity(1)
-    .nodeLabel(n => n.id)
+    .nodeLabel((n) => n.id)
     .nodeId("id")
     .nodeVal(resetNodesVal)
     .linkWidth(linkWidth)
@@ -331,7 +385,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility) {
         .linkColor(resetLinksColor)
         .linkDirectionalArrowLength(arrowLength);
     })
-    .linkDirectionalArrowLength(arrowLength)
+    .linkDirectionalArrowLength(arrowLength);
   updateStatistics();
 }
 
@@ -369,7 +423,7 @@ async function logPositions2d(type) {
     setTimeout(function () {
       if (i == loopNo) {
         const pos = {};
-        Object.values(graphNodes).forEach(node => {
+        Object.values(graphNodes).forEach((node) => {
           if (!("x" in node) || !("y" in node)) {
             return;
           }
@@ -379,7 +433,11 @@ async function logPositions2d(type) {
         console.log(pos);
       } else {
         console.log(`setPositions2d ${i}`);
-        drawGraph2d({ nodes: Object.values(graphNodes), links: graphLinks }, 100000, false);
+        drawGraph2d(
+          { nodes: Object.values(graphNodes), links: graphLinks },
+          100000,
+          false
+        );
       }
     }, loopTime * i);
   }
@@ -387,7 +445,7 @@ async function logPositions2d(type) {
 
 function logPositions3d() {
   const pos = {};
-  Object.values(graphNodes).forEach(node => {
+  Object.values(graphNodes).forEach((node) => {
     if (!("x" in node) || !("y" in node) || !("z" in node)) {
       return;
     }
@@ -399,12 +457,15 @@ function logPositions3d() {
   console.log(pos);
 }
 
-const ratingLinkColor = 'orange';
-const energyLinkColor = 'blue';
-const ratedNodeColor = 'orange';
-const energyTransferedNodeColor = 'blue';
+const ratingLinkColor = "orange";
+const energyLinkColor = "blue";
+const ratedNodeColor = "orange";
+const energyTransferedNodeColor = "blue";
 async function drawAura(fname) {
-  const { energyTransfers, ratings, energy } = await $.ajax({url: `./${fname}.json`, cache: false});
+  const { energyTransfers, ratings, energy } = await $.ajax({
+    url: `./${fname}.json`,
+    cache: false,
+  });
   updateAuraLegend();
 
   graphNodes = {};
@@ -412,10 +473,14 @@ async function drawAura(fname) {
   linksMap = {};
 
   ratings.forEach((r) => {
-    allNodes[r.fromBrightId]['outgoingRatings'] = (allNodes[r.fromBrightId]['outgoingRatings'] || 0) + 1;
-    allNodes[r.toBrightId]['incomingRatings'] = (allNodes[r.toBrightId]['incomingRatings'] || 0) + 1;
-    allNodes[r.fromBrightId]['givenRatings'] = (allNodes[r.fromBrightId]['givenRatings'] || 0) + parseFloat(r.rating);
-    allNodes[r.toBrightId]['rating'] = (allNodes[r.toBrightId]['rating'] || 0) + parseFloat(r.rating);
+    allNodes[r.fromBrightId]["outgoingRatings"] =
+      (allNodes[r.fromBrightId]["outgoingRatings"] || 0) + 1;
+    allNodes[r.toBrightId]["incomingRatings"] =
+      (allNodes[r.toBrightId]["incomingRatings"] || 0) + 1;
+    allNodes[r.fromBrightId]["givenRatings"] =
+      (allNodes[r.fromBrightId]["givenRatings"] || 0) + parseFloat(r.rating);
+    allNodes[r.toBrightId]["rating"] =
+      (allNodes[r.toBrightId]["rating"] || 0) + parseFloat(r.rating);
 
     linksMap[`${r.fromBrightId}:${r.toBrightId}`] = {
       source: r.fromBrightId,
@@ -430,24 +495,27 @@ async function drawAura(fname) {
       ...allNodes[r.fromBrightId],
       aColor: ratedNodeColor,
       val: 1,
-    }
+    };
 
     graphNodes[r.toBrightId] = {
       ...allNodes[r.toBrightId],
       aColor: ratedNodeColor,
       val: 1,
-    }
+    };
   });
 
   energyTransfers.forEach((et) => {
     if (et.amount == 0) {
       return;
     }
-    linksMap[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(linksMap[`${et.fromBrightId}:${et.toBrightId}`], {
-      aColor: energyLinkColor,
-      width: (et.amount - 1) * (5 - 2) / (100 - 1) + 2,
-      energy: et.amount,
-    });
+    linksMap[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(
+      linksMap[`${et.fromBrightId}:${et.toBrightId}`],
+      {
+        aColor: energyLinkColor,
+        width: ((et.amount - 1) * (5 - 2)) / (100 - 1) + 2,
+        energy: et.amount,
+      }
+    );
   });
 
   const energies = [];
@@ -465,8 +533,9 @@ async function drawAura(fname) {
     }
     graphNodes[e.brightId] = Object.assign(graphNodes[e.brightId], {
       aColor: energyTransferedNodeColor,
-      val: (e.amount - minEnergies) * (10 - 2) / (maxEnergies - minEnergies) + 2,
-      energy: e.amount
+      val:
+        ((e.amount - minEnergies) * (10 - 2)) / (maxEnergies - minEnergies) + 2,
+      energy: e.amount,
     });
   });
 
@@ -475,43 +544,52 @@ async function drawAura(fname) {
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem);
-  Graph
-    .nodeColor(n => n.aColor)
+  Graph.nodeColor((n) => n.aColor)
     .graphData(data)
     .nodeId("id")
-    .nodeVal(n => n.val)
-    .nodeLabel(n => `${allNodes[n.id]?.name || n.id}<br/>energy: ${n.energy || 0}<br/>outgoing ratings: ${n.outgoingRatings || 0}<br/>incoming ratings: ${n.incomingRatings || 0}`)
+    .nodeVal((n) => n.val)
+    .nodeLabel(
+      (n) =>
+        `${allNodes[n.id]?.name || n.id}<br/>energy: ${
+          n.energy || 0
+        }<br/>outgoing ratings: ${
+          n.outgoingRatings || 0
+        }<br/>incoming ratings: ${n.incomingRatings || 0}`
+    )
     .linkSource("source")
     .linkTarget("target")
     .linkLabel((link) => {
       const source = allNodes[link.source.id]?.name || link.source.id;
       const target = allNodes[link.target.id]?.name || link.target.id;
-      const res = `${source} -> ${target} rank: ${link.rating || 0} energy: ${link.energy || 0}`;
+      const res = `${source} -> ${target} rank: ${link.rating || 0} energy: ${
+        link.energy || 0
+      }`;
       const rlink = linksMap[`${link.target.id}:${link.source.id}`];
-      return rlink ? `${res}<br/>${target} -> ${source}  rank: ${rlink.rating || 0} energy: ${rlink.energy || 0}` :  res;
+      return rlink
+        ? `${res}<br/>${target} -> ${source}  rank: ${
+            rlink.rating || 0
+          } energy: ${rlink.energy || 0}`
+        : res;
     })
     .onNodeClick((node) => {
       if (!node.selected) {
         selectNode(node, true, false);
       }
-      Graph
-        .linkWidth(l => l.width)
-        .linkVisibility(true);
+      Graph.linkWidth((l) => l.width).linkVisibility(true);
     })
     .onBackgroundClick((evt) => {
       for (const id in graphNodes) {
         graphNodes[id].selected = false;
       }
       selectedNode = undefined;
-      Graph
-        .nodeColor((n) => n.aColor)
+      Graph.nodeColor((n) => n.aColor)
         .linkVisibility(true)
         .linkColor((l) => l.aColor)
         .linkDirectionalArrowLength(arrowLength);
     })
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject((n, ctx) => {
-      let size = 7 * n.val ** .5;
+      let size = 7 * n.val ** 0.5;
       if (n.img) {
         ctx.lineWidth = 0;
         ctx.save();
@@ -522,14 +600,14 @@ async function drawAura(fname) {
         try {
           ctx.drawImage(n.img, n.x - size / 2, n.y - size / 2, size, size);
         } catch (err) {
-          console.log("Error in drawImage: ", err)
+          console.log("Error in drawImage: ", err);
         }
         // ctx.stroke();
         ctx.restore();
       }
     })
-    .linkColor(l => l.aColor)
-    .linkWidth(l => l.width)
+    .linkColor((l) => l.aColor)
+    .linkWidth((l) => l.width)
     .linkVisibility(true)
     .linkDirectionalArrowLength(arrowLength)
     .cooldownTime(10000);
@@ -537,30 +615,52 @@ async function drawAura(fname) {
 
 function updateAuraLegend(index) {
   $("#legendNodes").empty();
-  $(`<li><a href="#" id="ratingNodes" onclick="drawAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`).appendTo("#legendNodes");
-  $(`<li><a href="#" id="energyNodes" onclick="drawAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`).appendTo("#legendNodes");
+  $(
+    `<li><a href="#" id="ratingNodes" onclick="drawAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`
+  ).appendTo("#legendNodes");
+  $(
+    `<li><a href="#" id="energyNodes" onclick="drawAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`
+  ).appendTo("#legendNodes");
 
   $("#legendLinks").empty();
-  $(`<li><span style="background:${ratingLinkColor};"></span>rating</li>`).appendTo("#legendLinks");
-  $(`<li><span style="background:${energyLinkColor};"></span>energy transfer</li>`).appendTo("#legendLinks");
+  $(
+    `<li><span style="background:${ratingLinkColor};"></span>rating</li>`
+  ).appendTo("#legendLinks");
+  $(
+    `<li><span style="background:${energyLinkColor};"></span>energy transfer</li>`
+  ).appendTo("#legendLinks");
 }
 
-const auraView = {"rating": true, "energy": true}
+const auraView = { rating: true, energy: true };
 async function drawAuraView(type) {
   auraView[type] = !auraView[type];
   $("#ratingNodes").css("color", auraView.rating ? "black" : "#d49a9a");
   $("#energyNodes").css("color", auraView.energy ? "black" : "#d49a9a");
 
-  Graph
-    .nodeVisibility(n => auraView.energy && n.energy ? true : auraView.rating && n.rating ? true : false)
-    .linkVisibility(l => auraView.energy && l.energy ? true : auraView.rating && l.rating ? true : false)
-    .nodeLabel(n => {
+  Graph.nodeVisibility((n) =>
+    auraView.energy && n.energy
+      ? true
+      : auraView.rating && n.rating
+      ? true
+      : false
+  )
+    .linkVisibility((l) =>
+      auraView.energy && l.energy
+        ? true
+        : auraView.rating && l.rating
+        ? true
+        : false
+    )
+    .nodeLabel((n) => {
       let label = `${allNodes[n.id]?.name || n.id}`;
       if (auraView.energy && n.energy) label += `<br/>energy: ${n.energy || 0}`;
-      if (auraView.rating && n.rating) label += `<br/>outgoing ratings: ${n.outgoingRatings || 0}<br/>incoming ratings: ${n.incomingRatings || 0}`;
+      if (auraView.rating && n.rating)
+        label += `<br/>outgoing ratings: ${
+          n.outgoingRatings || 0
+        }<br/>incoming ratings: ${n.incomingRatings || 0}`;
       return label;
     })
-    .linkLabel(l => {
+    .linkLabel((l) => {
       const source = allNodes[l.source.id]?.name || l.source.id;
       const target = allNodes[l.target.id]?.name || l.target.id;
       let label = `${source} -> ${target}`;
@@ -568,18 +668,20 @@ async function drawAuraView(type) {
       if (auraView.rating && l.rating) label += ` rank: ${l.rating || 0}`;
       const rl = linksMap[`${l.target.id}:${l.source.id}`];
       if (rl) label += `<br/>${target} -> ${source}`;
-      if (rl && auraView.energy && l.energy) label += ` energy: ${rl.energy || 0}`;
-      if (rl && auraView.rating && l.rating) label += ` rank: ${rl.rating || 0}`;
+      if (rl && auraView.energy && l.energy)
+        label += ` energy: ${rl.energy || 0}`;
+      if (rl && auraView.rating && l.rating)
+        label += ` rank: ${rl.rating || 0}`;
       return label;
     })
-    .nodeColor(n => {
+    .nodeColor((n) => {
       if (auraView.rating && auraView.energy) return n.aColor;
       if (auraView.rating) return ratedNodeColor;
       if (auraView.energy) return energyTransferedNodeColor;
     })
-    .linkColor(l => {
+    .linkColor((l) => {
       if (auraView.rating && auraView.energy) return l.aColor;
       if (auraView.rating) return ratingLinkColor;
       if (auraView.energy) return energyLinkColor;
-    })
+    });
 }
