@@ -13,10 +13,10 @@ cuts_json = {}
 
 
 def clusterify(graph, resolution, regions=None):
-    print(f'graph: {graph}, resolution: {resolution}')
     global nodes
     clusters = community.best_partition(
         graph, resolution=resolution, randomize=False)
+    print(f'graph: {graph}, resolution: {resolution}, clusters: {len(set(clusters.values()))}')
     for n, cluster in clusters.items():
         nodes[n]['cluster'] = nodes[n]['cluster'] + (int(cluster) + 1,)
     for region in regions or {}:
