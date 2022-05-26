@@ -1,5 +1,5 @@
 var sPlayer = new starsPlayer();
-var colors = ["purple", "blue", "green", "red", "orange", "brown"]
+var colors = ["purple", "blue", "green", "red", "orange", "brown"];
 
 function starsPlayer() {
   let task;
@@ -30,8 +30,9 @@ function starsPlayer() {
       $("#linkVisibility").prop("checked", false);
       drawGraph();
       graphLinks.forEach((l) => {
-        const timestamp = l.history[l.history.length - 1][0]
-        if (l.source?.node_type != "Seed" ||
+        const timestamp = l.history[l.history.length - 1][0];
+        if (
+          l.source?.node_type != "Seed" ||
           l.level == "reported" ||
           timestamp < fromDate ||
           timestamp > toDate
@@ -45,14 +46,21 @@ function starsPlayer() {
       });
       sortedKeys = Object.keys(allConnected);
       sortedKeys.sort(function (a, b) {
-        return Object.keys(allConnected[b]).length - Object.keys(allConnected[a]).length;
+        return (
+          Object.keys(allConnected[b]).length -
+          Object.keys(allConnected[a]).length
+        );
       });
       for (var i = sortedKeys.length - 1; i > 0; i--) {
         const seed = sortedKeys[i];
-        Object.keys(allConnected[seed]).forEach(n => {
+        Object.keys(allConnected[seed]).forEach((n) => {
           const colorId = Math.min(i, 5);
-          colored[n] = { "color": colors[colorId], "groupId": i, "timestamp": allConnected[seed][n] };
-        })
+          colored[n] = {
+            color: colors[colorId],
+            groupId: i,
+            timestamp: allConnected[seed][n],
+          };
+        });
       }
       step = 0;
       $("#dateSI").html("&nbsp;");
@@ -72,11 +80,21 @@ function starsPlayer() {
       <div class="legend-title">Node colors</div>
       <div class="legend-scale">
         <ul class="legend-labels">
-          <li><span style="background:purple;"></span>Connected to ${graphNodes[sortedKeys[0]]?.name || sortedKeys[0] || "__"}</li>
-          <li><span style="background:blue;"></span>Connected to ${graphNodes[sortedKeys[1]]?.name || sortedKeys[1] || "__"}</li>
-          <li><span style="background:green;"></span>Connected to ${graphNodes[sortedKeys[2]]?.name || sortedKeys[2] || "__"}</li>
-          <li><span style="background:red;"></span>Connected to ${graphNodes[sortedKeys[3]]?.name || sortedKeys[3] || "__"}</li>
-          <li><span style="background:orange;"></span>Connected to ${graphNodes[sortedKeys[4]]?.name || sortedKeys[4] || "__"}</li>
+          <li><span style="background:purple;"></span>Connected to ${
+            graphNodes[sortedKeys[0]]?.name || sortedKeys[0] || "__"
+          }</li>
+          <li><span style="background:blue;"></span>Connected to ${
+            graphNodes[sortedKeys[1]]?.name || sortedKeys[1] || "__"
+          }</li>
+          <li><span style="background:green;"></span>Connected to ${
+            graphNodes[sortedKeys[2]]?.name || sortedKeys[2] || "__"
+          }</li>
+          <li><span style="background:red;"></span>Connected to ${
+            graphNodes[sortedKeys[3]]?.name || sortedKeys[3] || "__"
+          }</li>
+          <li><span style="background:orange;"></span>Connected to ${
+            graphNodes[sortedKeys[4]]?.name || sortedKeys[4] || "__"
+          }</li>
           <li><span style="background:brown;"></span>Connected to other seeds</li>
         </ul>
       </div>
@@ -109,7 +127,7 @@ function starsPlayer() {
     clearTimeout(task);
     reset();
     if (step + 1 < steps) {
-      step++
+      step++;
       drawStep();
     }
   }
@@ -118,14 +136,14 @@ function starsPlayer() {
     clearTimeout(task);
     reset();
     if (step - 1 > 0) {
-      step--
+      step--;
       drawStep();
     }
   }
 
   function loop() {
     if (step + 1 < steps) {
-      step++
+      step++;
       task = setTimeout(loop, delay);
       drawStep();
     } else {
@@ -140,7 +158,7 @@ function starsPlayer() {
   }
 
   function drawStep() {
-    const to = fromDate + (step * stepLength);
+    const to = fromDate + step * stepLength;
     let from = to - stepLength;
     if (stepLength == 60 * 60 * 1000) {
       $("#dateSI").html(new Date(to).toLocaleString());
@@ -152,16 +170,23 @@ function starsPlayer() {
       if (step + 1 == steps) {
         from = fromDate;
       }
-      if (n.id in colored && from <= colored[n.id]["timestamp"] && colored[n.id]["timestamp"] <= to) {
+      if (
+        n.id in colored &&
+        from <= colored[n.id]["timestamp"] &&
+        colored[n.id]["timestamp"] <= to
+      ) {
         return colored[n.id]["color"];
-      }
-      else {
+      } else {
         return fadedColor;
       }
     }
 
     function setSize(n) {
-      if (n.id in colored && fromDate <= colored[n.id]["timestamp"] && colored[n.id]["timestamp"] <= to) {
+      if (
+        n.id in colored &&
+        fromDate <= colored[n.id]["timestamp"] &&
+        colored[n.id]["timestamp"] <= to
+      ) {
         return 50;
       } else {
         return 1;

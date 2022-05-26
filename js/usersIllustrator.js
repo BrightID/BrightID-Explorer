@@ -21,12 +21,14 @@ function player() {
     if (playerSettingChanged) {
       step = 0;
       $("#date").html("&nbsp;");
-      Graph.nodeColor(n => fadedColor);
-      Graph.linkVisibility(link => false);
+      Graph.nodeColor((n) => fadedColor);
+      Graph.linkVisibility((link) => false);
       const fd = $("#fromDate").val();
       const td = $("#toDate").val();
-      fromDate = new Date(fd).getTime() - (new Date(fd).getTimezoneOffset() * 60000);
-      toDate = new Date(td).getTime() - (new Date(td).getTimezoneOffset() * 60000);
+      fromDate =
+        new Date(fd).getTime() - new Date(fd).getTimezoneOffset() * 60000;
+      toDate =
+        new Date(td).getTime() - new Date(td).getTimezoneOffset() * 60000;
       delay = $("#delay").val() * 1000;
       if (toDate - fromDate >= 24 * 60 * 60 * 1000) {
         stepLength = 24 * 60 * 60 * 1000;
@@ -41,7 +43,14 @@ function player() {
   }
 
   function linkColorByLevel(level) {
-    const colors = { "recovery": "blue", "already known": "orange", "just met": "yellow", "suspicious": "red", "reported": "red", "filtered": "gray" };
+    const colors = {
+      recovery: "blue",
+      "already known": "orange",
+      "just met": "yellow",
+      suspicious: "red",
+      reported: "red",
+      filtered: "gray",
+    };
     return colors[level];
   }
 
@@ -85,7 +94,7 @@ function player() {
     clearTimeout(task);
     reset();
     if (step + 1 <= steps) {
-      step++
+      step++;
       drawStep();
     }
   }
@@ -94,14 +103,14 @@ function player() {
     clearTimeout(task);
     reset();
     if (step - 1 > 0) {
-      step--
+      step--;
       drawStep();
     }
   }
 
   function loop() {
     if (step + 1 <= steps) {
-      step++
+      step++;
       task = setTimeout(loop, delay);
       drawStep();
     } else {
@@ -119,19 +128,19 @@ function player() {
     const stepLinks = {};
     const stepNodes = new Set();
     const previousStepsLinks = {};
-    let to = fromDate + (step * stepLength);
+    let to = fromDate + step * stepLength;
     let from = to - stepLength;
     if (step == steps) {
       from = fromDate;
       to = toDate;
     }
     graphLinks.forEach((link) => {
-
       let filtered1 = link["history"].filter(function (tl) {
         return fromDate <= tl[0] && tl[0] < from;
       });
       if (filtered1.length > 0) {
-        previousStepsLinks[`${link.source.id}${link.target.id}`] = filtered1[filtered1.length - 1][1];
+        previousStepsLinks[`${link.source.id}${link.target.id}`] =
+          filtered1[filtered1.length - 1][1];
         stepNodes.add(link.source.id);
         stepNodes.add(link.target.id);
       }
@@ -140,11 +149,11 @@ function player() {
         return from <= tl[0] && tl[0] <= to;
       });
       if (filtered2.length > 0) {
-        stepLinks[`${link.source.id}${link.target.id}`] = filtered2[filtered2.length - 1][1];
+        stepLinks[`${link.source.id}${link.target.id}`] =
+          filtered2[filtered2.length - 1][1];
         stepNodes.add(link.source.id);
         stepNodes.add(link.target.id);
       }
-
     });
 
     if (stepLength < 24 * 60 * 60 * 1000) {
@@ -152,11 +161,26 @@ function player() {
     } else {
       $("#date").html(new Date(to).toJSON().split("T")[0]);
     }
-    Graph.nodeColor(n => stepNodes.has(n.id) ? resetNodesColor(n) : fadedColor)
-      .linkVisibility((l) => (`${l.source.id}${l.target.id}` in stepLinks || `${l.source.id}${l.target.id}` in previousStepsLinks ? true : false))
-      .linkWidth((l) => (`${l.source.id}${l.target.id}` in stepLinks ? 0.4 : linkWidth))
-      .linkColor((l) => (`${l.source.id}${l.target.id}` in stepLinks ? linkColorByLevel(stepLinks[`${l.source.id}${l.target.id}`]) : fadedColor))
-      .linkDirectionalArrowLength((l) => `${l.source.id}${l.target.id}` in stepLinks ? 8 : 1);
+    Graph.nodeColor((n) =>
+      stepNodes.has(n.id) ? resetNodesColor(n) : fadedColor
+    )
+      .linkVisibility((l) =>
+        `${l.source.id}${l.target.id}` in stepLinks ||
+        `${l.source.id}${l.target.id}` in previousStepsLinks
+          ? true
+          : false
+      )
+      .linkWidth((l) =>
+        `${l.source.id}${l.target.id}` in stepLinks ? 0.4 : linkWidth
+      )
+      .linkColor((l) =>
+        `${l.source.id}${l.target.id}` in stepLinks
+          ? linkColorByLevel(stepLinks[`${l.source.id}${l.target.id}`])
+          : fadedColor
+      )
+      .linkDirectionalArrowLength((l) =>
+        `${l.source.id}${l.target.id}` in stepLinks ? 8 : 1
+      );
   }
 }
 
