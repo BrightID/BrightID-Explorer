@@ -1,394 +1,542 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="BrightID Graph Explorer" />
+    <title>BrightID Graph Explorer</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
+      integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="css/custom.css" />
+    <link rel="stylesheet" href="css/myStyle.css" />
+    <link rel="stylesheet" href="css/simple-sidebar.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css"
+      integrity="sha512-BnbUDfEUfV0Slx6TunuB042k9tuKe3xrD6q4mg5Ed72LTgzDIcLPxg6yI2gcMFRyomt+yJJxE+zJwNmxki6/RA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.9.0/localforage.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/expr-eval/2.0.2/bundle.min.js"
+      integrity="sha512-TNliDPFdpL1W1sP7v9WzHUxTAY+PN7wRiHqJzntb4HpaJ0HlreSm0tzbA8MU7EBEoPTYgEtB+ZpbBB2yQQu49g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.2/nacl-fast.min.js"
+      integrity="sha512-aLSwsdjU35MF6PERT7Pic3+X6qL7O+Us8hYQl/gjrPoV4JXUNoCF2Ys3/vfJSiBW1QNxz2WTr4tEo5VcOdHt/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/base64-js@1.5.1/base64js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="//unpkg.com/force-graph"></script>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="js/login.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/graphs.js"></script>
+    <script src="js/aura.js"></script>
+    <script src="js/tools.js"></script>
+    <script src="js/usersIllustrator.js"></script>
+    <script src="js/starsIllustrator.js"></script>
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <meta name="description" content="BrightID Graph Explorer" />
-  <title>BrightID Graph Explorer</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
-    integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
-  <link rel="stylesheet" href="css/custom.css" />
-  <link rel="stylesheet" href="css/myStyle.css" />
-  <link rel="stylesheet" href="css/simple-sidebar.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css"
-    integrity="sha512-BnbUDfEUfV0Slx6TunuB042k9tuKe3xrD6q4mg5Ed72LTgzDIcLPxg6yI2gcMFRyomt+yJJxE+zJwNmxki6/RA=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.9.0/localforage.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/expr-eval/2.0.2/bundle.min.js"
-    integrity="sha512-TNliDPFdpL1W1sP7v9WzHUxTAY+PN7wRiHqJzntb4HpaJ0HlreSm0tzbA8MU7EBEoPTYgEtB+ZpbBB2yQQu49g=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.2/nacl-fast.min.js"
-    integrity="sha512-aLSwsdjU35MF6PERT7Pic3+X6qL7O+Us8hYQl/gjrPoV4JXUNoCF2Ys3/vfJSiBW1QNxz2WTr4tEo5VcOdHt/g=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdn.jsdelivr.net/npm/base64-js@1.5.1/base64js.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="//unpkg.com/force-graph"></script>
-  <script src="//unpkg.com/3d-force-graph"></script>
-  <script src="js/login.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/graphs.js"></script>
-  <script src="js/aura.js"></script>
-  <script src="js/tools.js"></script>
-  <script src="js/usersIllustrator.js"></script>
-  <script src="js/starsIllustrator.js"></script>
-</head>
-
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
-    <button class="btn btn-primary" id="menuToggle">
-      <i id="menuToggleIcon" class="fas fa-bars"></i>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-        <li>
-          <form class="form-inline ml-3">
-            <div id="searchbox">
-              <select name="searchfield" id="searchField" class="searchfield">
-                <optgroup label="Verifications" id="searchFieldVerifications">
-                  <option value="Bitu">Bitu</option>
-                  <option value="Seed">Seed</option>
-                  <option value="SeedConnected">Seed connected</option>
-                  <option value="SocialRecoverySetup">Social recovery setup</option>
-                </optgroup>
-                <optgroup label="Seed Groups" id="searchFieldSeedGroups">
-                  <option value="Complete Graph">Complete graph</option>
-                </optgroup>
-                <optgroup label="Connections" id="searchFieldConnections"></optgroup>
-                <optgroup label="Groups" id="searchFieldGroups"></optgroup>
-              </select>
-            </div>
-          </form>
-        </li>
-      </ul>
-    </div>
-    <!--<div class="row justify-content-md-center ml-3 mt-2">
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+      <button class="btn btn-primary" id="menuToggle">
+        <i id="menuToggleIcon" class="fas fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+          <li>
+            <form class="form-inline ml-3">
+              <div id="searchbox">
+                <select name="searchfield" id="searchField" class="searchfield">
+                  <optgroup label="Verifications" id="searchFieldVerifications">
+                    <option value="Bitu">Bitu</option>
+                    <option value="Seed">Seed</option>
+                    <option value="SeedConnected">Seed connected</option>
+                    <option value="SocialRecoverySetup">
+                      Social recovery setup
+                    </option>
+                  </optgroup>
+                  <optgroup label="Seed Groups" id="searchFieldSeedGroups">
+                    <option value="Complete Graph">Complete graph</option>
+                  </optgroup>
+                  <optgroup
+                    label="Connections"
+                    id="searchFieldConnections"
+                  ></optgroup>
+                  <optgroup label="Groups" id="searchFieldGroups"></optgroup>
+                </select>
+              </div>
+            </form>
+          </li>
+        </ul>
+      </div>
+      <!--<div class="row justify-content-md-center ml-3 mt-2">
       <label class="switch">
         <input type="checkbox" id="3dBtn">
         <div class="slider round"></div>
       </label>
     </div>  -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-        <li>
-          <button class="btn btn-primary mr-5 mt-1" id="resetBtn">
-            Reset
-          </button>
-        </li>
-        <li class="nav-item active">
-          <a href="https://brightid.org" style="outline: none;">
-            <img width="100px"
-              src="https://uploads-ssl.webflow.com/5e54622b3f6e65be8baf0653/5e57958e0eb38846a2658298_brightid-reversed.svg"
-              alt="">
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+          <li>
+            <button class="btn btn-primary mr-5 mt-1" id="resetBtn">
+              Reset
+            </button>
+          </li>
+          <li class="nav-item active">
+            <a href="https://brightid.org" style="outline: none">
+              <img
+                width="100px"
+                src="https://uploads-ssl.webflow.com/5e54622b3f6e65be8baf0653/5e57958e0eb38846a2658298_brightid-reversed.svg"
+                alt=""
+              />
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="d-flex toggled" id="wrapper">
+      <div
+        class="bg-dark"
+        id="sidebar-wrapper"
+        style="height: 100vh; width: 35vw"
+      >
+        <div
+          id="sidebarMenu"
+          class="list-group list-group-flush sidebar"
+          style="height: 90vh"
+        >
+          <a
+            href="#"
+            onclick="openCollapsible('loginDetails')"
+            class="list-group-item list-group-item-action bg-primary"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Login
           </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-  <div class="d-flex toggled" id="wrapper">
-    <div class="bg-dark" id="sidebar-wrapper" style="height: 100vh; width: 35vw;">
-      <div id="sidebarMenu" class="list-group list-group-flush sidebar" style="height: 90vh">
-        <a href="#" onclick="openCollapsible('loginDetails')" class="list-group-item list-group-item-action bg-primary">
-          <i style="font-size:16px" class="fas">&#xf105; </i>
-          Login
-        </a>
-        <div class="hidden menu-item-body" id="loginDetails">
-          <div id="qrCodeForm" class="hidden text-center">
-            <div id="qrInfo" class="qrcodeblock text-white text-center">
-              Scan the QR code using BrightID and add the explorer to your devices list.
+          <div class="hidden menu-item-body" id="loginDetails">
+            <div id="qrCodeForm" class="hidden text-center">
+              <div id="qrInfo" class="qrcodeblock text-white text-center">
+                Scan the QR code using BrightID and add the explorer to your
+                devices list.
+              </div>
+              <div id="qrcode" class="qrcodeblock text-center mt-4"></div>
+              <div id="waitingSpinner" class="hidden">
+                <img src="img/spinner.gif" />
+              </div>
+              <p id="loginStatus" class="text-center text-white mt-2"></p>
             </div>
-            <div id="qrcode" class="qrcodeblock text-center mt-4"></div>
-            <div id="waitingSpinner" class="hidden">
-              <img src="img/spinner.gif" />
+            <div id="loginForm" id="login">
+              <div class="text-center text-white mt-2">
+                Login with BrightID to see your connections' names and photos in
+                the Explorer
+              </div>
+              <div class="row justify-content-md-center mt-4">
+                <button
+                  id="connectBrightidBtn"
+                  class="btn btn-primary align-center"
+                >
+                  Login with BrightID
+                </button>
+              </div>
             </div>
-            <p id="loginStatus" class="text-center text-white mt-2"></p>
+            <div id="logoutForm">
+              <div class="text-center">
+                <img id="logoutFormImage" class="profile-image" />
+              </div>
+              <div
+                id="logoutFormUserName"
+                class="text-center text-white mt-2"
+                style="font-size: 25px"
+              ></div>
+              <div class="row justify-content-md-center mt-3">
+                <button id="logoutBtn" class="btn btn-primary align-left">
+                  Logout
+                </button>
+                <button
+                  id="syncBrightidBtn"
+                  class="btn btn-primary align-right ml-3"
+                  title="get new connections"
+                >
+                  Sync
+                </button>
+              </div>
+            </div>
           </div>
-          <div id="loginForm" id="login">
-            <div class="text-center text-white mt-2">Login with BrightID to see your connections' names and photos in the Explorer</div>
-            <div class="row justify-content-md-center mt-4">
-              <button id="connectBrightidBtn" class="btn btn-primary align-center">Login with BrightID</button>
+          <a
+            id="userbtntitle"
+            onclick="openCollapsible('userDetails')"
+            href="#"
+            class="list-group-item list-group-item-action bg-primary"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            User
+          </a>
+          <div class="hidden menu-item-body" id="userDetails">
+            <div class="menu-item-body" id="userDetailsPlaceHolder">
+              <div class="title">Select a user</div>
             </div>
-          </div>
-          <div id="logoutForm">
-            <div class="text-center">
-              <img id="logoutFormImage" class="profile-image" />
-            </div>
-            <div id="logoutFormUserName" class="text-center text-white mt-2" style="font-size: 25px;"></div>
-            <div class="row justify-content-md-center mt-3">
-              <button id="logoutBtn" class="btn btn-primary align-left">Logout</button>
-              <button id="syncBrightidBtn" class="btn btn-primary align-right ml-3"
-                title="get new connections">Sync</button>
-            </div>
-          </div>
-        </div>
-        <a id="userbtntitle" onclick="openCollapsible('userDetails')" href="#"
-          class="list-group-item list-group-item-action bg-primary">
-          <i style="font-size:16px" class="fas">&#xf105; </i>
-          User
-        </a>
-        <div class="hidden menu-item-body" id="userDetails">
-          <div class="menu-item-body" id="userDetailsPlaceHolder">
-            <div class="title">Select a user</div>
-          </div>
-          <div class="menu-item-body hidden" id="userDetailsContent">
-            <div class="text-center">
-              <img id="userImage" class="user-image" />
-            </div>
-            <div class="row mt-2 px-4 hidden" id="userNameContainer">
-              <div class="text-white text-center mt-3" style="font-size: 16px;" id="userName"></div>
-            </div>
-            <div class="row px-4">
-              <div class="title">BrightID:</div>
-              <br>
-              <input style="opacity: 0;" type="text" id="brightidField" value="">
-              <div class="text-white ml-2 text-small" id="brightidText"></div>
-            </div>
-            <div class="row px-4">
-              <div class="title">Joined At: </div>
-              <div class="value" id="nodeCreatedAt"></div>
-            </div>
-            <ul class="tree row text-white mt-3">
-              <li><span class="caret title">Verifications:</span>
-                <ul class="nested text-small" id="verificationsTree">
-                </ul>
-            </ul>
-            <div class="hidden" id="neighborsContainer">
-              <div class="row mt-3">
-                <div class="combo-title">Connections:</div>
-                <div class="value" id="neighborsCount"></div>
+            <div class="menu-item-body hidden" id="userDetailsContent">
+              <div class="text-center">
+                <img id="userImage" class="user-image" />
               </div>
-              <div class="input-group-sm mb-3 px-2 text-small">
-                <select class="custom-select" id="neighbors">
-                  <option value="none" selected="">None</option>
-                </select>
+              <div class="row mt-2 px-4 hidden" id="userNameContainer">
+                <div
+                  class="text-white text-center mt-3"
+                  style="font-size: 16px"
+                  id="userName"
+                ></div>
               </div>
-              <div class="hidden" id="neighborContainer">
-                <div class="row px-4">
-                  <div class="title">Outbound Connection: </div>
-                </div>
-                <div class="row px-4">
-                  <div class="value" id="outboundLevel"></div>
-                  <div class="value" id="outboundTime"></div>
-                </div>
-                <div class="row px-4">
-                  <div class="title">Inbound Connection: </div>
-                </div>
-                <div class="row px-4">
-                  <div class="value" id="inboundLevel"></div>
-                  <div class="value" id="inboundTime"></div>
-                </div>
-              </div>
-              <div class="row justify-content-md-center mt-2">
-                <button id="selectNeighbor" class="btn btn-primary align-center mb-2">Show Neighbor</button>
-              </div>
-            </div>
-            <div class="hidden" id="neighborsHistoryContainer">
-              <div class="row mt-2">
-                <div class="combo-title">Connections History:</div>
-              </div>
-              <div class="input-group-sm mb-3 px-2 text-small">
-                <select class="custom-select" id="neighborsHistory">
-                  <option value="none" selected="">None</option>
-                </select>
-              </div>
-            </div>
-            <div class="row px-4">
-              <div class="title">Connections: </div>
-            </div>
-            <div class="row px-4 text-white text-small">
-              <table cellpadding="5">
-                <tbody>
-                  <tr>
-                    <td>Level</td>
-                    <td>In</td>
-                    <td>Out</td>
-                  </tr>
-                  <tr>
-                    <td>recovery</td>
-                    <td id="recoveryIn"></td>
-                    <td id="recoveryOut"></td>
-                  </tr>
-                  <tr>
-                    <td>already known</td>
-                    <td id="alreadyKnownIn"></td>
-                    <td id="alreadyKnownOut"></td>
-                  </tr>
-                  <tr>
-                    <td>just met</td>
-                    <td id="justMetIn"></td>
-                    <td id="justMetOut"></td>
-                  </tr>
-                  <tr>
-                    <td>suspicious</td>
-                    <td id="suspiciousIn"></td>
-                    <td id="suspiciousOut"></td>
-                  </tr>
-                  <tr>
-                    <td>reported</td>
-                    <td id="reportedIn"></td>
-                    <td id="reportedOut"></td>
-                  </tr>
-                  <tr>
-                    <td>filtered</td>
-                    <td id="filteredIn"></td>
-                    <td id="filteredOut"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div id="seedData" class="hidden">
               <div class="row px-4">
-                <div class="title">No. Seed Groups: </div>
-                <div class="value" id="noSeedGroups"></div>
+                <div class="title">BrightID:</div>
+                <br />
+                <input
+                  style="opacity: 0"
+                  type="text"
+                  id="brightidField"
+                  value=""
+                />
+                <div class="text-white ml-2 text-small" id="brightidText"></div>
               </div>
-              <div class="row mt-2 px-4">
-                <div class="title">Seed Quota: </div>
-                <div class="value" id="quotaValue"></div>
+              <div class="row px-4">
+                <div class="title">Joined At:</div>
+                <div class="value" id="nodeCreatedAt"></div>
               </div>
-            </div>
-            <div class="row mt-2">
-              <div class="combo-title">Groups:</div>
-              <div class="value" id="groupsCount"></div>
-            </div>
-            <div class="input-group-sm mb-3 px-2 text-small">
-              <select class="custom-select" id="groups">
-                <option value="none" selected="">None</option>
-              </select>
-            </div>
-            <div class="row justify-content-md-center mt-2">
-              <button id="showGroup" class="btn btn-primary align-center">Show Group</button>
-            </div>
-          </div>
-        </div>
-        <a id="groupbtntitle" onclick="openCollapsible('groupDetails')" href="#"
-          class="list-group-item list-group-item-action bg-primary">
-          <i style="font-size:16px" class="fas">&#xf105; </i>
-          Group
-        </a>
-        <div class="hidden menu-item-body" id="groupDetails">
-          <div class="menu-item-body" id="groupDetailsPlaceHolder">
-            <div class="title">Select a group</div>
-          </div>
-          <div class="hidden menu-item-body" id="groupDetailsContent">
-            <div class="text-center">
-              <img id="groupImg" class="group-image" />
-            </div>
-            <div class="row px-4" id="groupNameContainer">
-              <div class="title">Name: </div>
-              <div class="value" id="groupName"></div>
-            </div>
-            <div class="row px-4" id="groupQuotaContainer">
-              <div class="title">Quota: </div>
-              <div class="value" id="groupQuota"></div>
-            </div>
-            <div class="row px-4">
-              <div class="title">ID: </div>
-              <div class="value" id="groupIdText"></div>
-            </div>
-            <div class="row justify-content-md-center mt-2">
-              <button id="drawSubgraphBtn" class="btn btn-primary align-center mb-5">Draw Subgraph</button>
-            </div>
-            <div class="row mt-2">
-              <div class="combo-title">Members:</div>
-              <div class="value" id="groupMembersCount"></div>
-            </div>
-            <div class="input-group-sm mb-3 px-2" id="groupMembersContainer">
-              <select class="custom-select" id="members" name="members">
-                <option value="none" selected="">None</option>
-              </select>
-            </div>
-            <div class="row justify-content-md-center mt-2">
-              <button id="showMember" class="btn btn-primary align-center mb-5">Show Member</button>
-            </div>
-            <div id="groupSeedConnectedDiv" class="hidden">
-              <div class="row">
-                <div class="combo-title">Users conected to this seed group:</div>
-                <div class="value" id="seedConectedCount"></div>
+              <ul class="tree row text-white mt-3">
+                <li>
+                  <span class="caret title">Verifications:</span>
+                  <ul class="nested text-small" id="verificationsTree"></ul>
+                </li>
+              </ul>
+
+              <div class="hidden" id="neighborsContainer">
+                <div class="row mt-3">
+                  <div class="combo-title">Connections:</div>
+                  <div class="value" id="neighborsCount"></div>
+                </div>
+                <div class="input-group-sm mb-3 px-2 text-small">
+                  <select class="custom-select" id="neighbors">
+                    <option value="none" selected="">None</option>
+                  </select>
+                </div>
+                <div class="hidden" id="neighborContainer">
+                  <div class="row px-4">
+                    <div class="title">Outbound Connection:</div>
+                  </div>
+                  <div class="row px-4">
+                    <div class="value" id="outboundLevel"></div>
+                    <div class="value" id="outboundTime"></div>
+                  </div>
+                  <div class="row px-4">
+                    <div class="title">Inbound Connection:</div>
+                  </div>
+                  <div class="row px-4">
+                    <div class="value" id="inboundLevel"></div>
+                    <div class="value" id="inboundTime"></div>
+                  </div>
+                </div>
+                <div class="row justify-content-md-center mt-2">
+                  <button
+                    id="selectNeighbor"
+                    class="btn btn-primary align-center mb-2"
+                  >
+                    Show Neighbor
+                  </button>
+                </div>
               </div>
-              <div class="input-group-sm mb-3 px-2">
-                <select class="custom-select" id="seedConnected" name="seedConnected">
+              <div class="hidden" id="neighborsHistoryContainer">
+                <div class="row mt-2">
+                  <div class="combo-title">Connections History:</div>
+                </div>
+                <div class="input-group-sm mb-3 px-2 text-small">
+                  <select class="custom-select" id="neighborsHistory">
+                    <option value="none" selected="">None</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row px-4">
+                <div class="title">Connections:</div>
+              </div>
+              <div class="row px-4 text-white text-small">
+                <table cellpadding="5">
+                  <tbody>
+                    <tr>
+                      <td>Level</td>
+                      <td>In</td>
+                      <td>Out</td>
+                    </tr>
+                    <tr>
+                      <td>recovery</td>
+                      <td id="recoveryIn"></td>
+                      <td id="recoveryOut"></td>
+                    </tr>
+                    <tr>
+                      <td>already known</td>
+                      <td id="alreadyKnownIn"></td>
+                      <td id="alreadyKnownOut"></td>
+                    </tr>
+                    <tr>
+                      <td>just met</td>
+                      <td id="justMetIn"></td>
+                      <td id="justMetOut"></td>
+                    </tr>
+                    <tr>
+                      <td>suspicious</td>
+                      <td id="suspiciousIn"></td>
+                      <td id="suspiciousOut"></td>
+                    </tr>
+                    <tr>
+                      <td>reported</td>
+                      <td id="reportedIn"></td>
+                      <td id="reportedOut"></td>
+                    </tr>
+                    <tr>
+                      <td>filtered</td>
+                      <td id="filteredIn"></td>
+                      <td id="filteredOut"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div id="seedData" class="hidden">
+                <div class="row px-4">
+                  <div class="title">No. Seed Groups:</div>
+                  <div class="value" id="noSeedGroups"></div>
+                </div>
+                <div class="row mt-2 px-4">
+                  <div class="title">Seed Quota:</div>
+                  <div class="value" id="quotaValue"></div>
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="combo-title">Groups:</div>
+                <div class="value" id="groupsCount"></div>
+              </div>
+              <div class="input-group-sm mb-3 px-2 text-small">
+                <select class="custom-select" id="groups">
                   <option value="none" selected="">None</option>
                 </select>
               </div>
               <div class="row justify-content-md-center mt-2">
-                <button id="showUser" class="btn btn-primary align-center mb-5">Show User</button>
-              </div>
-            </div>
-            <input style="opacity: 0;" type="text" id="groupIdField" value="">
-          </div>
-        </div>
-        <a href="#" onclick="openCollapsible('statisticsDetails')"
-          class="list-group-item list-group-item-action bg-primary">
-          <i style="font-size:16px" class="fas">&#xf105; </i>
-          Statistics
-        </a>
-        <div class="hidden menu-item-body" id="statisticsDetails">
-          <div class="containar">
-            <div class="row justify-content-md-center ">
-              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
-                <div class="card-header"> <i class="fas fa-user mr-2"></i>No. Nodes</div>
-                <div class="card-body text-dark justify-center">
-                  <h2 class="text-center" id="numNodes"></h2>
-                </div>
-              </div>
-            </div>
-            <div class="row justify-content-md-center ">
-              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
-                <div class="card-header"><i class="fas fa-check-circle mr-2"></i>Bitu</div>
-                <div class="card-body text-dark justify-center">
-                  <h4 class="text-center" id="bituVerifieds"></h4>
-                  <p class="text-center" style="font-size:9px">
-                    +10 score: <span id="bituVerifiedsHighScore"></span><br>
-                    release: <span id="releaseDate"></span>
-                    <span class="pl-3">
-                      next rlease: <span id="nextReleaseDate"></span>
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="row justify-content-md-center ">
-              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
-                <div class="card-header"><i class="fas fa-check-circle mr-2"></i>Seed</div>
-                <div class="card-body text-dark justify-center">
-                  <h2 class="text-center" id="seedVerifieds"></h2>
-                </div>
-              </div>
-            </div>
-            <div class="row justify-content-md-center ">
-              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
-                <div class="card-header"><i class="fas fa-check-circle mr-2"></i>Seed connected</div>
-                <div class="card-body text-dark justify-center">
-                  <h2 class="text-center" id="seedConnectedVerifieds"></h2>
-                </div>
-              </div>
-            </div>
-            <div class="row justify-content-md-center ">
-              <div class="card statisticsCard border-dark mb-3" style="max-width: 18rem;">
-                <div class="card-header"><i class="fas fa-check-circle mr-2"></i>Social Recovery Setup</div>
-                <div class="card-body text-dark justify-center">
-                  <h2 class="text-center" id="socialRecoverySetupVerifieds"></h2>
-                </div>
+                <button id="showGroup" class="btn btn-primary align-center">
+                  Show Group
+                </button>
               </div>
             </div>
           </div>
-        </div>
-        <a href="#" onclick="openCollapsible('userIllustratorDetails')"
-          class="list-group-item list-group-item-action bg-primary">
-          <i style="font-size:16px" class="fas">&#xf105; </i>
-          Users Activity Illustrator
-        </a>
-        <div class="hidden menu-item-body" id="userIllustratorDetails">
-          <div class="row mt-2">
-            <div class="combo-title">Highlight Connections within:</div>
+          <a
+            id="groupbtntitle"
+            onclick="openCollapsible('groupDetails')"
+            href="#"
+            class="list-group-item list-group-item-action bg-primary"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Group
+          </a>
+          <div class="hidden menu-item-body" id="groupDetails">
+            <div class="menu-item-body" id="groupDetailsPlaceHolder">
+              <div class="title">Select a group</div>
+            </div>
+            <div class="hidden menu-item-body" id="groupDetailsContent">
+              <div class="text-center">
+                <img id="groupImg" class="group-image" />
+              </div>
+              <div class="row px-4" id="groupNameContainer">
+                <div class="title">Name:</div>
+                <div class="value" id="groupName"></div>
+              </div>
+              <div class="row px-4" id="groupQuotaContainer">
+                <div class="title">Quota:</div>
+                <div class="value" id="groupQuota"></div>
+              </div>
+              <div class="row px-4">
+                <div class="title">ID:</div>
+                <div class="value" id="groupIdText"></div>
+              </div>
+              <div class="row justify-content-md-center mt-2">
+                <button
+                  id="drawSubgraphBtn"
+                  class="btn btn-primary align-center mb-5"
+                >
+                  Draw Subgraph
+                </button>
+              </div>
+              <div class="row mt-2">
+                <div class="combo-title">Members:</div>
+                <div class="value" id="groupMembersCount"></div>
+              </div>
+              <div class="input-group-sm mb-3 px-2" id="groupMembersContainer">
+                <select class="custom-select" id="members" name="members">
+                  <option value="none" selected="">None</option>
+                </select>
+              </div>
+              <div class="row justify-content-md-center mt-2">
+                <button
+                  id="showMember"
+                  class="btn btn-primary align-center mb-5"
+                >
+                  Show Member
+                </button>
+              </div>
+              <div id="groupSeedConnectedDiv" class="hidden">
+                <div class="row">
+                  <div class="combo-title">
+                    Users conected to this seed group:
+                  </div>
+                  <div class="value" id="seedConectedCount"></div>
+                </div>
+                <div class="input-group-sm mb-3 px-2">
+                  <select
+                    class="custom-select"
+                    id="seedConnected"
+                    name="seedConnected"
+                  >
+                    <option value="none" selected="">None</option>
+                  </select>
+                </div>
+                <div class="row justify-content-md-center mt-2">
+                  <button
+                    id="showUser"
+                    class="btn btn-primary align-center mb-5"
+                  >
+                    Show User
+                  </button>
+                </div>
+              </div>
+              <input
+                style="opacity: 0"
+                type="text"
+                id="groupIdField"
+                value=""
+              />
+            </div>
           </div>
-          <!--<div class="input-group-sm mb-3 px-2">
+          <a
+            href="#"
+            onclick="openCollapsible('statisticsDetails')"
+            class="list-group-item list-group-item-action bg-primary"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Statistics
+          </a>
+          <div class="hidden menu-item-body" id="statisticsDetails">
+            <div class="containar">
+              <div class="row justify-content-md-center">
+                <div
+                  class="card statisticsCard border-dark mb-3"
+                  style="max-width: 18rem"
+                >
+                  <div class="card-header">
+                    <i class="fas fa-user mr-2"></i>No. Nodes
+                  </div>
+                  <div class="card-body text-dark justify-center">
+                    <h2 class="text-center" id="numNodes"></h2>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-md-center">
+                <div
+                  class="card statisticsCard border-dark mb-3"
+                  style="max-width: 18rem"
+                >
+                  <div class="card-header">
+                    <i class="fas fa-check-circle mr-2"></i>Bitu
+                  </div>
+                  <div class="card-body text-dark justify-center">
+                    <h4 class="text-center" id="bituVerifieds"></h4>
+                    <p class="text-center" style="font-size: 9px">
+                      +10 score: <span id="bituVerifiedsHighScore"></span><br />
+                      release: <span id="releaseDate"></span>
+                      <span class="pl-3">
+                        next rlease: <span id="nextReleaseDate"></span>
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-md-center">
+                <div
+                  class="card statisticsCard border-dark mb-3"
+                  style="max-width: 18rem"
+                >
+                  <div class="card-header">
+                    <i class="fas fa-check-circle mr-2"></i>Seed
+                  </div>
+                  <div class="card-body text-dark justify-center">
+                    <h2 class="text-center" id="seedVerifieds"></h2>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-md-center">
+                <div
+                  class="card statisticsCard border-dark mb-3"
+                  style="max-width: 18rem"
+                >
+                  <div class="card-header">
+                    <i class="fas fa-check-circle mr-2"></i>Seed connected
+                  </div>
+                  <div class="card-body text-dark justify-center">
+                    <h2 class="text-center" id="seedConnectedVerifieds"></h2>
+                  </div>
+                </div>
+              </div>
+              <div class="row justify-content-md-center">
+                <div
+                  class="card statisticsCard border-dark mb-3"
+                  style="max-width: 18rem"
+                >
+                  <div class="card-header">
+                    <i class="fas fa-check-circle mr-2"></i>Social Recovery
+                    Setup
+                  </div>
+                  <div class="card-body text-dark justify-center">
+                    <h2
+                      class="text-center"
+                      id="socialRecoverySetupVerifieds"
+                    ></h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <a
+            href="#"
+            onclick="openCollapsible('userIllustratorDetails')"
+            class="list-group-item list-group-item-action bg-primary"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Users Activity Illustrator
+          </a>
+          <div class="hidden menu-item-body" id="userIllustratorDetails">
+            <div class="row mt-2">
+              <div class="combo-title">Highlight Connections within:</div>
+            </div>
+            <!--<div class="input-group-sm mb-3 px-2">
             <select class="custom-select" id="dateRange">
               <option value="none" selected>None</option>
               <option value="all">All</option>
@@ -397,174 +545,263 @@
               <option value="month">Last Month</option>
             </select>
           </div> -->
-          <div class="row mt-2">
-            <div class="combo-title">From:</div>
-          </div>
-          <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="datetime-local" id="fromDate" />
-          </div>
-          <div class="row mt-2">
-            <div class="combo-title">To:</div>
-          </div>
-          <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="datetime-local" id="toDate" />
-          </div>
-          <div class="row mt-2">
-            <div class="combo-title">Delay between steps (seconds):</div>
-          </div>
-          <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="number" id="delay" value="1" min="0" />
-          </div>
-          <div class="title" id="date">&nbsp;</div>
-          <div class="row input-group-sm px-2 justify-content-md-center">
-            <a id="previousBtn" class="fa fa-2x player-buttons fa-step-backward"></a>
-            <a id="stopBtn" class="fa fa-2x player-buttons fa-stop"></a>
-            <a id="playBtn" class="fa fa-2x player-buttons fa-play"></a>
-            <a id="nextBtn" class="fa fa-2x player-buttons fa-step-forward"></a>
-          </div>
-          <div class="row justify-content-md-center mt-2">
-            <button id="drawSubgraphBtn" class="btn btn-primary align-center mt-2">Sub-graph</button>
-          </div>
-
-        </div>
-        <a href="#" onclick="openCollapsible('starsIllustratorDetails')"
-          class="list-group-item list-group-item-action bg-primary">
-          <i style="font-size:16px" class="fas">&#xf105; </i>
-          Stars Activity Illustrator
-        </a>
-        <div class="hidden menu-item-body" id="starsIllustratorDetails">
-          <div class="row mt-2">
-            <div class="combo-title">Highlight connected users within:</div>
-          </div>
-          <div class="input-group-sm mb-3 px-2">
-            <select class="custom-select" id="dateRangeSI">
-              <option value="none" selected>None</option>
-              <option value="all">All</option>
-              <option value="day">Last Day</option>
-              <option value="week">Last Week</option>
-              <option value="month">Last Month</option>
-            </select>
-          </div>
-          <div class="row mt-2">
-            <div class="combo-title">From:</div>
-          </div>
-          <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="date" id="fromDateSI" />
-          </div>
-          <div class="row mt-2">
-            <div class="combo-title">To:</div>
-          </div>
-          <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="date" id="toDateSI" />
-          </div>
-          <div class="row mt-2">
-            <div class="combo-title">Delay between steps (seconds):</div>
-          </div>
-          <div class="input-group-sm px-2">
-            <input class="form-control mb-2" type="number" id="delaySI" value="1" min="0" />
-          </div>
-          <div class="title" id="dateSI">&nbsp;</div>
-          <div class="row input-group-sm px-2 justify-content-md-center">
-            <a id="previousBtnSI" class="fa fa-2x player-buttons fa-step-backward"></a>
-            <a id="stopBtnSI" class="fa fa-2x player-buttons fa-stop"></a>
-            <a id="playBtnSI" class="fa fa-2x player-buttons fa-play"></a>
-            <a id="nextBtnSI" class="fa fa-2x player-buttons fa-step-forward"></a>
-          </div>
-        </div>
-        <a id="graphbtntitle" onclick="openCollapsible('graphDetails')" href="#"
-          class="list-group-item list-group-item-action bg-primary">
-          <i style="font-size:16px" class="fas">&#xf105; </i>
-          Graph
-        </a>
-        <div class="hidden menu-item-body" id="graphDetails">
-          <div class="row px-4 justify-content-md-center">
-            <h5 class="text-white" id="connectionLevel">Already known</h5>
-            <i class="fas fa-question-circle text-white" data-toggle="tooltip" data-placement="top"
-              title="selected level as the lowest connection level to be included in the graph"></i>
-          </div>
-          <div class="row px-4 justify-content-md-center">
-            <input type="range" min="0" max="4" value="3" list="steplist" class="levels-range" id="levelsRange" />
-          </div>
-
-          <div class="row mt-2">
-            <div class="combo-title">Cooldown Time:
-              <i class="fas fa-question-circle" data-toggle="tooltip" data-placement="top"
-                title="graph simulation cool down time in seconds"></i>
+            <div class="row mt-2">
+              <div class="combo-title">From:</div>
+            </div>
+            <div class="input-group-sm px-2">
+              <input
+                class="form-control mb-2"
+                type="datetime-local"
+                id="fromDate"
+              />
+            </div>
+            <div class="row mt-2">
+              <div class="combo-title">To:</div>
+            </div>
+            <div class="input-group-sm px-2">
+              <input
+                class="form-control mb-2"
+                type="datetime-local"
+                id="toDate"
+              />
+            </div>
+            <div class="row mt-2">
+              <div class="combo-title">Delay between steps (seconds):</div>
+            </div>
+            <div class="input-group-sm px-2">
+              <input
+                class="form-control mb-2"
+                type="number"
+                id="delay"
+                value="1"
+                min="0"
+              />
+            </div>
+            <div class="title" id="date">&nbsp;</div>
+            <div class="row input-group-sm px-2 justify-content-md-center">
+              <a
+                id="previousBtn"
+                class="fa fa-2x player-buttons fa-step-backward"
+              ></a>
+              <a id="stopBtn" class="fa fa-2x player-buttons fa-stop"></a>
+              <a id="playBtn" class="fa fa-2x player-buttons fa-play"></a>
+              <a
+                id="nextBtn"
+                class="fa fa-2x player-buttons fa-step-forward"
+              ></a>
+            </div>
+            <div class="row justify-content-md-center mt-2">
+              <button
+                id="drawSubgraphBtn"
+                class="btn btn-primary align-center mt-2"
+              >
+                Sub-graph
+              </button>
             </div>
           </div>
-          <div class="input-group-sm px-2 py-1">
-            <input class="form-control" type="number" id="cooldownTime" value="10" min="1" />
+          <a
+            href="#"
+            onclick="openCollapsible('starsIllustratorDetails')"
+            class="list-group-item list-group-item-action bg-primary"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Stars Activity Illustrator
+          </a>
+          <div class="hidden menu-item-body" id="starsIllustratorDetails">
+            <div class="row mt-2">
+              <div class="combo-title">Highlight connected users within:</div>
+            </div>
+            <div class="input-group-sm mb-3 px-2">
+              <select class="custom-select" id="dateRangeSI">
+                <option value="none" selected>None</option>
+                <option value="all">All</option>
+                <option value="day">Last Day</option>
+                <option value="week">Last Week</option>
+                <option value="month">Last Month</option>
+              </select>
+            </div>
+            <div class="row mt-2">
+              <div class="combo-title">From:</div>
+            </div>
+            <div class="input-group-sm px-2">
+              <input class="form-control mb-2" type="date" id="fromDateSI" />
+            </div>
+            <div class="row mt-2">
+              <div class="combo-title">To:</div>
+            </div>
+            <div class="input-group-sm px-2">
+              <input class="form-control mb-2" type="date" id="toDateSI" />
+            </div>
+            <div class="row mt-2">
+              <div class="combo-title">Delay between steps (seconds):</div>
+            </div>
+            <div class="input-group-sm px-2">
+              <input
+                class="form-control mb-2"
+                type="number"
+                id="delaySI"
+                value="1"
+                min="0"
+              />
+            </div>
+            <div class="title" id="dateSI">&nbsp;</div>
+            <div class="row input-group-sm px-2 justify-content-md-center">
+              <a
+                id="previousBtnSI"
+                class="fa fa-2x player-buttons fa-step-backward"
+              ></a>
+              <a id="stopBtnSI" class="fa fa-2x player-buttons fa-stop"></a>
+              <a id="playBtnSI" class="fa fa-2x player-buttons fa-play"></a>
+              <a
+                id="nextBtnSI"
+                class="fa fa-2x player-buttons fa-step-forward"
+              ></a>
+            </div>
           </div>
-          <div class="form-check mt-2 ml-2">
-            <input class="form-check-input" type="checkbox" value="" id="predefinedPosition" checked>
-            <label class="form-check-label text-white" for="flexCheckDefault">
-              Use predefined positions
-              <i class="fas fa-question-circle" data-toggle="tooltip" data-placement="top"
-                title="set the predefined positions for the nodes"></i>
-            </label>
+          <a
+            id="graphbtntitle"
+            onclick="openCollapsible('graphDetails')"
+            href="#"
+            class="list-group-item list-group-item-action bg-primary"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Graph
+          </a>
+          <div class="hidden menu-item-body" id="graphDetails">
+            <div class="row px-4 justify-content-md-center">
+              <h5 class="text-white" id="connectionLevel">Already known</h5>
+              <i
+                class="fas fa-question-circle text-white"
+                data-toggle="tooltip"
+                data-placement="top"
+                title="selected level as the lowest connection level to be included in the graph"
+              ></i>
+            </div>
+            <div class="row px-4 justify-content-md-center">
+              <input
+                type="range"
+                min="0"
+                max="4"
+                value="3"
+                list="steplist"
+                class="levels-range"
+                id="levelsRange"
+              />
+            </div>
+
+            <div class="row mt-2">
+              <div class="combo-title">
+                Cooldown Time:
+                <i
+                  class="fas fa-question-circle"
+                  data-toggle="tooltip"
+                  data-placement="top"
+                  title="graph simulation cool down time in seconds"
+                ></i>
+              </div>
+            </div>
+            <div class="input-group-sm px-2 py-1">
+              <input
+                class="form-control"
+                type="number"
+                id="cooldownTime"
+                value="10"
+                min="1"
+              />
+            </div>
+            <div class="form-check mt-2 ml-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="predefinedPosition"
+                checked
+              />
+              <label class="form-check-label text-white" for="flexCheckDefault">
+                Use predefined positions
+                <i
+                  class="fas fa-question-circle"
+                  data-toggle="tooltip"
+                  data-placement="top"
+                  title="set the predefined positions for the nodes"
+                ></i>
+              </label>
+            </div>
+            <div class="form-check mt-2 ml-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="linkVisibility"
+                checked
+              />
+              <label class="form-check-label text-white" for="flexCheckDefault">
+                Show links
+              </label>
+            </div>
+            <div class="row justify-content-md-center mt-2">
+              <button
+                id="drawGustomGraph"
+                class="btn btn-primary align-center mb-5"
+              >
+                Draw
+              </button>
+            </div>
           </div>
-          <div class="form-check mt-2 ml-2">
-            <input class="form-check-input" type="checkbox" value="" id="linkVisibility" checked>
-            <label class="form-check-label text-white" for="flexCheckDefault">
-              Show links
-            </label>
+        </div>
+      </div>
+      <div id="page-content-wrapper">
+        <div style="height: 90vh" class="container-fluid mx-0 px-0">
+          <div style="height: 100%" id="graphDiv"></div>
+          <div id="loadingoverlay">
+            <div class="cv-spinner">
+              <span class="spinner"></span>
+            </div>
           </div>
-          <div class="row justify-content-md-center mt-2">
-            <button id="drawGustomGraph" class="btn btn-primary align-center mb-5">Draw</button>
+          <div class="my-legend" id="defaultLegend">
+            <div class="legend-title">Node colors</div>
+            <div class="legend-scale">
+              <ul id="legendNodes" class="legend-labels">
+                <li><span style="background: blue"></span>Verified</li>
+                <li><span style="background: orange"></span>Not Verified</li>
+              </ul>
+            </div>
+            <div class="legend-title">Link colors</div>
+            <div class="legend-scale">
+              <ul id="legendLinks" class="legend-labels"></ul>
+            </div>
+          </div>
+          <div class="my-legend hidden" id="customizedLegend">
+            <div class="legend-title">Node colors</div>
+            <div class="legend-scale">
+              <ul class="legend-labels" id="customizedLegendUi"></ul>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div id="page-content-wrapper">
-      <div style="height: 90vh;" class="container-fluid mx-0 px-0">
-        <div style="height: 100%;" id="graphDiv"></div>
-        <div id="loadingoverlay">
-          <div class="cv-spinner">
-            <span class="spinner"></span>
+    <div class="modal fade" id="alert" role="dialog">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="alertTitle"></h5>
+            <button type="button" class="close" data-dismiss="modal">
+              &times;
+            </button>
           </div>
-        </div>
-        <div class="my-legend" id="defaultLegend">
-          <div class="legend-title">Node colors</div>
-          <div class="legend-scale">
-            <ul id="legendNodes" class="legend-labels">
-              <li><span style="background:blue;"></span>Verified</li>
-              <li><span style="background:orange;"></span>Not Verified</li>
-            </ul>
+          <div class="modal-body">
+            <p id="alertBody"></p>
           </div>
-          <div class="legend-title">Link colors</div>
-          <div class="legend-scale">
-            <ul id="legendLinks" class="legend-labels">
-            </ul>
-          </div>
-        </div>
-        <div class="my-legend hidden" id="customizedLegend">
-          <div class="legend-title">Node colors</div>
-          <div class="legend-scale">
-            <ul class="legend-labels" id="customizedLegendUi"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal fade" id="alert" role="dialog">
-    <div class="modal-dialog modal-sm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="alertTitle"></h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p id="alertBody"></p>
-        </div>
-        <!-- <div class="modal-footer modal-sm">
+          <!-- <div class="modal-footer modal-sm">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div> -->
+        </div>
       </div>
     </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
-    crossorigin="anonymous"></script>
-</body>
-
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
+      crossorigin="anonymous"
+    ></script>
+  </body>
 </html>
