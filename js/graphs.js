@@ -9,7 +9,12 @@ function drawGraph() {
   updateGraphData(levelIndex);
   updateLegend(levelIndex);
   const predefinedPosition = $("#predefinedPosition").is(":checked");
-  if ($("#3dBtn").is(":checked")) {
+  if (document.URL.indexOf("aura=") >= 0) {
+    auraMode = true;
+    setPosition("noPositions");
+    setTimeout(() => drawAura(document.URL.split("aura=")[1]), 1000);
+  } else if ($("#3dBtn").is(":checked")) {
+    auraMode = false;
     setPosition(predefinedPosition ? "3d" : "noPositions");
     drawGraph3d(
       { nodes: Object.values(graphNodes), links: graphLinks },
@@ -17,6 +22,7 @@ function drawGraph() {
       linkVisibility
     );
   } else {
+    auraMode = false;
     const positions = predefinedPosition ? "2d" : "noPositions";
     setPosition(positions, levelIndex);
     drawGraph2d(
@@ -333,9 +339,6 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
         !autoLoginDone
       ) {
         loadPersonalData();
-      }
-      if (document.URL.indexOf("aura=") >= 0) {
-        setTimeout(() => drawAura(document.URL.split("aura=")[1]), 1000);
       }
     });
   Graph.moving = false;

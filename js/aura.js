@@ -3,12 +3,164 @@ const energyLinkColor = "blue";
 const ratedNodeColor = "orange";
 const energyTransferedNodeColor = "blue";
 
-async function drawAura(fname) {
+function prepare() {
+  $("#legendNodes").empty();
+  $(
+    `<li><a href="#" id="ratingNodes" onclick="drawAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`
+  ).appendTo("#legendNodes");
+  $(
+    `<li><a href="#" id="energyNodes" onclick="drawAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`
+  ).appendTo("#legendNodes");
+
+  $("#legendLinks").empty();
+  $(
+    `<li><span style="background:${ratingLinkColor};"></span>rating</li>`
+  ).appendTo("#legendLinks");
+  $(
+    `<li><span style="background:${energyLinkColor};"></span>energy transfer</li>`
+  ).appendTo("#legendLinks");
+
+  $("#graphbtntitle").hide();
+  $("#groupbtntitle").hide();
+  $("#statisticsbtntitle").hide();
+  $("#usersillustratorbtntitle").hide();
+  $("#starillustratorbtntitle").hide();
+  $("#seedData").hide();
+  $("#neighborsContainer").hide();
+  $("#neighborsHistoryContainer").hide();
+  $("#groupsContainer").hide();
+}
+
+function selectAuraNode(node, showDetails, focus) {
+  $("#userDetailsContent").show();
+  $("#seedData").hide();
+  $("#groupsData").hide();
+  $("#userNameContainer").hide();
+  $("#userRecoveryContainer").hide();
+  $("#userDetailsPlaceHolder").hide();
+  $("#neighborsContainer").hide();
+  $("#neighborContainer").hide();
+  $("#verificationsTree").empty();
+  $("#neighborsHistoryContainer").hide();
+  $("#groupsContainer").hide();
+  $("#auraConnectionsContainer").show();
+
+  if (selectedNode) {
+    selectedNode.selected = false;
+  }
+
+  node.selected = true;
+  selectedNode = node;
+  $("#brightidText").html(node.id);
+  $("#brightidField").val(node.id);
+  $("#nodeCreatedAt").html(new Date(node.createdAt).toJSON().split("T")[0]);
+  $("#recoveryIn").html(node.statistics["inbound"]["recovery"]);
+  $("#recoveryOut").html(node.statistics["outbound"]["recovery"]);
+  $("#alreadyKnownIn").html(node.statistics["inbound"]["already known"]);
+  $("#alreadyKnownOut").html(node.statistics["outbound"]["already known"]);
+  $("#justMetIn").html(node.statistics["inbound"]["just met"]);
+  $("#justMetOut").html(node.statistics["outbound"]["just met"]);
+  $("#suspiciousIn").html(node.statistics["inbound"]["suspicious"]);
+  $("#suspiciousOut").html(node.statistics["outbound"]["suspicious"]);
+  $("#reportedIn").html(node.statistics["inbound"]["reported"]);
+  $("#reportedOut").html(node.statistics["outbound"]["reported"]);
+  $("#filteredIn").html(node.statistics["inbound"]["filtered"]);
+  $("#filteredOut").html(node.statistics["outbound"]["filtered"]);
+  $("#energyIn").html(node.incomingEnergies || 0);
+  $("#energyOut").html(node.outgoingEnergies || 0);
+  $("#ratingIn").html(node.incomingRatings || 0);
+  $("#ratingOut").html(node.outgoingRatings || 0);
+
+  $("#userImage").attr("src", node?.img?.src || "");
+
+  if (node.name) {
+    $("#userName").html(node.name);
+    $("#userNameContainer").show();
+  }
+
+  addVerificationsTree(node);
+
+  $("#auraConnections")
+    .empty()
+    .append(
+      new Option(
+        "neighbor | energy-out | rating-out | energy-in | rating-in",
+        "none"
+      )
+    );
+  Object.keys(node.neighbors).forEach((n) => {
+    const l = linksMap[`${node.id}:${n}`];
+    const rl = linksMap[`${n}:${node.id}`];
+    if (!l && !rl) {
+      return;
+    }
+    const connText = `${allNodes[n]?.name || n} | ${
+      l ? l.energy || "_" : "_"
+    } | ${l ? l.rating || "_" : "_"} | ${rl ? rl.energy || "_" : "_"} | ${
+      rl ? rl.rating || "_" : "_"
+    }`;
+    $("#auraConnections").append(new Option(connText, n));
+  });
+  $("#auraStatistics").show();
+  $("#auraConnectionsContainer").show();
+
+  const highlightNodes = new Set([node.id]);
+  Object.keys(node.neighbors).forEach((n1) => {
+    const tLevel =
+      node.neighbors[n1]["to"].length > 0
+        ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1]
+        : null;
+    const fLevel =
+      node.neighbors[n1]["from"].length > 0
+        ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1]
+        : null;
+    if (!selectedLevels.includes("just met")) {
+      if (
+        !selectedLevels.includes(fLevel) ||
+        !selectedLevels.includes(tLevel)
+      ) {
+        return;
+      }
+    } else {
+      if (
+        !selectedLevels.includes(fLevel) &&
+        !selectedLevels.includes(tLevel)
+      ) {
+        return;
+      }
+    }
+    highlightNodes.add(n1);
+  });
+
+  const highlightLinks = new Set();
+  graphLinks.forEach((l) => {
+    if (l.source.id != node.id && l.target.id != node.id) {
+      return;
+    }
+    if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
+      highlightLinks.add(l);
+    }
+  });
+
+  Graph.linkVisibility((l) => (highlightLinks.has(l) ? true : false))
+    .nodeColor((n) =>
+      highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true)
+    )
+    .linkColor((l) => (highlightLinks.has(l) ? resetLinksColor(l) : fadedColor))
+    .linkDirectionalArrowLength((l) =>
+      highlightLinks.has(l) ? arrowLength : 1
+    )
+    .centerAt(node.x + 200, node.y)
+    .zoom(1.2, 1000);
+
+  openCollapsible("userDetails", true);
+}
+
+async function getAuraData(fname) {
   const { energyTransfers, ratings, energy } = await $.ajax({
     url: `./${fname}.json`,
     cache: false,
   });
-  updateAuraLegend();
 
   graphNodes = {};
   graphLinks = [];
@@ -50,6 +202,12 @@ async function drawAura(fname) {
     if (et.amount == 0) {
       return;
     }
+
+    graphNodes[et.fromBrightId]["outgoingEnergies"] =
+      (graphNodes[et.fromBrightId]["outgoingEnergies"] || 0) + 1;
+    graphNodes[et.toBrightId]["incomingEnergies"] =
+      (graphNodes[et.toBrightId]["incomingEnergies"] || 0) + 1;
+
     linksMap[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(
       linksMap[`${et.fromBrightId}:${et.toBrightId}`],
       {
@@ -80,9 +238,20 @@ async function drawAura(fname) {
       energy: e.amount,
     });
   });
+}
+
+async function drawAura(fname) {
+  prepare();
+
+  if ((await localforage.getItem("brightid_has_imported")) && !autoLoginDone) {
+    await loadPersonalData();
+  }
+
+  await getAuraData(fname);
 
   graphLinks = Object.values(linksMap);
   const data = { nodes: Object.values(graphNodes), links: graphLinks };
+
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem);
@@ -115,7 +284,7 @@ async function drawAura(fname) {
     })
     .onNodeClick((node) => {
       if (!node.selected) {
-        selectNode(node, true, false);
+        selectAuraNode(node, true);
       }
       Graph.linkWidth((l) => l.width).linkVisibility(true);
     })
@@ -152,51 +321,35 @@ async function drawAura(fname) {
     .linkWidth((l) => l.width)
     .linkVisibility(true)
     .linkDirectionalArrowLength(arrowLength)
-    .cooldownTime(10000);
+    .cooldownTime(10000)
+    .zoom(1, 2000);
 }
 
-function updateAuraLegend(index) {
-  $("#legendNodes").empty();
-  $(
-    `<li><a href="#" id="ratingNodes" onclick="drawAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`
-  ).appendTo("#legendNodes");
-  $(
-    `<li><a href="#" id="energyNodes" onclick="drawAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`
-  ).appendTo("#legendNodes");
-
-  $("#legendLinks").empty();
-  $(
-    `<li><span style="background:${ratingLinkColor};"></span>rating</li>`
-  ).appendTo("#legendLinks");
-  $(
-    `<li><span style="background:${energyLinkColor};"></span>energy transfer</li>`
-  ).appendTo("#legendLinks");
-}
-
-const auraView = { rating: true, energy: true };
+const auraGraphView = { rating: true, energy: true };
 async function drawAuraView(type) {
-  auraView[type] = !auraView[type];
-  $("#ratingNodes").css("color", auraView.rating ? "black" : "#d49a9a");
-  $("#energyNodes").css("color", auraView.energy ? "black" : "#d49a9a");
+  auraGraphView[type] = !auraGraphView[type];
+  $("#ratingNodes").css("color", auraGraphView.rating ? "black" : "#d49a9a");
+  $("#energyNodes").css("color", auraGraphView.energy ? "black" : "#d49a9a");
 
   Graph.nodeVisibility((n) =>
-    auraView.energy && n.energy
+    auraGraphView.energy && n.energy
       ? true
-      : auraView.rating && n.rating
+      : auraGraphView.rating && n.rating
       ? true
       : false
   )
     .linkVisibility((l) =>
-      auraView.energy && l.energy
+      auraGraphView.energy && l.energy
         ? true
-        : auraView.rating && l.rating
+        : auraGraphView.rating && l.rating
         ? true
         : false
     )
     .nodeLabel((n) => {
       let label = `${allNodes[n.id]?.name || n.id}`;
-      if (auraView.energy && n.energy) label += `<br/>energy: ${n.energy || 0}`;
-      if (auraView.rating && n.rating)
+      if (auraGraphView.energy && n.energy)
+        label += `<br/>energy: ${n.energy || 0}`;
+      if (auraGraphView.rating && n.rating)
         label += `<br/>outgoing ratings: ${
           n.outgoingRatings || 0
         }<br/>incoming ratings: ${n.incomingRatings || 0}`;
@@ -206,24 +359,25 @@ async function drawAuraView(type) {
       const source = allNodes[l.source.id]?.name || l.source.id;
       const target = allNodes[l.target.id]?.name || l.target.id;
       let label = `${source} -> ${target}`;
-      if (auraView.energy && l.energy) label += ` energy: ${l.energy || 0}`;
-      if (auraView.rating && l.rating) label += ` rank: ${l.rating || 0}`;
+      if (auraGraphView.energy && l.energy)
+        label += ` energy: ${l.energy || 0}`;
+      if (auraGraphView.rating && l.rating) label += ` rank: ${l.rating || 0}`;
       const rl = linksMap[`${l.target.id}:${l.source.id}`];
       if (rl) label += `<br/>${target} -> ${source}`;
-      if (rl && auraView.energy && l.energy)
+      if (rl && auraGraphView.energy && l.energy)
         label += ` energy: ${rl.energy || 0}`;
-      if (rl && auraView.rating && l.rating)
+      if (rl && auraGraphView.rating && l.rating)
         label += ` rank: ${rl.rating || 0}`;
       return label;
     })
     .nodeColor((n) => {
-      if (auraView.rating && auraView.energy) return n.aColor;
-      if (auraView.rating) return ratedNodeColor;
-      if (auraView.energy) return energyTransferedNodeColor;
+      if (auraGraphView.rating && auraGraphView.energy) return n.aColor;
+      if (auraGraphView.rating) return ratedNodeColor;
+      if (auraGraphView.energy) return energyTransferedNodeColor;
     })
     .linkColor((l) => {
-      if (auraView.rating && auraView.energy) return l.aColor;
-      if (auraView.rating) return ratingLinkColor;
-      if (auraView.energy) return energyLinkColor;
+      if (auraGraphView.rating && auraGraphView.energy) return l.aColor;
+      if (auraGraphView.rating) return ratingLinkColor;
+      if (auraGraphView.energy) return energyLinkColor;
     });
 }

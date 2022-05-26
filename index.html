@@ -202,9 +202,11 @@
               <div class="title">Select a user</div>
             </div>
             <div class="menu-item-body hidden" id="userDetailsContent">
+
               <div class="text-center">
                 <img id="userImage" class="user-image" />
               </div>
+
               <div class="row mt-2 px-4 hidden" id="userNameContainer">
                 <div
                   class="text-white text-center mt-3"
@@ -212,21 +214,17 @@
                   id="userName"
                 ></div>
               </div>
+
               <div class="row px-4">
                 <div class="title">BrightID:</div>
-                <br />
-                <input
-                  style="opacity: 0"
-                  type="text"
-                  id="brightidField"
-                  value=""
-                />
-                <div class="text-white ml-2 text-small" id="brightidText"></div>
+                <div class="value" id="brightidText"></div>
               </div>
+
               <div class="row px-4">
                 <div class="title">Joined At:</div>
                 <div class="value" id="nodeCreatedAt"></div>
               </div>
+
               <ul class="tree row text-white mt-3">
                 <li>
                   <span class="caret title">Verifications:</span>
@@ -269,6 +267,7 @@
                   </button>
                 </div>
               </div>
+
               <div class="hidden" id="neighborsHistoryContainer">
                 <div class="row mt-2">
                   <div class="combo-title">Connections History:</div>
@@ -279,50 +278,92 @@
                   </select>
                 </div>
               </div>
-              <div class="row px-4">
-                <div class="title">Connections:</div>
+
+              <div class="hidden" id="auraConnectionsContainer">
+                <div class="row mt-3">
+                  <div class="combo-title">Aura Connections:</div>
+                </div>
+                <div class="input-group-sm mb-3 px-2 text-small">
+                  <select class="custom-select" id="auraConnections">
+                    <option value="none" selected="">None</option>
+                  </select>
+                </div>
               </div>
-              <div class="row px-4 text-white text-small">
-                <table cellpadding="5">
-                  <tbody>
-                    <tr>
-                      <td>Level</td>
-                      <td>In</td>
-                      <td>Out</td>
-                    </tr>
-                    <tr>
-                      <td>recovery</td>
-                      <td id="recoveryIn"></td>
-                      <td id="recoveryOut"></td>
-                    </tr>
-                    <tr>
-                      <td>already known</td>
-                      <td id="alreadyKnownIn"></td>
-                      <td id="alreadyKnownOut"></td>
-                    </tr>
-                    <tr>
-                      <td>just met</td>
-                      <td id="justMetIn"></td>
-                      <td id="justMetOut"></td>
-                    </tr>
-                    <tr>
-                      <td>suspicious</td>
-                      <td id="suspiciousIn"></td>
-                      <td id="suspiciousOut"></td>
-                    </tr>
-                    <tr>
-                      <td>reported</td>
-                      <td id="reportedIn"></td>
-                      <td id="reportedOut"></td>
-                    </tr>
-                    <tr>
-                      <td>filtered</td>
-                      <td id="filteredIn"></td>
-                      <td id="filteredOut"></td>
-                    </tr>
-                  </tbody>
-                </table>
+
+              <div id="auraStatistics" class="hidden">
+                <div class="row px-4">
+                  <div class="title">Aura Statistics:</div>
+                </div>
+                <div class="row px-4 text-white text-small">
+                  <table class="table table-sm table-dark">
+                    <tbody>
+                      <tr>
+                        <th>Type</th>
+                        <th>In</th>
+                        <th>Out</th>
+                      </tr>
+                      <tr>
+                        <td>energy transfer</td>
+                        <td id="energyIn"></td>
+                        <td id="energyOut"></td>
+                      </tr>
+                      <tr>
+                        <td>rating</td>
+                        <td id="ratingIn"></td>
+                        <td id="ratingOut"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              <div id="connectionsStatistics">
+                <div class="row px-4">
+                  <div class="title">Connections Statistics:</div>
+                </div>
+                <div class="row px-4 text-white text-small">
+                  <table class="table table-sm table-dark">
+                    <tbody>
+                      <tr>
+                        <th>Level</th>
+                        <th>In</th>
+                        <th>Out</th>
+                      </tr>
+                      <tr>
+                        <td>recovery</td>
+                        <td id="recoveryIn"></td>
+                        <td id="recoveryOut"></td>
+                      </tr>
+                      <tr>
+                        <td>already known</td>
+                        <td id="alreadyKnownIn"></td>
+                        <td id="alreadyKnownOut"></td>
+                      </tr>
+                      <tr>
+                        <td>just met</td>
+                        <td id="justMetIn"></td>
+                        <td id="justMetOut"></td>
+                      </tr>
+                      <tr>
+                        <td>suspicious</td>
+                        <td id="suspiciousIn"></td>
+                        <td id="suspiciousOut"></td>
+                      </tr>
+                      <tr>
+                        <td>reported</td>
+                        <td id="reportedIn"></td>
+                        <td id="reportedOut"></td>
+                      </tr>
+                      <tr>
+                        <td>filtered</td>
+                        <td id="filteredIn"></td>
+                        <td id="filteredOut"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               <div id="seedData" class="hidden">
                 <div class="row px-4">
                   <div class="title">No. Seed Groups:</div>
@@ -333,20 +374,24 @@
                   <div class="value" id="quotaValue"></div>
                 </div>
               </div>
-              <div class="row mt-2">
-                <div class="combo-title">Groups:</div>
-                <div class="value" id="groupsCount"></div>
+
+              <div id="groupsContainer">
+                <div class="row mt-2">
+                  <div class="combo-title">Groups:</div>
+                  <div class="value" id="groupsCount"></div>
+                </div>
+                <div class="input-group-sm mb-3 px-2 text-small">
+                  <select class="custom-select" id="groups">
+                    <option value="none" selected="">None</option>
+                  </select>
+                </div>
+                <div class="row justify-content-md-center mt-2">
+                  <button id="showGroup" class="btn btn-primary align-center">
+                    Show Group
+                  </button>
+                </div>
               </div>
-              <div class="input-group-sm mb-3 px-2 text-small">
-                <select class="custom-select" id="groups">
-                  <option value="none" selected="">None</option>
-                </select>
-              </div>
-              <div class="row justify-content-md-center mt-2">
-                <button id="showGroup" class="btn btn-primary align-center">
-                  Show Group
-                </button>
-              </div>
+
             </div>
           </div>
           <a
@@ -437,6 +482,7 @@
             </div>
           </div>
           <a
+            id="statisticsbtntitle"
             href="#"
             onclick="openCollapsible('statisticsDetails')"
             class="list-group-item list-group-item-action bg-primary"
@@ -525,6 +571,7 @@
             </div>
           </div>
           <a
+            id="usersillustratorbtntitle"
             href="#"
             onclick="openCollapsible('userIllustratorDetails')"
             class="list-group-item list-group-item-action bg-primary"
@@ -600,6 +647,7 @@
             </div>
           </div>
           <a
+            id="starillustratorbtntitle"
             href="#"
             onclick="openCollapsible('starsIllustratorDetails')"
             class="list-group-item list-group-item-action bg-primary"

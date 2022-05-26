@@ -20,6 +20,7 @@ var positions = { status: "", "2d": {}, "3d": {} };
 var selectedVerification = "Bitu";
 var selectedLevels;
 var boldMood = 0;
+var auraMode = false;
 
 var areaPoints = [];
 $(document).keyup(function (e) {
@@ -713,7 +714,11 @@ $(document).ready(function () {
       selectVerification(id);
     } else if (allNodes[id]) {
       if (graphNodes[id]) {
-        selectNode(allNodes[id], true);
+        if (auraMode) {
+          selectAuraNode(allNodes[id], true);
+        } else {
+          selectNode(allNodes[id], true);
+        }
       } else {
         alert("Error:", "This id is not node of this subgraph.");
       }

@@ -103,7 +103,10 @@ const loadPersonalData = async () => {
   }
 
   $("#logoutForm").show();
-  selectNode(user, true);
+
+  if (!auraMode) {
+    selectNode(user, true);
+  }
 };
 
 const createImportQR = async () => {
