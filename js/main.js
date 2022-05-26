@@ -16,7 +16,7 @@ var allLinks = {};
 var graphNodes = {};
 var graphLinks = [];
 var Graph;
-var positions = { "status": "", "2d": {}, "3d": {} };
+var positions = { status: "", "2d": {}, "3d": {} };
 var selectedVerification = "Bitu";
 var selectedLevels;
 var boldMood = 0;
@@ -25,7 +25,7 @@ var areaPoints = [];
 $(document).keyup(function (e) {
   if (e.keyCode != 17) {
     return;
-  };
+  }
   // clear area points from canvas
   Graph.zoom(Graph.zoom());
   const nodes = [];
@@ -38,7 +38,7 @@ $(document).keyup(function (e) {
     selectNodes(nodes);
   }
   areaPoints = [];
-})
+});
 
 $(document).keydown(function (e) {
   if (e.keyCode == 49 && e.shiftKey) {
@@ -73,11 +73,27 @@ function selectNeighbor() {
 
 function showNeighborDetails() {
   const node = allNodes[$("#neighbors").val()];
-  const fData = selectedNode.neighbors[node.id]["from"].length > 0 ? selectedNode.neighbors[node.id]["from"][selectedNode.neighbors[node.id]["from"].length - 1] : ["__", "__"];
-  const tData = selectedNode.neighbors[node.id]["to"].length > 0 ? selectedNode.neighbors[node.id]["to"][selectedNode.neighbors[node.id]["to"].length - 1] : ["__", "__"];
+  const fData =
+    selectedNode.neighbors[node.id]["from"].length > 0
+      ? selectedNode.neighbors[node.id]["from"][
+          selectedNode.neighbors[node.id]["from"].length - 1
+        ]
+      : ["__", "__"];
+  const tData =
+    selectedNode.neighbors[node.id]["to"].length > 0
+      ? selectedNode.neighbors[node.id]["to"][
+          selectedNode.neighbors[node.id]["to"].length - 1
+        ]
+      : ["__", "__"];
   $("#neighbor").html(node.id);
-  const outboundTime = new Date(tData[0]).toJSON().split(".")[0].replace("T", " ");
-  const inboundTime = new Date(fData[0]).toJSON().split(".")[0].replace("T", " ");
+  const outboundTime = new Date(tData[0])
+    .toJSON()
+    .split(".")[0]
+    .replace("T", " ");
+  const inboundTime = new Date(fData[0])
+    .toJSON()
+    .split(".")[0]
+    .replace("T", " ");
   $("#outboundLevel").html(tData[1]);
   $("#outboundTime").html(outboundTime);
   $("#inboundLevel").html(fData[1]);
@@ -93,7 +109,7 @@ function showGroup() {
 function drawGroupSubgraph() {
   const id = $("#groupIdText").val();
   const subgraphData = getGroupGraphData(id);
-  drawSubgraph(Object.values(subgraphData.nodes), subgraphData.links)
+  drawSubgraph(Object.values(subgraphData.nodes), subgraphData.links);
 }
 
 function getGroupGraphData(id) {
@@ -102,7 +118,7 @@ function getGroupGraphData(id) {
   const links = [];
   for (const member of group.members) {
     nodes[member] = allNodes[member];
-    Object.keys(allNodes[member].neighbors).forEach(n => {
+    Object.keys(allNodes[member].neighbors).forEach((n) => {
       if (n in graphNodes) {
         nodes[n] = allNodes[n];
       }
@@ -113,7 +129,7 @@ function getGroupGraphData(id) {
       links.push(link);
     }
   }
-  return { nodes, links }
+  return { nodes, links };
 }
 
 function selectGroup(id, showDetails) {
@@ -164,13 +180,15 @@ function selectGroup(id, showDetails) {
     $("#groupSeedConnectedDiv").show();
   }
 
-  Graph.nodeColor(n => {
-    if (group.members.includes(n.id)) return 'blue';
-    if (n.id in subgraphData.nodes) return 'orange';
+  Graph.nodeColor((n) => {
+    if (group.members.includes(n.id)) return "blue";
+    if (n.id in subgraphData.nodes) return "orange";
     return fadedColor;
   });
 
-  Graph.linkColor(l => subgraphData.links.includes(l) ? resetLinksColor(l) : fadedColor);
+  Graph.linkColor((l) =>
+    subgraphData.links.includes(l) ? resetLinksColor(l) : fadedColor
+  );
 
   if (showDetails) {
     openCollapsible("groupDetails", true);
@@ -183,7 +201,7 @@ function selectGroup(id, showDetails) {
     sumY += allNodes[member].y;
   }
   const n = group.members.length;
-  move(sumX / n, sumY / n, .5);
+  move(sumX / n, sumY / n, 0.5);
 }
 
 function selectVerification(verification) {
@@ -218,7 +236,9 @@ function selectRegion(name) {
       sumX += allNodes[id].x;
       sumY += allNodes[id].y;
     }
-    Graph.nodeColor(n => members.includes(n.id) ? resetNodesColor(n) : resetNodesColor(n, true));
+    Graph.nodeColor((n) =>
+      members.includes(n.id) ? resetNodesColor(n) : resetNodesColor(n, true)
+    );
     Graph.linkColor(fadedColor);
     const n = members.length;
     move(sumX / n, sumY / n, 1.2);
@@ -232,12 +252,21 @@ function getGroupName(group) {
 function getConnText(neighbor, fData, tData) {
   if (fData[0] && tData[0]) {
     if (Math.abs(fData[0] - tData[0]) > 15 * 60 * 1000) {
-      connTime = `${new Date(fData[0]).toJSON().split(".")[0].replace("T", " ")} | ${new Date(tData[0]).toJSON().split(".")[0].replace("T", " ")}`
+      connTime = `${new Date(fData[0])
+        .toJSON()
+        .split(".")[0]
+        .replace("T", " ")} | ${new Date(tData[0])
+        .toJSON()
+        .split(".")[0]
+        .replace("T", " ")}`;
     } else {
       connTime = new Date(fData[0]).toJSON().split(".")[0].replace("T", " ");
     }
   } else {
-    connTime = new Date(fData[0] || tData[0]).toJSON().split(".")[0].replace("T", " ");
+    connTime = new Date(fData[0] || tData[0])
+      .toJSON()
+      .split(".")[0]
+      .replace("T", " ");
   }
   if (fData[1]) {
     if (fData[1] == "reported") {
@@ -246,7 +275,7 @@ function getConnText(neighbor, fData, tData) {
       fLevel = fData[1][0].toUpperCase();
     }
   } else {
-    fLevel = "_"
+    fLevel = "_";
   }
   if (tData[1]) {
     if (tData[1] == "reported") {
@@ -255,9 +284,11 @@ function getConnText(neighbor, fData, tData) {
       tLevel = tData[1][0].toUpperCase();
     }
   } else {
-    tLevel = "_"
+    tLevel = "_";
   }
-  let text = `${allNodes[neighbor]?.name || neighbor} | ${tLevel} | ${fLevel} | ${connTime}`
+  let text = `${
+    allNodes[neighbor]?.name || neighbor
+  } | ${tLevel} | ${fLevel} | ${connTime}`;
   if (allNodes[neighbor].node_type == "Seed") {
     text = `🌱 ${text}`;
   }
@@ -265,14 +296,18 @@ function getConnText(neighbor, fData, tData) {
 }
 
 function addVerificationsTree(node) {
-  let domString = '';
+  let domString = "";
   for (const name in node.verifications) {
     if (node.verifications[name].app || node.verifications[name].expression) {
       continue;
     }
     domString += `<li><span class="caret">${name}</span><ul class="nested">`;
     for (let [key, value] of Object.entries(node.verifications[name])) {
-      if (["timestamp", "hash", "block", "communities", "releaseTime"].includes(key)) {
+      if (
+        ["timestamp", "hash", "block", "communities", "releaseTime"].includes(
+          key
+        )
+      ) {
         continue;
       } else if (!value && key == "friend") {
         continue;
@@ -281,27 +316,29 @@ function addVerificationsTree(node) {
       } else if (key == "connected") {
         domString += `<li><span class="caret">${key}</span><ul class="nested">`;
         for (const groupId of value) {
-          domString += `<li>${groups[groupId].region || groupId}</li>`
+          domString += `<li>${groups[groupId].region || groupId}</li>`;
         }
         domString += "</ul></li>";
       } else if (key == "reported") {
         domString += `<li><span class="caret">${key}</span><ul class="nested">`;
         for (const groupId of value) {
-          domString += `<li>${groups[groupId].region || groupId}</li>`
+          domString += `<li>${groups[groupId].region || groupId}</li>`;
         }
         domString += "</ul></li>";
       } else if (["directReports", "indirectReports"].includes(key)) {
         domString += `<li><span class="caret">${key}</span><ul class="nested">`;
         for (let k of Object.keys(value)) {
-          domString += `<li>${allNodes[k].name || k}: ${value[k]}</li>`
+          domString += `<li>${allNodes[k].name || k}: ${value[k]}</li>`;
         }
         domString += "</ul></li>";
       } else if (key == "reportedConnections") {
         domString += `<li><span class="caret">${key}</span><ul class="nested">`;
         for (let k of Object.keys(value)) {
-          domString += `<li><span class="caret">${allNodes[k].name || k}</span><ul class="nested">`
+          domString += `<li><span class="caret">${
+            allNodes[k].name || k
+          }</span><ul class="nested">`;
           for (let v of value[k]) {
-            domString += `<li>${allNodes[v].name || v}</li>`
+            domString += `<li>${allNodes[v].name || v}</li>`;
           }
           domString += "</ul></li>";
         }
@@ -312,7 +349,7 @@ function addVerificationsTree(node) {
     }
     domString += "</ul></li>";
   }
-  $("#verificationsTree").append(domString)
+  $("#verificationsTree").append(domString);
   var toggler = document.getElementsByClassName("caret");
   var i;
   for (i = 0; i < toggler.length; i++) {
@@ -321,7 +358,6 @@ function addVerificationsTree(node) {
       this.classList.toggle("caret-down");
     });
   }
-
 }
 
 function selectNode(node, showDetails, focus) {
@@ -372,10 +408,16 @@ function selectNode(node, showDetails, focus) {
     $("#neighborsCount").html(neighborsCount);
     $("#neighbors").empty().append(new Option("", "none"));
     $("#neighborsHistory").empty().append(new Option("", "none"));
-    const allNeighbors = []
-    Object.keys(node.neighbors).forEach(n => {
-      const fData = node.neighbors[n]["from"].length > 0 ? node.neighbors[n]["from"][node.neighbors[n]["from"].length - 1] : [null, null];
-      const tData = node.neighbors[n]["to"].length > 0 ? node.neighbors[n]["to"][node.neighbors[n]["to"].length - 1] : [null, null];
+    const allNeighbors = [];
+    Object.keys(node.neighbors).forEach((n) => {
+      const fData =
+        node.neighbors[n]["from"].length > 0
+          ? node.neighbors[n]["from"][node.neighbors[n]["from"].length - 1]
+          : [null, null];
+      const tData =
+        node.neighbors[n]["to"].length > 0
+          ? node.neighbors[n]["to"][node.neighbors[n]["to"].length - 1]
+          : [null, null];
       const connText = getConnText(n, fData, tData);
       $("#neighbors").append(new Option(connText, n));
       for (const nf of node.neighbors[n]["from"]) {
@@ -387,7 +429,9 @@ function selectNode(node, showDetails, focus) {
     });
     allNeighbors.sort((a, b) => a[0] - b[0]);
     for (const n2 of allNeighbors) {
-      const text = `${allNodes[n2[3]]?.name || n2[3]} | ${n2[2]} | ${n2[1] == "reported" ? "reported" : n2[1][0].toUpperCase()} | ${new Date(n2[0]).toJSON().split(".")[0].replace("T", " ")}`
+      const text = `${allNodes[n2[3]]?.name || n2[3]} | ${n2[2]} | ${
+        n2[1] == "reported" ? "reported" : n2[1][0].toUpperCase()
+      } | ${new Date(n2[0]).toJSON().split(".")[0].replace("T", " ")}`;
       $("#neighborsHistory").append(new Option(text, n2[3]));
     }
     $("#neighborsContainer").show();
@@ -413,15 +457,27 @@ function selectNode(node, showDetails, focus) {
 
   const highlightNodes = new Set([node.id]);
 
-  Object.keys(node.neighbors).forEach(n1 => {
-    const tLevel = node.neighbors[n1]["to"].length > 0 ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1] : null
-    const fLevel = node.neighbors[n1]["from"].length > 0 ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1] : null
+  Object.keys(node.neighbors).forEach((n1) => {
+    const tLevel =
+      node.neighbors[n1]["to"].length > 0
+        ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1]
+        : null;
+    const fLevel =
+      node.neighbors[n1]["from"].length > 0
+        ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1]
+        : null;
     if (!selectedLevels.includes("just met")) {
-      if (!selectedLevels.includes(fLevel) || !selectedLevels.includes(tLevel)) {
+      if (
+        !selectedLevels.includes(fLevel) ||
+        !selectedLevels.includes(tLevel)
+      ) {
         return;
       }
     } else {
-      if (!selectedLevels.includes(fLevel) && !selectedLevels.includes(tLevel)) {
+      if (
+        !selectedLevels.includes(fLevel) &&
+        !selectedLevels.includes(tLevel)
+      ) {
         return;
       }
     }
@@ -429,7 +485,7 @@ function selectNode(node, showDetails, focus) {
   });
 
   const highlightLinks = new Set();
-  graphLinks.forEach(l => {
+  graphLinks.forEach((l) => {
     if (l.source.id != node.id && l.target.id != node.id) {
       return;
     }
@@ -438,10 +494,14 @@ function selectNode(node, showDetails, focus) {
     }
   });
 
-  Graph.linkVisibility(l => highlightLinks.has(l) ? true : false)
-    .nodeColor(n => highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true))
-    .linkColor(l => highlightLinks.has(l) ? resetLinksColor(l) : fadedColor)
-    .linkDirectionalArrowLength(l => highlightLinks.has(l) ? arrowLength : 1)
+  Graph.linkVisibility((l) => (highlightLinks.has(l) ? true : false))
+    .nodeColor((n) =>
+      highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true)
+    )
+    .linkColor((l) => (highlightLinks.has(l) ? resetLinksColor(l) : fadedColor))
+    .linkDirectionalArrowLength((l) =>
+      highlightLinks.has(l) ? arrowLength : 1
+    );
 
   if (showDetails) {
     openCollapsible("userDetails", true);
@@ -453,7 +513,12 @@ function selectNode(node, showDetails, focus) {
 }
 
 function updateStatistics() {
-  let bituVerifieds = bituVerifiedsHighScore = seedVerifieds = seedConnectedVerifieds = socialRecoverySetupVerifieds = 0;
+  let bituVerifieds =
+    (bituVerifiedsHighScore =
+    seedVerifieds =
+    seedConnectedVerifieds =
+    socialRecoverySetupVerifieds =
+      0);
   Object.values(allNodes).forEach((node) => {
     if (node.verifications) {
       if ("Bitu" in node.verifications && node.verifications.Bitu.score > 0) {
@@ -473,9 +538,13 @@ function updateStatistics() {
       }
     }
   });
-  const d = new Date(allNodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"]["verifications"]["Bitu"]["releaseTime"]);
+  const d = new Date(
+    allNodes["AsjAK5gJ68SMYvGfCAuROsMrJQ0_83ZS92xy94LlfIA"]["verifications"][
+      "Bitu"
+    ]["releaseTime"]
+  );
   const releaseDate = `${d.getDate()}/${d.getMonth() + 1}`;
-  const nd = new Date(d.getTime() + (7 * 24 * 60 * 60 * 1000));
+  const nd = new Date(d.getTime() + 7 * 24 * 60 * 60 * 1000);
   const nextReleaseDate = `${nd.getDate()}/${nd.getMonth() + 1}`;
   $("#numNodes").html(Object.keys(allNodes).length);
   $("#bituVerifieds").html(bituVerifieds);
@@ -490,19 +559,35 @@ function updateStatistics() {
 function alert(alertTitle, alertBody) {
   $("#alertTitle").html(alertTitle);
   $("#alertBody").html(alertBody);
-  $("#alert").modal("show")
+  $("#alert").modal("show");
 }
 
 function updateLegend(index) {
-  const connectionLevels = { "suspicious": "red", "just met": "yellow", "filtered": "gray", "already known": "orange", "recovery": "blue" };
+  const connectionLevels = {
+    suspicious: "red",
+    "just met": "yellow",
+    filtered: "gray",
+    "already known": "orange",
+    recovery: "blue",
+  };
   const selectedLevels = Object.keys(connectionLevels).slice(index, 5);
   $("#legendLinks").empty();
   selectedLevels.forEach((level) => {
-    $(`<li><span style="background:${connectionLevels[level]};"></span>${level}</li>`).appendTo("#legendLinks");
+    $(
+      `<li><span style="background:${connectionLevels[level]};"></span>${level}</li>`
+    ).appendTo("#legendLinks");
   });
 }
 
-const accordion = { "loginDetails": false, "graphDetails": false, "userDetails": false, "groupDetails": false, "statisticsDetails": false, "userIllustratorDetails": false, "starsIllustrator": false };
+const accordion = {
+  loginDetails: false,
+  graphDetails: false,
+  userDetails: false,
+  groupDetails: false,
+  statisticsDetails: false,
+  userIllustratorDetails: false,
+  starsIllustrator: false,
+};
 function openCollapsible(selectedId, reopen) {
   if ($("#wrapper").hasClass("toggled")) {
     $("#wrapper").removeClass("toggled");
@@ -516,7 +601,7 @@ function openCollapsible(selectedId, reopen) {
         $(`#${id}`).addClass("hidden");
         accordion[id] = false;
       }
-    })
+    });
   } else if (accordion[selectedId] && !reopen) {
     $(`#${selectedId}`).addClass("hidden");
     accordion[selectedId] = false;
@@ -536,8 +621,8 @@ function checkExpression(exprString) {
     }
   }
   if (verifieds.length > 0) {
-    Graph.nodeColor(n => verifieds.includes(n.id) ? 'blue' : 'orange');
-    Graph.nodeVal(n => verifieds.includes(n.id) ? 20 ** .5 : 3 ** .5);
+    Graph.nodeColor((n) => (verifieds.includes(n.id) ? "blue" : "orange"));
+    Graph.nodeVal((n) => (verifieds.includes(n.id) ? 20 ** 0.5 : 3 ** 0.5));
     alert("Info:", `There are ${verifieds.length} verified users`);
   }
   return;
@@ -572,10 +657,10 @@ $(document).ready(function () {
 
   $.get(dataFileAddr, function (data) {
     // data = JSON.parse(data);
-    data.links.forEach(l => {
+    data.links.forEach((l) => {
       allLinks[`${l.source}${l.target}`] = l;
     });
-    data.groups.forEach(group => {
+    data.groups.forEach((group) => {
       groups[group.id] = { ...group, members: [], seedConnected: [] };
       const region = group.region;
       if (region) {
@@ -589,12 +674,12 @@ $(document).ready(function () {
       }
     });
 
-    data.nodes.forEach(node => {
+    data.nodes.forEach((node) => {
       node.neighbors = {};
       node.statistics = data.users_statistics[node.id];
       allNodes[node.id] = node;
 
-      node.groups.forEach(group => groups[group].members.push(node.id));
+      node.groups.forEach((group) => groups[group].members.push(node.id));
       if (node.verifications.SeedConnected) {
         for (const sg of node.verifications.SeedConnected.connected) {
           groups[sg].seedConnected.push(node.id);
@@ -602,12 +687,12 @@ $(document).ready(function () {
       }
     });
 
-    Object.values(allLinks).forEach(l => {
+    Object.values(allLinks).forEach((l) => {
       if (!(l.target in allNodes[l.source].neighbors)) {
-        allNodes[l.source].neighbors[l.target] = { "from": [], "to": [] };
+        allNodes[l.source].neighbors[l.target] = { from: [], to: [] };
       }
       if (!(l.source in allNodes[l.target].neighbors)) {
-        allNodes[l.target].neighbors[l.source] = { "from": [], "to": [] };
+        allNodes[l.target].neighbors[l.source] = { from: [], to: [] };
       }
       for (h of l["history"]) {
         allNodes[l.source].neighbors[l.target]["to"].push(h);
@@ -668,18 +753,18 @@ $(document).ready(function () {
   $("#showUser").click(showUser);
   $("#searchField").select2({ tags: true });
   $("#dateRange").change(setDateRange);
-  $("#fromDate").change(() => playerSettingChanged = true);
-  $("#toDate").change(() => playerSettingChanged = true);
-  $("#delay").change(() => playerSettingChanged = true);
+  $("#fromDate").change(() => (playerSettingChanged = true));
+  $("#toDate").change(() => (playerSettingChanged = true));
+  $("#delay").change(() => (playerSettingChanged = true));
   $("#playBtn").click(playBtnUI);
   $("#stopBtn").click(stopBtnUI);
   $("#previousBtn").click(previousBtnUI);
   $("#nextBtn").click(nextBtnUI);
   $("#drawSubgraphBtn").click(subgraphBtnUI);
   $("#dateRangeSI").change(setDateRangeSI);
-  $("#fromDateSI").change(() => playerSettingChangedSI = true);
-  $("#toDateSI").change(() => playerSettingChangedSI = true);
-  $("#delaySI").change(() => playerSettingChangedSI = true);
+  $("#fromDateSI").change(() => (playerSettingChangedSI = true));
+  $("#toDateSI").change(() => (playerSettingChangedSI = true));
+  $("#delaySI").change(() => (playerSettingChangedSI = true));
   $("#playBtnSI").click(playBtnSI);
   $("#stopBtnSI").click(stopBtnSI);
   $("#previousBtnSI").click(previousBtnSI);
@@ -691,12 +776,18 @@ $(document).ready(function () {
     stopBtnSI();
     stopBtnUI();
   });
-  $("#selectNeighbor").click(selectNeighbor)
+  $("#selectNeighbor").click(selectNeighbor);
   $("#neighbors").change(showNeighborDetails);
   $("#3dBtn").click(drawGraph);
   $("#levelsRange").change(() => {
     const levelIndex = $("#levelsRange").val();
-    const connectionLevels = ["Suspicious", "Just met", "Filtered", "Already known", "Recovery"];
+    const connectionLevels = [
+      "Suspicious",
+      "Just met",
+      "Filtered",
+      "Already known",
+      "Recovery",
+    ];
     $("#connectionLevel").html(connectionLevels[levelIndex]);
   });
   $("#drawGustomGraph").click(drawGraph);
@@ -720,8 +811,5 @@ $(document).ready(function () {
       $("#wrapper").addClass("toggled");
     }
   });
-
   $("#drawSubgraphBtn").click(drawGroupSubgraph);
-
-
 });
