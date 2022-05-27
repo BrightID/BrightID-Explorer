@@ -104,34 +104,7 @@ function selectAuraNode(node, showDetails, focus) {
   $("#auraStatistics").show();
   $("#auraConnectionsContainer").show();
 
-  const highlightNodes = new Set([node.id]);
-  Object.keys(node.neighbors).forEach((n1) => {
-    const tLevel =
-      node.neighbors[n1]["to"].length > 0
-        ? node.neighbors[n1]["to"][node.neighbors[n1]["to"].length - 1][1]
-        : null;
-    const fLevel =
-      node.neighbors[n1]["from"].length > 0
-        ? node.neighbors[n1]["from"][node.neighbors[n1]["from"].length - 1][1]
-        : null;
-    if (!selectedLevels.includes("just met")) {
-      if (
-        !selectedLevels.includes(fLevel) ||
-        !selectedLevels.includes(tLevel)
-      ) {
-        return;
-      }
-    } else {
-      if (
-        !selectedLevels.includes(fLevel) &&
-        !selectedLevels.includes(tLevel)
-      ) {
-        return;
-      }
-    }
-    highlightNodes.add(n1);
-  });
-
+  const highlightNodes = new Set([...Object.keys(node.neighbors), node.id]);
   const highlightLinks = new Set();
   graphLinks.forEach((l) => {
     if (l.source.id != node.id && l.target.id != node.id) {
