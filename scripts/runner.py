@@ -13,7 +13,7 @@ def main():
 
     # updates nodes' position
     print('\nUpdating positions...')
-    os.system('node ./position_updater/runner.js')
+    os.system('/usr/local/bin/node ./position_updater/runner.js')
 
     # calculates bitu score
     bitu_updater.eligible_finder.run()
