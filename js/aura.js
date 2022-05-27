@@ -84,7 +84,7 @@ function selectAuraNode(node, showDetails, focus) {
     .empty()
     .append(
       new Option(
-        "neighbor | energy-out | rating-out | energy-in | rating-in",
+        "connection ↭ energy-out | rating-out ⬈ energy-in | rating-in ⬋",
         "none"
       )
     );
@@ -94,11 +94,11 @@ function selectAuraNode(node, showDetails, focus) {
     if (!l && !rl) {
       return;
     }
-    const connText = `${allNodes[n]?.name || n} | ${
+    const connText = `${allNodes[n]?.name || n} ↭ ${
       l ? l.energy || "_" : "_"
-    } | ${l ? l.rating || "_" : "_"} | ${rl ? rl.energy || "_" : "_"} | ${
+    } | ${l ? l.rating || "_" : "_"} ⬈ ${rl ? rl.energy || "_" : "_"} | ${
       rl ? rl.rating || "_" : "_"
-    }`;
+    } ⬋`;
     $("#auraConnections").append(new Option(connText, n));
   });
   $("#auraStatistics").show();
