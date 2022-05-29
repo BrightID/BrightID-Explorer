@@ -15,7 +15,7 @@ cuts_json = {}
 def clusterify(graph, resolution, regions=None):
     global nodes
     clusters = community.best_partition(
-        graph, resolution=resolution, randomize=False)
+        graph, resolution=resolution, randomize=False, random_state=100)
     print(f'graph: {graph}, resolution: {resolution}, clusters: {len(set(clusters.values()))}')
     for n, cluster in clusters.items():
         nodes[n]['cluster'] = nodes[n]['cluster'] + (int(cluster) + 1,)
@@ -37,7 +37,7 @@ def remove_attacks_from(graph, cluster, region):
     keys = [n for n in nodes if nodes[n]['cluster'] == cluster]
 
     # clusterify the region to find attack patterns in each cluster
-    subg = graph.subgraph(keys)
+    subg = get_subgraph(graph, keys)
     H = build_auxiliary_node_connectivity(subg)
     R = build_residual_network(H, 'capacity')
 
@@ -165,6 +165,12 @@ def remove_best_cut(graph, cluster, region):
     cuts_json["_".join(map(str, cluster))] = {"cut": cut, "removed": removed}
 
 
+def get_subgraph(graph, nodes):
+    subg = nx.OrderedGraph()
+    subg.add_nodes_from([n for n in sorted(nodes)])
+    subg.add_edges_from((u, v) for (u, v) in graph.edges() if u in subg if v in subg)
+    return subg
+
 def run():
     global nodes
     print('\nFind bitu eligibles ...')
@@ -177,7 +183,7 @@ def run():
     for region in regions['regions']:
         r = regions['regions'][region]
         if 'regions' in r:
-            subg = graph.subgraph(
+            subg = get_subgraph(graph,
                 [n for n in nodes if nodes[n]['cluster'] == (region,)])
             clusterify(subg, r['resolution'], r['regions'])
 
