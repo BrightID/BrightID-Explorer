@@ -1,3 +1,4 @@
+import os
 import json
 import community
 import networkx as nx
@@ -10,12 +11,12 @@ import config
 
 nodes = subg = H = R = None
 cuts_json = {}
-
+previous_cuts = []
 
 def clusterify(graph, resolution, regions=None):
     global nodes
     clusters = community.best_partition(
-        graph, resolution=resolution, randomize=False)
+        graph, resolution=resolution, randomize=False, random_state=1)
     print(f'graph: {graph}, resolution: {resolution}, clusters: {len(set(clusters.values()))}')
     for n, cluster in clusters.items():
         nodes[n]['cluster'] = nodes[n]['cluster'] + (int(cluster) + 1,)
@@ -35,77 +36,89 @@ def remove_attacks_from(graph, cluster, region):
     print(f'remove attacks from cluster {cluster}')
     # if cluster != ('core-team',): return
     keys = [n for n in nodes if nodes[n]['cluster'] == cluster]
+    subg = get_subgraph(graph, keys)
+
+    print('removing previous round cuts if they are still valid ...')
+    cuts = [cut for cut in previous_cuts if cut[0] in subg]
+    print('len prev cuts', len(cuts))
+    for i, cut in enumerate(sorted(cuts, key=lambda c: len(c), reverse=True)):
+        remove_best_cut(graph, cluster + (f'prev_{i}',), region, cut)
 
     # clusterify the region to find attack patterns in each cluster
-    subg = graph.subgraph(keys)
-    H = build_auxiliary_node_connectivity(subg)
-    R = build_residual_network(H, 'capacity')
-
     clusterify(subg, region.get('resolution', .5))
     clusters = set([nodes[n]['cluster']
                     for n in nodes if nodes[n]['cluster'][:-1] == cluster])
+
+    H = build_auxiliary_node_connectivity(subg)
+    R = build_residual_network(H, 'capacity')
     for c in sorted(clusters, key=lambda c: c[-1]):
         print(c, len(clusters))
         remove_best_cut(graph, c, region)
 
 
-def remove_best_cut(graph, cluster, region):
+def remove_best_cut(graph, cluster, region, prev_cut=None):
     global nodes, subg, H, R
-    keys = [n for n in nodes if nodes[n]['cluster']
-            == cluster and subg.has_node(n)]
+    keys = [n for n in nodes if nodes[n]['cluster'] == cluster and subg.has_node(n)]
     keys.sort()
 
     # uses track to debug
     track = None
-    # track = 'OwLKbjDcjyRqheYpJBBJCM-ZNiMt5G8Hh1NdhEzstlM'
+    # track = 'fNtAhuGI1mq6dOHNoSzvmAVDP4HrSpBeBsHc4cshiF8'
     # if track in keys:
     #     print('cluster of {} has {} members.\n{}'.format(track, len(keys), '\n'.join(keys)))
+    # else:
+    #     return
 
-    # consider first pre-defined member of the region as from for min-cut
-    f = region['members'][0]
-    cache = {}
+    if not prev_cut:
+        # consider first pre-defined member of the region as from for min-cut
+        f = region['members'][0]
+        cache = {}
+        def min_cut(k):
+            if k not in cache:
+                cache[k] = minimum_st_node_cut(
+                    subg, f, k, auxiliary=H, residual=R) or (k,)
+            return cache[k]
 
-    def min_cut(k):
-        if k not in cache:
-            cache[k] = minimum_st_node_cut(
-                subg, f, k, auxiliary=H, residual=R) or (k,)
-        return cache[k]
+        # finds min-cuts from first predefined member of region, to sample set of cluster nodes
+        all_cuts = []  # accumulates cuts for all samples
+        for k in keys[:5]:
+            # replaces min-cut of each node with next level cut for nodes in that min-cut and stops this when
+            # - reaches nodes that are not inside the cluster
+            # - length of cut increases by 2 compared to the previous level
+            # this helps to find a better and deeper cut for the node compared to the initial shallow cut
+            history = [(k,)]
+            while True:
+                # finds min-cuts for cutting nodes that are still in the cluster
+                cuts = [[n for n in min_cut(k)] if k in keys else (k,)
+                        for k in history[-1]]
+                # concatenate cuts into single cut
+                cut = set([k for cut in cuts for k in cut])
+                # stops if length of cut increases by 2 compared to the previous level without accepting the new cut
+                if len(history) > 1 and len(cut) > 6 and len(cut) - len(history[-1]) > 1:
+                    break
+                # stops if a vicious circle detected without accepting the new cut
+                if not cut or cut in history:
+                    break
+                history.append(cut)
+                # stops if all cutting nodes are outside of the cluster after accepting the new cut by adding it to the history
+                if all([k not in keys for k in cut]):
+                    break
 
-    # finds min-cuts from first predefined member of region, to sample set of cluster nodes
-    all_cuts = []  # accumulates cuts for all samples
-    for k in keys[:5]:
-        # replaces min-cut of each node with next level cut for nodes in that min-cut and stops this when
-        # - reaches nodes that are not inside the cluster
-        # - length of cut increases by 2 compared to the previous level
-        # this helps to find a better and deeper cut for the node compared to the initial shallow cut
-        history = [(k,)]
-        while True:
-            # finds min-cuts for cutting nodes that are still in the cluster
-            cuts = [[n for n in min_cut(k)] if k in keys else (k,)
-                    for k in history[-1]]
-            # concatenate cuts into single cut
-            cut = set([k for cut in cuts for k in cut])
-            # stops if length of cut increases by 2 compared to the previous level without accepting the new cut
-            if len(history) > 1 and len(cut) > 6 and len(cut) - len(history[-1]) > 1:
-                break
-            # stops if a vicious circle detected without accepting the new cut
-            if not cut or cut in history:
-                break
-            history.append(cut)
-            # stops if all cutting nodes are outside of the cluster after accepting the new cut by adding it to the history
-            if all([k not in keys for k in cut]):
-                break
+            # considers last accepted cut as the cut for the sample node
+            if len(history) > 1:
+                all_cuts.extend(history[-1])
+            if track in keys:
+                print(f'history: {history}, k: {k}')
 
-        # considers last accepted cut as the cut for the sample node
-        if len(history) > 1:
-            all_cuts.extend(history[-1])
+        # sorts cutting nodes for all samples based on their frequency in being included
+        # in cuts for different samples and consider the result and candidate cut for the cluster
+        c = Counter(all_cuts)
+        cut = sorted(c.keys(), key=lambda k: c[k], reverse=True)
         if track in keys:
-            print(f'history: {history}, k: {k}')
-
-    # sorts cutting nodes for all samples based on their frequency in being included
-    # in cuts for different samples and consider the result and candidate cut for the cluster
-    c = Counter(all_cuts)
-    cut = sorted(c.keys(), key=lambda k: c[k], reverse=True)
+            print('counter', c)
+            print('init cut', cut)
+    else:
+        cut = prev_cut[:]
 
     # counts how many nodes will be removed from the graph when each cutting node is cutted
     subg_copy = subg.copy()
@@ -133,7 +146,6 @@ def remove_best_cut(graph, cluster, region):
     else:
         return
     cut = [stat[0] for stat in stats[:i]]
-
     # applies the final cut
     if track in keys:
         print(f'final cut: {cut}')
@@ -156,7 +168,11 @@ def remove_best_cut(graph, cluster, region):
     removed = []
     # removes removed nodes from main graph and nodes objects
     for n in list(nodes.keys()):
-        if cluster[:-1] == nodes[n]['cluster'][:-1] and not subg.has_node(n):
+        if not prev_cut:
+            subg_had_node = cluster[:-1] == nodes[n]['cluster'][:-1]
+        else:
+            subg_had_node = cluster[:-1] == nodes[n]['cluster']
+        if subg_had_node and not subg.has_node(n):
             del nodes[n]
             graph.remove_node(n)
             removed.append(n)
@@ -165,8 +181,14 @@ def remove_best_cut(graph, cluster, region):
     cuts_json["_".join(map(str, cluster))] = {"cut": cut, "removed": removed}
 
 
+def get_subgraph(graph, nodes):
+    subg = nx.OrderedGraph()
+    subg.add_nodes_from([n for n in sorted(nodes)])
+    subg.add_edges_from((u, v) for (u, v) in graph.edges() if u in subg if v in subg)
+    return subg
+
 def run():
-    global nodes
+    global nodes, previous_cuts
     print('\nFind bitu eligibles ...')
     # finds clusters based on regions in 2 levels
     graph = load_graph()
@@ -177,7 +199,7 @@ def run():
     for region in regions['regions']:
         r = regions['regions'][region]
         if 'regions' in r:
-            subg = graph.subgraph(
+            subg = get_subgraph(graph,
                 [n for n in nodes if nodes[n]['cluster'] == (region,)])
             clusterify(subg, r['resolution'], r['regions'])
 
@@ -196,6 +218,9 @@ def run():
             graph.remove_node(n)
 
     # remove attack patterns based on min-cut from valid clusters
+    if os.path.exists(config.CUTS_JSON_FILE):
+        with open(config.CUTS_JSON_FILE) as f:
+            previous_cuts = [row['cut'] for row in json.loads(f.read()).values()]
     for cluster in valid:
         r = regions['regions'][cluster[0]]
         if len(cluster) == 2:
