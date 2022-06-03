@@ -4,6 +4,7 @@ const ratedNodeColor = "orange";
 const energyTransferedNodeColor = "blue";
 
 const auraGraphView = { rating: true, energy: true };
+const auraLinkDirection = { incoming: true, outgoing: true };
 
 function prepare() {
   $("#legendNodes").empty();
@@ -21,6 +22,15 @@ function prepare() {
   $(
     `<li><span style="background:${energyLinkColor};"></span>energy transfer</li>`
   ).appendTo("#legendLinks");
+
+  $("#legendDirectionContainar").show();
+  $("#legendDirection").empty();
+  $(
+    `<li><a href="#" id="incomingLink" onclick="selectAuraLinkDirection('incoming')" style="text-decoration: none; color: black;"><span style="background:yellow;">⬋</span> incoming</a></li>`
+  ).appendTo("#legendDirection");
+  $(
+    `<li><a href="#" id="outgoingLink" onclick="selectAuraLinkDirection('outgoing')" style="text-decoration: none; color: black;"><span style="background:yellow;">⬈</span> outgoing</a></li>`
+  ).appendTo("#legendDirection");
 
   $("#graphbtntitle").hide();
   $("#groupbtntitle").hide();
@@ -109,7 +119,19 @@ function selectAuraNode(node, showDetails, focus) {
   const highlightNodes = new Set([...Object.keys(node.neighbors), node.id]);
   const highlightLinks = new Set();
   graphLinks.forEach((l) => {
-    if (l.source.id != node.id && l.target.id != node.id) {
+    if (auraLinkDirection.incoming && auraLinkDirection.outgoing) {
+      if (l.source.id != node.id && l.target.id != node.id) {
+        return;
+      }
+    } else if (auraLinkDirection.incoming) {
+      if (l.target.id != node.id) {
+        return;
+      }
+    } else if (auraLinkDirection.outgoing) {
+      if (l.source.id != node.id) {
+        return;
+      }
+    } else {
       return;
     }
     if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
@@ -127,6 +149,8 @@ function selectAuraNode(node, showDetails, focus) {
     .linkDirectionalArrowLength((l) =>
       highlightLinks.has(l) ? arrowLength : 1
     )
+    .linkLabel((l) => (highlightLinks.has(l) ? resetAuraLinksLabel(l) : ""))
+    .linkWidth((l) => (highlightLinks.has(l) ? resetAuraLinksWidth(l) : 0))
     .centerAt(node.x + 200, node.y)
     .zoom(1.2, 1000);
 
@@ -292,10 +316,11 @@ function resetAuraLinksWidth(l) {
 }
 
 function resetAuraLinksLabel(l) {
+  let label = "";
   const source = allNodes[l.source.id]?.name || l.source.id;
   const target = allNodes[l.target.id]?.name || l.target.id;
 
-  let label = `${source} -> ${target}`;
+  label += `${source} -> ${target}`;
   if (auraGraphView.energy) {
     label += ` energy: ${l.energy || 0}`;
   }
@@ -303,15 +328,16 @@ function resetAuraLinksLabel(l) {
     label += ` rating: ${l.rating || 0}`;
   }
 
-  const rl = auraLinks[`${l.target.id}:${l.source.id}`];
-
-  if (rl) {
-    label += `<br/>${target} -> ${source}`;
-    if (auraGraphView.energy) {
-      label += ` energy: ${rl.energy || 0}`;
-    }
-    if (auraGraphView.rating) {
-      label += ` rating: ${rl.rating || 0}`;
+  if (auraLinkDirection.incoming && auraLinkDirection.outgoing) {
+    const rl = auraLinks[`${l.target.id}:${l.source.id}`];
+    if (rl) {
+      label += `<br/>${target} -> ${source}`;
+      if (auraGraphView.energy) {
+        label += ` energy: ${rl.energy || 0}`;
+      }
+      if (auraGraphView.rating) {
+        label += ` rating: ${rl.rating || 0}`;
+      }
     }
   }
   return label;
@@ -334,9 +360,7 @@ async function drawAuraGraph(nodes, links) {
     .linkTarget("target")
     .linkLabel(resetAuraLinksLabel)
     .onNodeClick((node) => {
-      if (!node.selected) {
-        selectAuraNode(node, true);
-      }
+      selectAuraNode(node, true);
     })
     .onBackgroundClick((evt) => {
       for (const id in graphNodes) {
@@ -399,4 +423,20 @@ async function selectAuraView(type) {
   }
 
   await drawAuraGraph(nodes, links);
+}
+
+async function selectAuraLinkDirection(type) {
+  auraLinkDirection[type] = !auraLinkDirection[type];
+  $("#incomingLink").css(
+    "color",
+    auraLinkDirection.incoming ? "black" : "#d49a9a"
+  );
+  $("#outgoingLink").css(
+    "color",
+    auraLinkDirection.outgoing ? "black" : "#d49a9a"
+  );
+
+  if (selectedNode) {
+    selectAuraNode(selectedNode, true);
+  }
 }
