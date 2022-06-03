@@ -3,13 +3,15 @@ const energyLinkColor = "blue";
 const ratedNodeColor = "orange";
 const energyTransferedNodeColor = "blue";
 
+const auraGraphView = { rating: true, energy: true };
+
 function prepare() {
   $("#legendNodes").empty();
   $(
-    `<li><a href="#" id="ratingNodes" onclick="drawAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`
+    `<li><a href="#" id="ratingNodes" onclick="selectAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`
   ).appendTo("#legendNodes");
   $(
-    `<li><a href="#" id="energyNodes" onclick="drawAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`
+    `<li><a href="#" id="energyNodes" onclick="selectAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`
   ).appendTo("#legendNodes");
 
   $("#legendLinks").empty();
@@ -89,8 +91,8 @@ function selectAuraNode(node, showDetails, focus) {
       )
     );
   Object.keys(node.neighbors).forEach((n) => {
-    const l = linksMap[`${node.id}:${n}`];
-    const rl = linksMap[`${n}:${node.id}`];
+    const l = auraLinks[`${node.id}:${n}`];
+    const rl = auraLinks[`${n}:${node.id}`];
     if (!l && !rl) {
       return;
     }
@@ -117,9 +119,11 @@ function selectAuraNode(node, showDetails, focus) {
 
   Graph.linkVisibility((l) => (highlightLinks.has(l) ? true : false))
     .nodeColor((n) =>
-      highlightNodes.has(n.id) ? resetNodesColor(n) : resetNodesColor(n, true)
+      highlightNodes.has(n.id) ? resetAuraNodesColor(n) : fadedColor
     )
-    .linkColor((l) => (highlightLinks.has(l) ? resetLinksColor(l) : fadedColor))
+    .linkColor((l) =>
+      highlightLinks.has(l) ? resetAuraLinksColor(l) : fadedColor
+    )
     .linkDirectionalArrowLength((l) =>
       highlightLinks.has(l) ? arrowLength : 1
     )
@@ -135,40 +139,60 @@ async function getAuraData(fname) {
     cache: false,
   });
 
-  graphNodes = {};
-  graphLinks = [];
-  linksMap = {};
+  auraNodes = {};
+  auraLinks = {};
 
   ratings.forEach((r) => {
-    allNodes[r.fromBrightId]["outgoingRatings"] =
-      (allNodes[r.fromBrightId]["outgoingRatings"] || 0) + 1;
-    allNodes[r.toBrightId]["incomingRatings"] =
-      (allNodes[r.toBrightId]["incomingRatings"] || 0) + 1;
-    allNodes[r.fromBrightId]["givenRatings"] =
-      (allNodes[r.fromBrightId]["givenRatings"] || 0) + parseFloat(r.rating);
-    allNodes[r.toBrightId]["rating"] =
-      (allNodes[r.toBrightId]["rating"] || 0) + parseFloat(r.rating);
+    if (!(r.fromBrightId in auraNodes)) {
+      auraNodes[r.fromBrightId] = {
+        ...allNodes[r.fromBrightId],
+        incomingRatings: 0,
+        outgoingRatings: 0,
+        givenRatings: 0,
+        rating: 0,
+        incomingEnergies: 0,
+        outgoingEnergies: 0,
+      };
+    }
 
-    linksMap[`${r.fromBrightId}:${r.toBrightId}`] = {
+    if (!(r.toBrightId in auraNodes)) {
+      auraNodes[r.toBrightId] = {
+        ...allNodes[r.toBrightId],
+        incomingRatings: 0,
+        outgoingRatings: 0,
+        givenRatings: 0,
+        rating: 0,
+        incomingEnergies: 0,
+        outgoingEnergies: 0,
+      };
+    }
+
+    auraNodes[r.fromBrightId]["outgoingRatings"] += 1;
+    auraNodes[r.toBrightId]["incomingRatings"] += 1;
+    auraNodes[r.fromBrightId]["givenRatings"] += parseFloat(r.rating);
+    auraNodes[r.toBrightId]["rating"] += parseFloat(r.rating);
+
+    auraLinks[`${r.fromBrightId}:${r.toBrightId}`] = {
       source: r.fromBrightId,
       target: r.toBrightId,
       history: [[new Date(r.createdAt).getTime(), "already known"]],
-      aColor: ratingLinkColor,
-      width: 1,
+      ratingWidth: ((parseFloat(r.rating) - 0) * (5 - 1)) / (4 - 0) + 1,
       rating: parseFloat(r.rating),
     };
+  });
 
-    graphNodes[r.fromBrightId] = {
-      ...allNodes[r.fromBrightId],
-      aColor: ratedNodeColor,
-      val: 1,
-    };
-
-    graphNodes[r.toBrightId] = {
-      ...allNodes[r.toBrightId],
-      aColor: ratedNodeColor,
-      val: 1,
-    };
+  const ratingAmounts = [];
+  Object.values(auraNodes).forEach((n) => {
+    if (n.rating == 0) {
+      return;
+    }
+    ratingAmounts.push(n.rating);
+  });
+  const maxRatings = Math.max(...ratingAmounts);
+  const minRatings = Math.min(...ratingAmounts);
+  Object.values(auraNodes).forEach((n) => {
+    auraNodes[n.id]["ratingVal"] =
+      ((n.rating - minRatings) * (10 - 1)) / (maxRatings - minRatings) + 1;
   });
 
   energyTransfers.forEach((et) => {
@@ -176,16 +200,13 @@ async function getAuraData(fname) {
       return;
     }
 
-    graphNodes[et.fromBrightId]["outgoingEnergies"] =
-      (graphNodes[et.fromBrightId]["outgoingEnergies"] || 0) + 1;
-    graphNodes[et.toBrightId]["incomingEnergies"] =
-      (graphNodes[et.toBrightId]["incomingEnergies"] || 0) + 1;
+    auraNodes[et.fromBrightId]["outgoingEnergies"] += 1;
+    auraNodes[et.toBrightId]["incomingEnergies"] += 1;
 
-    linksMap[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(
-      linksMap[`${et.fromBrightId}:${et.toBrightId}`],
+    auraLinks[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(
+      auraLinks[`${et.fromBrightId}:${et.toBrightId}`],
       {
-        aColor: energyLinkColor,
-        width: ((et.amount - 1) * (5 - 2)) / (100 - 1) + 2,
+        energyWidth: ((et.amount - 1) * (5 - 2)) / (100 - 1) + 2,
         energy: et.amount,
       }
     );
@@ -204,9 +225,9 @@ async function getAuraData(fname) {
     if (e.amount == 0) {
       return;
     }
-    graphNodes[e.brightId] = Object.assign(graphNodes[e.brightId], {
+    auraNodes[e.brightId] = Object.assign(auraNodes[e.brightId], {
       aColor: energyTransferedNodeColor,
-      val:
+      energyVal:
         ((e.amount - minEnergies) * (10 - 2)) / (maxEnergies - minEnergies) + 2,
       energy: e.amount,
     });
@@ -222,58 +243,114 @@ async function drawAura(fname) {
 
   await getAuraData(fname);
 
-  graphLinks = Object.values(linksMap);
-  const data = { nodes: Object.values(graphNodes), links: graphLinks };
+  await drawAuraGraph(auraNodes, auraLinks);
+}
+
+function resetAuraNodesColor(n) {
+  if (auraGraphView.rating && auraGraphView.energy) {
+    return n.energy > 0 ? energyTransferedNodeColor : ratedNodeColor;
+  }
+  if (auraGraphView.rating) return ratedNodeColor;
+  if (auraGraphView.energy) return energyTransferedNodeColor;
+}
+
+function resetAuraNodesVal(n) {
+  if (auraGraphView.rating && auraGraphView.energy) {
+    return n.energyVal > 0 ? n.energyVal : 1;
+  }
+  if (auraGraphView.rating) return n.ratingVal;
+  if (auraGraphView.energy) return n.energyVal;
+}
+
+function resetAuraNodesLabel(n) {
+  let label = `${allNodes[n.id]?.name || n.id}`;
+  if (auraGraphView.energy) {
+    label += `<br/>energy: ${n.energy || 0}`;
+  }
+  if (auraGraphView.rating) {
+    label += `<br/>outgoing ratings: ${
+      n.outgoingRatings || 0
+    }<br/>incoming ratings: ${n.incomingRatings || 0}`;
+  }
+  return label;
+}
+
+function resetAuraLinksColor(l) {
+  if (auraGraphView.rating && auraGraphView.energy) {
+    return l.energy > 0 ? energyLinkColor : ratingLinkColor;
+  }
+  if (auraGraphView.rating) return ratingLinkColor;
+  if (auraGraphView.energy) return energyLinkColor;
+}
+
+function resetAuraLinksWidth(l) {
+  if (auraGraphView.rating && auraGraphView.energy) {
+    return l.energyWidth > 0 ? l.energyWidth : 1;
+  }
+  if (auraGraphView.rating) return l.ratingWidth;
+  if (auraGraphView.energy) return l.energyWidth;
+}
+
+function resetAuraLinksLabel(l) {
+  const source = allNodes[l.source.id]?.name || l.source.id;
+  const target = allNodes[l.target.id]?.name || l.target.id;
+
+  let label = `${source} -> ${target}`;
+  if (auraGraphView.energy) {
+    label += ` energy: ${l.energy || 0}`;
+  }
+  if (auraGraphView.rating) {
+    label += ` rating: ${l.rating || 0}`;
+  }
+
+  const rl = auraLinks[`${l.target.id}:${l.source.id}`];
+
+  if (rl) {
+    label += `<br/>${target} -> ${source}`;
+    if (auraGraphView.energy) {
+      label += ` energy: ${rl.energy || 0}`;
+    }
+    if (auraGraphView.rating) {
+      label += ` rating: ${rl.rating || 0}`;
+    }
+  }
+  return label;
+}
+
+async function drawAuraGraph(nodes, links) {
+  graphNodes = nodes;
+  graphLinks = Object.values(links);
+  const data = { nodes: Object.values(nodes), links: Object.values(links) };
 
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem);
-  Graph.nodeColor((n) => n.aColor)
+  Graph.nodeColor(resetAuraNodesColor)
     .graphData(data)
     .nodeId("id")
-    .nodeVal((n) => n.val)
-    .nodeLabel(
-      (n) =>
-        `${allNodes[n.id]?.name || n.id}<br/>energy: ${
-          n.energy || 0
-        }<br/>outgoing ratings: ${
-          n.outgoingRatings || 0
-        }<br/>incoming ratings: ${n.incomingRatings || 0}`
-    )
+    .nodeVal(resetAuraNodesVal)
+    .nodeLabel(resetAuraNodesLabel)
     .linkSource("source")
     .linkTarget("target")
-    .linkLabel((link) => {
-      const source = allNodes[link.source.id]?.name || link.source.id;
-      const target = allNodes[link.target.id]?.name || link.target.id;
-      const res = `${source} -> ${target} rank: ${link.rating || 0} energy: ${
-        link.energy || 0
-      }`;
-      const rlink = linksMap[`${link.target.id}:${link.source.id}`];
-      return rlink
-        ? `${res}<br/>${target} -> ${source}  rank: ${
-            rlink.rating || 0
-          } energy: ${rlink.energy || 0}`
-        : res;
-    })
+    .linkLabel(resetAuraLinksLabel)
     .onNodeClick((node) => {
       if (!node.selected) {
         selectAuraNode(node, true);
       }
-      Graph.linkWidth((l) => l.width).linkVisibility(true);
     })
     .onBackgroundClick((evt) => {
       for (const id in graphNodes) {
         graphNodes[id].selected = false;
       }
       selectedNode = undefined;
-      Graph.nodeColor((n) => n.aColor)
+      Graph.nodeColor(resetAuraNodesColor)
         .linkVisibility(true)
-        .linkColor((l) => l.aColor)
+        .linkColor(resetAuraLinksColor)
         .linkDirectionalArrowLength(arrowLength);
     })
     .nodeCanvasObjectMode(() => "after")
     .nodeCanvasObject((n, ctx) => {
-      let size = 7 * n.val ** 0.5;
+      let size = 7 * (n.energyVal || 1) ** 0.5;
       if (n.img) {
         ctx.lineWidth = 0;
         ctx.save();
@@ -290,67 +367,36 @@ async function drawAura(fname) {
         ctx.restore();
       }
     })
-    .linkColor((l) => l.aColor)
-    .linkWidth((l) => l.width)
+    .linkColor(resetAuraLinksColor)
+    .linkWidth(resetAuraLinksWidth)
     .linkVisibility(true)
     .linkDirectionalArrowLength(arrowLength)
     .cooldownTime(10000)
     .zoom(1, 2000);
 }
 
-const auraGraphView = { rating: true, energy: true };
-async function drawAuraView(type) {
+async function selectAuraView(type) {
   auraGraphView[type] = !auraGraphView[type];
   $("#ratingNodes").css("color", auraGraphView.rating ? "black" : "#d49a9a");
   $("#energyNodes").css("color", auraGraphView.energy ? "black" : "#d49a9a");
 
-  Graph.nodeVisibility((n) =>
-    auraGraphView.energy && n.energy
-      ? true
-      : auraGraphView.rating && n.rating
-      ? true
-      : false
-  )
-    .linkVisibility((l) =>
-      auraGraphView.energy && l.energy
-        ? true
-        : auraGraphView.rating && l.rating
-        ? true
-        : false
-    )
-    .nodeLabel((n) => {
-      let label = `${allNodes[n.id]?.name || n.id}`;
-      if (auraGraphView.energy && n.energy)
-        label += `<br/>energy: ${n.energy || 0}`;
-      if (auraGraphView.rating && n.rating)
-        label += `<br/>outgoing ratings: ${
-          n.outgoingRatings || 0
-        }<br/>incoming ratings: ${n.incomingRatings || 0}`;
-      return label;
-    })
-    .linkLabel((l) => {
-      const source = allNodes[l.source.id]?.name || l.source.id;
-      const target = allNodes[l.target.id]?.name || l.target.id;
-      let label = `${source} -> ${target}`;
-      if (auraGraphView.energy && l.energy)
-        label += ` energy: ${l.energy || 0}`;
-      if (auraGraphView.rating && l.rating) label += ` rank: ${l.rating || 0}`;
-      const rl = linksMap[`${l.target.id}:${l.source.id}`];
-      if (rl) label += `<br/>${target} -> ${source}`;
-      if (rl && auraGraphView.energy && l.energy)
-        label += ` energy: ${rl.energy || 0}`;
-      if (rl && auraGraphView.rating && l.rating)
-        label += ` rank: ${rl.rating || 0}`;
-      return label;
-    })
-    .nodeColor((n) => {
-      if (auraGraphView.rating && auraGraphView.energy) return n.aColor;
-      if (auraGraphView.rating) return ratedNodeColor;
-      if (auraGraphView.energy) return energyTransferedNodeColor;
-    })
-    .linkColor((l) => {
-      if (auraGraphView.rating && auraGraphView.energy) return l.aColor;
-      if (auraGraphView.rating) return ratingLinkColor;
-      if (auraGraphView.energy) return energyLinkColor;
-    });
+  const nodes = {};
+  const links = {};
+
+  for (const key in auraLinks) {
+    const l = auraLinks[key];
+    if (auraGraphView.energy && l.energy) {
+      links[key] = l;
+      nodes[l.source.id] = auraNodes[l.source.id];
+      nodes[l.target.id] = auraNodes[l.target.id];
+    }
+
+    if (auraGraphView.rating && l.rating) {
+      links[key] = l;
+      nodes[l.source.id] = auraNodes[l.source.id];
+      nodes[l.target.id] = auraNodes[l.target.id];
+    }
+  }
+
+  await drawAuraGraph(nodes, links);
 }
