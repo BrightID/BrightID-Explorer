@@ -816,5 +816,5 @@ $(document).ready(function () {
       $("#wrapper").addClass("toggled");
     }
   });
-  $("#drawSubgraphBtn").click(drawGroupSubgraph);
+  $("#drawGroupSubgraphBtn").click(drawGroupSubgraph);
 });

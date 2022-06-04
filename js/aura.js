@@ -35,7 +35,6 @@ function prepare() {
   $("#graphbtntitle").hide();
   $("#groupbtntitle").hide();
   $("#statisticsbtntitle").hide();
-  $("#usersillustratorbtntitle").hide();
   $("#starillustratorbtntitle").hide();
   $("#seedData").hide();
   $("#neighborsContainer").hide();
@@ -158,7 +157,7 @@ function selectAuraNode(node, showDetails, focus) {
 }
 
 async function getAuraData(fname) {
-  const { energyTransfers, ratings, energy } = await $.ajax({
+  const { energyTransfers, ratings, energy, activityLog } = await $.ajax({
     url: `./${fname}.json`,
     cache: false,
   });
@@ -199,10 +198,17 @@ async function getAuraData(fname) {
     auraLinks[`${r.fromBrightId}:${r.toBrightId}`] = {
       source: r.fromBrightId,
       target: r.toBrightId,
-      history: [[new Date(r.createdAt).getTime(), "already known"]],
+      history: [],
       ratingWidth: ((parseFloat(r.rating) - 0) * (5 - 1)) / (4 - 0) + 1,
       rating: parseFloat(r.rating),
     };
+  });
+
+  activityLog.forEach((al) => {
+    auraLinks[`${al.fromBrightId}:${al.toBrightId}`]["history"].push([
+      new Date(al.timestamp).getTime(),
+      al.action.action,
+    ]);
   });
 
   const ratingAmounts = [];

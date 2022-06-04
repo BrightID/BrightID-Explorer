@@ -84,7 +84,11 @@ function player() {
 
   function stop() {
     clearTimeout(task);
-    drawGraph();
+    if (auraMode) {
+      drawAuraGraph(auraNodes, auraLinks);
+    } else {
+      drawGraph();
+    }
     $("#date").html("&nbsp;");
     step = 0;
     return true;
