@@ -112,15 +112,12 @@ const loadPersonalData = async () => {
 const createImportQR = async () => {
   const array = CryptoJS.lib.WordArray.random(16);
   const aesKey = b64ToUrlSafeB64(CryptoJS.enc.Base64.stringify(array));
-  console.log(`aesKey: ${aesKey}`);
   const channelId = hash(aesKey);
   console.log(`channelId: ${channelId}`);
   const { publicKey, secretKey } = await nacl.sign.keyPair();
   const b64PublicKey = base64js.fromByteArray(publicKey);
   localforage.setItem(`explorer_signing_key`, b64PublicKey);
-  console.log(`b64PublicKey: ${b64PublicKey}`);
   const b64SecretKey = base64js.fromByteArray(secretKey);
-  console.log(`b64SecretKey: ${b64SecretKey}`);
   localforage.setItem(`explorer_secret_key`, b64PublicKey);
   const data = {
     data: JSON.stringify({
