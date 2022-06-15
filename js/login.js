@@ -216,6 +216,11 @@ const readChannel = (data) => {
 
     channels[channelId]["requested"].add(dataId);
 
+    if (dataId == "data") {
+      channels[channelId]["received"].add(dataId);
+      continue;
+    }
+
     if (
       !dataId.startsWith("sig_completed_") &&
       !dataId.startsWith("sig_userinfo_") &&
@@ -227,11 +232,6 @@ const readChannel = (data) => {
         `received ${channels[channelId]["received"].size} of ${channels[channelId]["dataIds"].size}`
       );
       removeData(`/${channelId}/${dataId}`);
-      continue;
-    }
-
-    if (dataId == "data") {
-      channels[channelId]["received"].add(dataId);
       continue;
     }
 
@@ -299,6 +299,7 @@ const checkChannelState = (data) => {
       state: "waiting",
     };
   }
+
   if (isDownloadCompleted(channelId)) {
     channels[channelId]["state"] = "finished";
     clearInterval(checkChannelStateIntervalID);
