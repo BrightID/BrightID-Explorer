@@ -282,11 +282,28 @@ const readChannel = (data) => {
 const isDownloadCompleted = (channelId) => {
   const dataIds = channels[channelId]["dataIds"];
   const received = channels[channelId]["received"];
-  return (
+  let completed =
     channels[channelId]["state"] == "uploadCompleted" &&
     dataIds.size === received.size &&
-    [...dataIds].every((id) => received.has(id))
-  );
+    [...dataIds].every((id) => received.has(id));
+
+  if (
+    channels[channelId]["state"] == "downloading" &&
+    dataIds.size == channels[channelId]["previousRound"]["dataIdsSize"] &&
+    received.size == channels[channelId]["previousRound"]["receivedSize"]
+  ) {
+    channels[channelId].attempts += 1;
+  } else {
+    channels[channelId]["previousRound"]["dataIdsSize"] = dataIds.size;
+    channels[channelId]["previousRound"]["receivedSize"] = received.size;
+    channels[channelId]["attempts"] = 0;
+  }
+
+  if (channels[channelId].attempts > 12) {
+    completed = true;
+  }
+
+  return completed;
 };
 
 const checkChannelState = (data) => {
@@ -297,6 +314,8 @@ const checkChannelState = (data) => {
       requested: new Set(),
       received: new Set(),
       state: "waiting",
+      previousRound: { dataIdsSize: 0, receivedSize: 0 },
+      attempts: 0,
     };
   }
 
