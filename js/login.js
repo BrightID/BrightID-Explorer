@@ -285,7 +285,7 @@ const isDownloadCompleted = (channelId) => {
     [...dataIds].every((id) => received.has(id));
 
   if (
-    channels[channelId]["state"] == "downloading" &&
+    channels[channelId]["state"] == "uploadCompleted" &&
     dataIds.size == channels[channelId]["previousRound"]["dataIdsSize"] &&
     received.size == channels[channelId]["previousRound"]["receivedSize"]
   ) {
