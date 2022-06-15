@@ -301,6 +301,7 @@ const isDownloadCompleted = (channelId) => {
 
   if (channels[channelId].attempts > 12) {
     completed = true;
+    alert("Warning:", "It seems some data are missed.");
   }
 
   return completed;
