@@ -9,10 +9,11 @@ function drawGraph() {
   updateGraphData(levelIndex);
   updateLegend(levelIndex);
   const predefinedPosition = $("#predefinedPosition").is(":checked");
-  if (document.URL.indexOf("aura=") >= 0) {
+  const req = new URL(window.location);
+  if (req.searchParams.get("aura")) {
     auraMode = true;
     setPosition("noPositions");
-    setTimeout(() => drawAura(document.URL.split("aura=")[1]), 1000);
+    setTimeout(() => drawAura(req.searchParams.get("aura")));
   } else if ($("#3dBtn").is(":checked")) {
     auraMode = false;
     setPosition(predefinedPosition ? "3d" : "noPositions");
@@ -339,6 +340,12 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
         !autoLoginDone
       ) {
         loadPersonalData();
+      }
+      const req = new URL(window.location);
+      const centerUser = req.searchParams.get("u");
+      if (!FocusedOnCenterNode && centerUser) {
+        selectNode(graphNodes[centerUser], true, true);
+        FocusedOnCenterNode = true;
       }
     });
   Graph.moving = false;

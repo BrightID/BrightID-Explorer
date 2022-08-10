@@ -21,6 +21,7 @@ var selectedVerification = "Bitu";
 var selectedLevels;
 var boldMood = 0;
 var auraMode = false;
+var FocusedOnCenterNode = false;
 
 var areaPoints = [];
 $(document).keyup(function (e) {

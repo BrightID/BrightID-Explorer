@@ -397,6 +397,14 @@ async function drawAuraGraph(nodes, links) {
         ctx.restore();
       }
     })
+    .onEngineStop(async () => {
+      const req = new URL(window.location);
+      const centerUser = req.searchParams.get("u");
+      if (!FocusedOnCenterNode && centerUser) {
+        selectAuraNode(graphNodes[centerUser], true, true);
+        FocusedOnCenterNode = true;
+      }
+    })
     .linkColor(resetAuraLinksColor)
     .linkWidth(resetAuraLinksWidth)
     .linkVisibility(true)

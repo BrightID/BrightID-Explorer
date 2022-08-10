@@ -104,8 +104,8 @@ const loadPersonalData = async () => {
 
   $("#logoutForm").show();
 
-  if (!auraMode) {
-    selectNode(user, true);
+  if (!auraMode && !FocusedOnCenterNode) {
+    selectNode(user, true, true);
   }
 };
 
