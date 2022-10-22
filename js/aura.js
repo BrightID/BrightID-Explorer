@@ -1,26 +1,43 @@
-const ratingLinkColor = "orange";
+const gold = "#FFD700";
+const silver = "#A6ACAF";
+const bronze = "#CD7F32";
+const red = "#FF0000";
+const gray = "#BB8FCE";
+const honestyLinkColor = "orange";
 const energyLinkColor = "blue";
-const ratedNodeColor = "orange";
-const energyTransferedNodeColor = "blue";
 
-const auraGraphView = { rating: true, energy: true };
+const auraGraphView = { honesty: true, energy: true };
 const auraLinkDirection = { incoming: true, outgoing: true };
+var allNum = goldNum = silverNum = bronzeNum = susNum = 0;
+
+function formatId(id) {
+  return `${id.slice(0, 4)}...${id.slice(-4)}`;
+}
 
 function prepare() {
   $("#legendNodes").empty();
-  $(
-    `<li><a href="#" id="ratingNodes" onclick="selectAuraView('rating')" style="text-decoration: none; color: black;"><span style="background:${ratedNodeColor};"></span>rating</a></li>`
-  ).appendTo("#legendNodes");
-  $(
-    `<li><a href="#" id="energyNodes" onclick="selectAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyTransferedNodeColor};"></span>energy transfer</a></li>`
-  ).appendTo("#legendNodes");
+  $(`<li><span style="background:${gold};"></span>Gold</li>`).appendTo(
+    "#legendNodes"
+  );
+  $(`<li><span style="background:${silver};"></span>Silver</li>`).appendTo(
+    "#legendNodes"
+  );
+  $(`<li><span style="background:${bronze};"></span>Bronze</li>`).appendTo(
+    "#legendNodes"
+  );
+  $(`<li><span style="background:${red};"></span>Suspicious</li>`).appendTo(
+    "#legendNodes"
+  );
+  $(`<li><span style="background:${gray};"></span>Unverified</li>`).appendTo(
+    "#legendNodes"
+  );
 
   $("#legendLinks").empty();
   $(
-    `<li><span style="background:${ratingLinkColor};"></span>rating</li>`
+    `<li><a href="#" id="ratingLinks" onclick="selectAuraView('honesty')" style="text-decoration: none; color: black;"><span style="background:${honestyLinkColor};"></span>honesty</a></li>`
   ).appendTo("#legendLinks");
   $(
-    `<li><span style="background:${energyLinkColor};"></span>energy transfer</li>`
+    `<li><a href="#" id="energyLinks" onclick="selectAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyLinkColor};"></span>energy transfer</a></li>`
   ).appendTo("#legendLinks");
 
   $("#legendDirectionContainar").show();
@@ -32,6 +49,7 @@ function prepare() {
     `<li><a href="#" id="outgoingLink" onclick="selectAuraLinkDirection('outgoing')" style="text-decoration: none; color: black;"><span style="background:yellow;">⬈</span> outgoing</a></li>`
   ).appendTo("#legendDirection");
 
+  $("#aurastatisticsbtntitle").show();
   $("#graphbtntitle").hide();
   $("#groupbtntitle").hide();
   $("#statisticsbtntitle").hide();
@@ -77,10 +95,22 @@ function selectAuraNode(node, showDetails, focus) {
   $("#reportedOut").html(node.statistics["outbound"]["reported"]);
   $("#filteredIn").html(node.statistics["inbound"]["filtered"]);
   $("#filteredOut").html(node.statistics["outbound"]["filtered"]);
-  $("#energyIn").html(node.incomingEnergies || 0);
-  $("#energyOut").html(node.outgoingEnergies || 0);
-  $("#ratingIn").html(node.incomingRatings || 0);
-  $("#ratingOut").html(node.outgoingRatings || 0);
+  $("#energyIn").html(
+    `${parseInt(node.inEnergy).toLocaleString("en-US")} (${
+      node.inEnergyNum || 0
+    })`
+  );
+  $("#energyOut").html(
+    `${parseInt(node.outEnergy).toLocaleString("en-US")} (${
+      node.outEnergyNum || 0
+    })`
+  );
+  $("#honestyIn").html(
+    `${parseInt(node.inHonesty)} (${node.inHonestyNum || 0})`
+  );
+  $("#honestyOut").html(
+    `${parseInt(node.outHonesty)} (${node.outHonestyNum || 0})`
+  );
 
   $("#userImage").attr("src", node?.img?.src || "");
 
@@ -95,7 +125,7 @@ function selectAuraNode(node, showDetails, focus) {
     .empty()
     .append(
       new Option(
-        "connection ↭ energy-out | rating-out ⬈ energy-in | rating-in ⬋",
+        "connection ↭ energy-out | honesty-out ⬈ energy-in | honesty-in ⬋",
         "none"
       )
     );
@@ -105,10 +135,12 @@ function selectAuraNode(node, showDetails, focus) {
     if (!l && !rl) {
       return;
     }
-    const connText = `${allNodes[n]?.name || n} ↭ ${
-      l ? l.energy || "_" : "_"
-    } | ${l ? l.rating || "_" : "_"} ⬈ ${rl ? rl.energy || "_" : "_"} | ${
-      rl ? rl.rating || "_" : "_"
+    const connText = `${allNodes[n]?.name || formatId(n)} ↭ 
+    ${l ? parseInt(l.energy || 0).toLocaleString("en-US") : "_"} | ${
+      l ? l.honesty || 0 : "_"
+    } ⬈ 
+    ${rl ? parseInt(rl.energy || 0).toLocaleString("en-US") : "_"} | ${
+      rl ? rl.honesty || 0 : "_"
     } ⬋`;
     $("#auraConnections").append(new Option(connText, n));
   });
@@ -156,8 +188,65 @@ function selectAuraNode(node, showDetails, focus) {
   openCollapsible("userDetails", true);
 }
 
+function placeComment() {
+  console.log("nodes:", selectedNodes);
+  const message = document.getElementById("nodesComment").value;
+  console.log("message:", message);
+}
+
+function selectAuraNodes(nodes) {
+  selectedNodes = nodes;
+  $("#userDetailsContent").show();
+  $("#seedData").hide();
+  $("#userNameContainer").hide();
+  $("#userRecoveryContainer").hide();
+  $("#userDetailsPlaceHolder").hide();
+  $("#neighborsContainer").hide();
+  $("#neighborContainer").hide();
+
+  const highlightNodes = new Set();
+  sumX = 0;
+  sumY = 0;
+  nodes.forEach((id) => {
+    highlightNodes.add(id);
+  });
+
+  const highlightLinks = new Set();
+  Object.values(auraLinks).forEach((l) => {
+    if (highlightNodes.has(l.source.id) && highlightNodes.has(l.target.id)) {
+      highlightLinks.add(l);
+    }
+  });
+
+  const selectedNodesText = nodes.join("\n");
+  alert(
+    "Submit Comment:",
+    `You selected ${nodes.length} nodes.
+    <br>
+    Please submit your comment.
+    <br>
+    <div class="text-center">
+      <textarea id="nodesComment" name="nodesComment"></textarea>
+      <br>
+      <button id="placeCommentBtn" class="btn btn-primary" onclick="placeComment()">
+        Submit
+      </button>
+    </div>`
+  );
+
+  Graph.linkVisibility((l) => (highlightLinks.has(l) ? true : false))
+    .nodeColor((n) => {
+      if (highlightNodes.has(n.id)) return resetAuraNodesColor(n);
+      else return resetNodesColor(n, true);
+    })
+    .linkDirectionalArrowLength((l) => (highlightLinks.has(l) ? 6 : 2))
+    .linkColor((l) =>
+      highlightLinks.has(l) ? resetAuraLinksColor(l) : fadedColor
+    );
+}
+
 async function getAuraData(fname) {
-  const { energyTransfers, ratings, energy, activityLog } = await $.ajax({
+  const { nodes, links } = await $.ajax({
     url: `./${fname}.json`,
     cache: false,
   });
@@ -165,101 +254,71 @@ async function getAuraData(fname) {
   auraNodes = {};
   auraLinks = {};
 
-  ratings.forEach((r) => {
-    if (!(r.fromBrightId in auraNodes)) {
-      auraNodes[r.fromBrightId] = {
-        ...allNodes[r.fromBrightId],
-        incomingRatings: 0,
-        outgoingRatings: 0,
-        givenRatings: 0,
-        rating: 0,
-        incomingEnergies: 0,
-        outgoingEnergies: 0,
-      };
+  nodes.forEach((n) => {
+    // Skip if node data doesn't exist in the main graph, it happens for the newly joined nodes to the BrightID.
+    if (!(n.id in allNodes)) {
+      return;
     }
 
-    if (!(r.toBrightId in auraNodes)) {
-      auraNodes[r.toBrightId] = {
-        ...allNodes[r.toBrightId],
-        incomingRatings: 0,
-        outgoingRatings: 0,
-        givenRatings: 0,
-        rating: 0,
-        incomingEnergies: 0,
-        outgoingEnergies: 0,
-      };
+    auraNodes[n.id] = Object.assign(allNodes[n.id], n);
+
+    allNum += 1;
+    if (n.aura_level == "Gold") goldNum += 1;
+    else if (n.aura_level == "Silver") silverNum += 1;
+    else if (n.aura_level == "Bronze") bronzeNum += 1;
+    else if (n.aura_level == "Sus") susNum += 1;
+  });
+
+  let energies = [];
+  links.forEach((l) => {
+    if (l.energy > 0) {
+      energies.push(l.energy);
+    }
+  });
+  let maxEnergy = Math.max(...energies);
+  let minEnergy = Math.min(...energies);
+
+  links.forEach((l) => {
+    if (!(l.source in allNodes) || !(l.target in allNodes)) {
+      return;
     }
 
-    auraNodes[r.fromBrightId]["outgoingRatings"] += 1;
-    auraNodes[r.toBrightId]["incomingRatings"] += 1;
-    auraNodes[r.fromBrightId]["givenRatings"] += parseFloat(r.rating);
-    auraNodes[r.toBrightId]["rating"] += parseFloat(r.rating);
-
-    auraLinks[`${r.fromBrightId}:${r.toBrightId}`] = {
-      source: r.fromBrightId,
-      target: r.toBrightId,
-      history: [],
-      ratingWidth: ((parseFloat(r.rating) - 0) * (5 - 1)) / (4 - 0) + 1,
-      rating: parseFloat(r.rating),
-    };
+    auraLinks[`${l.source}:${l.target}`] = l;
+    auraLinks[`${l.source}:${l.target}`]["honestyWidth"] =
+      ((parseFloat(l.honesty) - 0) * (5 - 1)) / (4 - 0) + 1;
+    if (l.energy > 0) {
+      auraLinks[`${l.source}:${l.target}`]["energyWidth"] =
+        ((l.energy - minEnergy) * (5 - 2)) / (maxEnergy - minEnergy) + 2;
+    }
   });
 
-  activityLog.forEach((al) => {
-    auraLinks[`${al.fromBrightId}:${al.toBrightId}`]["history"].push([
-      new Date(al.timestamp).getTime(),
-      al.action.action,
-    ]);
-  });
-
-  const ratingAmounts = [];
+  const honesties = [];
+  energies = [];
   Object.values(auraNodes).forEach((n) => {
-    if (n.rating == 0) {
-      return;
+    if (n.inHonesty != 0) {
+      honesties.push(n.inHonesty);
     }
-    ratingAmounts.push(n.rating);
+    if (n.energy != 0) {
+      energies.push(n.energy);
+    }
   });
-  const maxRatings = Math.max(...ratingAmounts);
-  const minRatings = Math.min(...ratingAmounts);
+
+  const maxHonesty = Math.max(...honesties);
+  const minHonesty = Math.min(...honesties);
+
+  maxEnergy = Math.max(...energies);
+  minEnergy = Math.min(...energies);
+
   Object.values(auraNodes).forEach((n) => {
-    auraNodes[n.id]["ratingVal"] =
-      ((n.rating - minRatings) * (10 - 1)) / (maxRatings - minRatings) + 1;
-  });
+    auraNodes[n.id]["honestyVal"] =
+      ((n.inHonesty - minHonesty) * (10 - 1)) / (maxHonesty - minHonesty) + 1;
 
-  energyTransfers.forEach((et) => {
-    if (et.amount == 0) {
-      return;
-    }
-
-    auraNodes[et.fromBrightId]["outgoingEnergies"] += 1;
-    auraNodes[et.toBrightId]["incomingEnergies"] += 1;
-
-    auraLinks[`${et.fromBrightId}:${et.toBrightId}`] = Object.assign(
-      auraLinks[`${et.fromBrightId}:${et.toBrightId}`],
-      {
-        energyWidth: ((et.amount - 1) * (5 - 2)) / (100 - 1) + 2,
-        energy: et.amount,
-      }
-    );
-  });
-
-  const energies = [];
-  energy.forEach((e) => {
-    if (e.amount == 0) {
-      return;
-    }
-    energies.push(e.amount);
-  });
-  const maxEnergies = Math.max(...energies);
-  const minEnergies = Math.min(...energies);
-  energy.forEach((e) => {
-    if (e.amount == 0) {
-      return;
-    }
-    auraNodes[e.brightId] = Object.assign(auraNodes[e.brightId], {
-      aColor: energyTransferedNodeColor,
+    auraNodes[n.id] = Object.assign(auraNodes[n.id], {
+      honestyVal:
+        ((n.inHonesty - minHonesty) * (10 - 1)) / (maxHonesty - minHonesty) + 1,
+      aColor: resetAuraNodesColor(n),
       energyVal:
-        ((e.amount - minEnergies) * (10 - 2)) / (maxEnergies - minEnergies) + 2,
-      energy: e.amount,
+        ((n.energy - minEnergy) * (10 - 2)) / (maxEnergy - minEnergy) + 2,
     });
   });
 }
@@ -272,66 +331,78 @@ async function drawAura(fname) {
   }
 
   await getAuraData(fname);
+  $("#goldNum").html(goldNum);
+  $("#silverNum").html(silverNum);
+  $("#bronzeNum").html(bronzeNum);
+  $("#susNum").html(susNum);
+  $("#allNum").html(allNum);
 
   await drawAuraGraph(auraNodes, auraLinks);
 }
 
 function resetAuraNodesColor(n) {
-  if (auraGraphView.rating && auraGraphView.energy) {
-    return n.energy > 0 ? energyTransferedNodeColor : ratedNodeColor;
-  }
-  if (auraGraphView.rating) return ratedNodeColor;
-  if (auraGraphView.energy) return energyTransferedNodeColor;
+  if (n.aura_level == "Gold") return gold;
+  if (n.aura_level == "Silver") return silver;
+  if (n.aura_level == "Bronze") return bronze;
+  if (n.aura_level == "Sus") return red;
+  return gray;
 }
 
 function resetAuraNodesVal(n) {
-  if (auraGraphView.rating && auraGraphView.energy) {
+  if (auraGraphView.honesty && auraGraphView.energy) {
     return n.energyVal > 0 ? n.energyVal : 1;
   }
-  if (auraGraphView.rating) return n.ratingVal;
+  if (auraGraphView.honesty) return n.honestyVal;
   if (auraGraphView.energy) return n.energyVal;
 }
 
 function resetAuraNodesLabel(n) {
-  let label = `${allNodes[n.id]?.name || n.id}`;
+  let label = `${allNodes[n.id]?.name || formatId(n.id)}`;
+  label += `<br/>level: ${n.aura_level || "_"} <br/> score: ${parseInt(
+    n.aura_score || 0
+  ).toLocaleString("en-US")}`;
   if (auraGraphView.energy) {
-    label += `<br/>energy: ${n.energy || 0}`;
+    label += `<br/>energy: ${parseInt(n.energy || 0).toLocaleString(
+      "en-US"
+    )} (${n.inEnergyNum} ⬋ / ${n.outEnergyNum} ⬈)`;
   }
-  if (auraGraphView.rating) {
-    label += `<br/>outgoing ratings: ${
-      n.outgoingRatings || 0
-    }<br/>incoming ratings: ${n.incomingRatings || 0}`;
+  if (auraGraphView.honesty) {
+    label += `<br/>honesty: ${n.inHonesty || 0} (${n.inHonestyNum} ⬋ / ${
+      n.outHonestyNum
+    } ⬈)`;
   }
   return label;
 }
 
 function resetAuraLinksColor(l) {
-  if (auraGraphView.rating && auraGraphView.energy) {
-    return l.energy > 0 ? energyLinkColor : ratingLinkColor;
+  if (auraGraphView.honesty && auraGraphView.energy) {
+    return l.energy > 0 ? energyLinkColor : honestyLinkColor;
   }
-  if (auraGraphView.rating) return ratingLinkColor;
+  if (auraGraphView.honesty) return honestyLinkColor;
   if (auraGraphView.energy) return energyLinkColor;
 }
 
 function resetAuraLinksWidth(l) {
-  if (auraGraphView.rating && auraGraphView.energy) {
+  if (auraGraphView.honesty && auraGraphView.energy) {
     return l.energyWidth > 0 ? l.energyWidth : 1;
   }
-  if (auraGraphView.rating) return l.ratingWidth;
+  if (auraGraphView.honesty) return l.honestyWidth;
   if (auraGraphView.energy) return l.energyWidth;
 }
 
 function resetAuraLinksLabel(l) {
   let label = "";
-  const source = allNodes[l.source.id]?.name || l.source.id;
-  const target = allNodes[l.target.id]?.name || l.target.id;
+  const source = allNodes[l.source.id]?.name || formatId(l.source.id);
+  const target = allNodes[l.target.id]?.name || formatId(l.target.id);
 
   label += `${source} -> ${target}`;
   if (auraGraphView.energy) {
-    label += ` energy: ${l.energy || 0}`;
+    label += ` energy: ${parseInt(l.energy || 0).toLocaleString("en-US")} (${
+      l.allocation || 0
+    }%)`;
   }
-  if (auraGraphView.rating) {
-    label += ` rating: ${l.rating || 0}`;
+  if (auraGraphView.honesty) {
+    label += ` honesty: ${l.honesty || 0}`;
   }
 
   if (auraLinkDirection.incoming && auraLinkDirection.outgoing) {
@@ -339,10 +410,12 @@ function resetAuraLinksLabel(l) {
     if (rl) {
       label += `<br/>${target} -> ${source}`;
       if (auraGraphView.energy) {
-        label += ` energy: ${rl.energy || 0}`;
+        label += ` energy: ${parseInt(rl.energy || 0).toLocaleString(
+          "en-US"
+        )} (${rl.allocation || 0}%)`;
       }
-      if (auraGraphView.rating) {
-        label += ` rating: ${rl.rating || 0}`;
+      if (auraGraphView.honesty) {
+        label += ` honesty: ${rl.honesty || 0}`;
       }
     }
   }
@@ -369,6 +442,15 @@ async function drawAuraGraph(nodes, links) {
       selectAuraNode(node, true);
     })
     .onBackgroundClick((evt) => {
+      if (evt.shiftKey) {
+        Graph.pauseAnimation();
+        const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
+        var rect = document.getElementById("graphDiv").getBoundingClientRect();
+        drawCoordinates(p.x, p.y, 5 / Graph.zoom() ** 0.5);
+        areaPoints.push([p.x, p.y]);
+        return;
+      }
+
       for (const id in graphNodes) {
         graphNodes[id].selected = false;
       }
@@ -376,6 +458,8 @@ async function drawAuraGraph(nodes, links) {
       Graph.nodeColor(resetAuraNodesColor)
         .linkVisibility(true)
         .linkColor(resetAuraLinksColor)
+        .linkWidth(resetAuraLinksWidth)
+        .linkLabel(resetAuraLinksLabel)
         .linkDirectionalArrowLength(arrowLength);
     })
     .nodeCanvasObjectMode(() => "after")
@@ -415,8 +499,8 @@ async function drawAuraGraph(nodes, links) {
 
 async function selectAuraView(type) {
   auraGraphView[type] = !auraGraphView[type];
-  $("#ratingNodes").css("color", auraGraphView.rating ? "black" : "#d49a9a");
-  $("#energyNodes").css("color", auraGraphView.energy ? "black" : "#d49a9a");
+  $("#ratingLinks").css("color", auraGraphView.honesty ? "black" : "#d49a9a");
+  $("#energyLinks").css("color", auraGraphView.energy ? "black" : "#d49a9a");
 
   const nodes = {};
   const links = {};
@@ -429,7 +513,7 @@ async function selectAuraView(type) {
       nodes[l.target.id] = auraNodes[l.target.id];
     }
 
-    if (auraGraphView.rating && l.rating) {
+    if (auraGraphView.honesty && l.honesty) {
       links[key] = l;
       nodes[l.source.id] = auraNodes[l.source.id];
       nodes[l.target.id] = auraNodes[l.target.id];

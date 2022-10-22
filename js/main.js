@@ -25,21 +25,35 @@ var FocusedOnCenterNode = false;
 
 var areaPoints = [];
 $(document).keyup(function (e) {
-  if (e.keyCode != 17) {
+  if (e.keyCode != 16) {
     return;
   }
-  // clear area points from canvas
-  Graph.zoom(Graph.zoom());
+
   const nodes = [];
-  for (const id in allNodes) {
-    if (inside([allNodes[id].x, allNodes[id].y], areaPoints)) {
-      nodes.push(id);
+  if (auraMode) {
+    for (const id in auraNodes) {
+      if (inside([auraNodes[id].x, auraNodes[id].y], areaPoints)) {
+        nodes.push(id);
+      }
+    }
+    if (nodes.length > 0) {
+      selectAuraNodes(nodes);
+    }
+  } else {
+    for (const id in allNodes) {
+      if (inside([allNodes[id].x, allNodes[id].y], areaPoints)) {
+        nodes.push(id);
+      }
+    }
+    if (nodes.length > 0) {
+      selectNodes(nodes);
     }
   }
-  if (nodes.length > 0) {
-    selectNodes(nodes);
-  }
   areaPoints = [];
+
+  // clear area points from canvas
+  Graph.resumeAnimation();
+  Graph.zoom(Graph.zoom());
 });
 
 $(document).keydown(function (e) {

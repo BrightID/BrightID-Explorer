@@ -54,9 +54,9 @@
     <script src="//unpkg.com/force-graph"></script>
     <script src="//unpkg.com/3d-force-graph"></script>
     <script src="js/login.js?version=1660116542"></script>
-    <script src="js/main.js?version=1660116542"></script>
-    <script src="js/graphs.js?version=1660116542"></script>
-    <script src="js/aura.js?version=1660116542"></script>
+    <script src="js/main.js?version=1666424118"></script>
+    <script src="js/graphs.js?version=1666424118"></script>
+    <script src="js/aura.js?version=1666424118"></script>
     <script src="js/tools.js?version=1653629921"></script>
     <script src="js/usersIllustrator.js?version=1654346384"></script>
     <script src="js/starsIllustrator.js?version=1653629921"></script>
@@ -307,9 +307,9 @@
                         <td id="energyOut"></td>
                       </tr>
                       <tr>
-                        <td>rating</td>
-                        <td id="ratingIn"></td>
-                        <td id="ratingOut"></td>
+                        <td>honesty</td>
+                        <td id="honestyIn"></td>
+                        <td id="honestyOut"></td>
                       </tr>
                     </tbody>
                   </table>
@@ -479,6 +479,53 @@
               />
             </div>
           </div>
+
+          <a
+            id="aurastatisticsbtntitle"
+            href="#"
+            onclick="openCollapsible('auraStatisticsDetails')"
+            class="list-group-item list-group-item-action bg-primary hidden"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Aura Statistics
+          </a>
+          <div class="hidden menu-item-body" id="auraStatisticsDetails">
+            <div class="containar">
+              <div style="display: block">
+                <div class="row px-4 text-white text-small">
+                  <table class="table table-sm table-dark">
+                    <tbody>
+                      <tr>
+                        <th>Nodes</th>
+                        <th>Number</th>
+                      </tr>
+                      <tr>
+                        <th>Gold</th>
+                        <td id="goldNum"></td>
+                      </tr>
+                      <tr>
+                        <th>Silver</th>
+                        <td id="silverNum"></td>
+                      </tr>
+                      <tr>
+                        <th>Bronze</th>
+                        <td id="bronzeNum"></td>
+                      </tr>
+                      <tr>
+                        <th>Sus</th>
+                        <td id="susNum"></td>
+                      </tr>
+                      <tr>
+                        <th>All</th>
+                        <td id="allNum"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <a
             id="statisticsbtntitle"
             href="#"
