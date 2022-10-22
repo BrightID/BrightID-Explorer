@@ -291,7 +291,8 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
       }
     })
     .onBackgroundClick((evt) => {
-      if (evt.ctrlKey) {
+      if (evt.shiftKey) {
+        Graph.pauseAnimation();
         const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
         var rect = document.getElementById("graphDiv").getBoundingClientRect();
         drawCoordinates(p.x, p.y, 5 / Graph.zoom() ** 0.5);
