@@ -13,11 +13,13 @@ nodes = subg = H = R = None
 cuts_json = {}
 previous_cuts = []
 
+
 def clusterify(graph, resolution, regions=None):
     global nodes
     clusters = community.best_partition(
         graph, resolution=resolution, randomize=False, random_state=1)
-    print(f'graph: {graph}, resolution: {resolution}, clusters: {len(set(clusters.values()))}')
+    print(
+        f'graph: {graph}, resolution: {resolution}, clusters: {len(set(clusters.values()))}')
     for n, cluster in clusters.items():
         nodes[n]['cluster'] = nodes[n]['cluster'] + (int(cluster) + 1,)
     for region in regions or {}:
@@ -58,7 +60,8 @@ def remove_attacks_from(graph, cluster, region):
 
 def remove_best_cut(graph, cluster, region, prev_cut=None):
     global nodes, subg, H, R
-    keys = [n for n in nodes if nodes[n]['cluster'] == cluster and subg.has_node(n)]
+    keys = [n for n in nodes if nodes[n]['cluster']
+            == cluster and subg.has_node(n)]
     keys.sort()
 
     # uses track to debug
@@ -73,6 +76,7 @@ def remove_best_cut(graph, cluster, region, prev_cut=None):
         # consider first pre-defined member of the region as from for min-cut
         f = region['members'][0]
         cache = {}
+
         def min_cut(k):
             if k not in cache:
                 cache[k] = minimum_st_node_cut(
@@ -184,8 +188,10 @@ def remove_best_cut(graph, cluster, region, prev_cut=None):
 def get_subgraph(graph, nodes):
     subg = nx.OrderedGraph()
     subg.add_nodes_from([n for n in sorted(nodes)])
-    subg.add_edges_from((u, v) for (u, v) in graph.edges() if u in subg if v in subg)
+    subg.add_edges_from((u, v)
+                        for (u, v) in graph.edges() if u in subg if v in subg)
     return subg
+
 
 def run():
     global nodes, previous_cuts
@@ -200,7 +206,7 @@ def run():
         r = regions['regions'][region]
         if 'regions' in r:
             subg = get_subgraph(graph,
-                [n for n in nodes if nodes[n]['cluster'] == (region,)])
+                                [n for n in nodes if nodes[n]['cluster'] == (region,)])
             clusterify(subg, r['resolution'], r['regions'])
 
     # removes all clusters except pre-defined valid ones
@@ -220,7 +226,8 @@ def run():
     # remove attack patterns based on min-cut from valid clusters
     if os.path.exists(config.CUTS_JSON_FILE):
         with open(config.CUTS_JSON_FILE) as f:
-            previous_cuts = [row['cut'] for row in json.loads(f.read()).values()]
+            previous_cuts = [row['cut']
+                             for row in json.loads(f.read()).values()]
     for cluster in valid:
         r = regions['regions'][cluster[0]]
         if len(cluster) == 2:
