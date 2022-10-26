@@ -58,6 +58,7 @@ function prepare() {
   $("#neighborsContainer").hide();
   $("#neighborsHistoryContainer").hide();
   $("#groupsContainer").hide();
+  $("#resetBtn").hide();
 }
 
 function selectAuraNode(node, showDetails, focus) {
@@ -251,6 +252,7 @@ async function getAuraData(fname) {
     cache: false,
   });
 
+  allNum = goldNum = silverNum = bronzeNum = susNum = 0
   auraNodes = {};
   auraLinks = {};
 
