@@ -629,9 +629,8 @@ async function addComment() {
           comment,
           nodes: selectedNodes,
         });
-        loadComments();
-        $("#alert").modal("hide");
         alert("Info", "The request was successful and will apply in 5 minutes.");
+        loadComments();
       } else {
         alert("Error!", rsp.message);
       }
