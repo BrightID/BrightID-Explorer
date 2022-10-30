@@ -37,7 +37,7 @@ $(document).keyup(function (e) {
       }
     }
     if (nodes.length > 0) {
-      selectAuraNodes(nodes);
+      selectAuraNodes(nodes, true);
     }
   } else {
     for (const id in allNodes) {
@@ -644,6 +644,16 @@ function checkExpression(exprString) {
   return;
 }
 
+function showAuraConnection() {
+  const node = allNodes[$("#auraConnections").val()];
+  move(node.x, node.y, 1.2);
+}
+
+function showAuraNode() {
+  const node = allNodes[$("#selectCommentNode").val()];
+  move(node.x, node.y, 1.2);
+}
+
 $(document).ready(function () {
   $("#loadingoverlay").fadeIn();
   let dataFileAddr;
@@ -832,4 +842,6 @@ $(document).ready(function () {
     }
   });
   $("#drawGroupSubgraphBtn").click(drawGroupSubgraph);
+  $("#auraConnections").change(showAuraConnection);
+  $("#selectCommentNode").change(showAuraNode);
 });

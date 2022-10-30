@@ -1,4 +1,4 @@
-const baseURL = "http://node.brightid.org/profile";
+const baseURL = "http://brightid2.idealmoney.io/profile";
 const channels = {};
 
 const CountdownTimer = () => {
@@ -115,10 +115,12 @@ const createImportQR = async () => {
   const channelId = hash(aesKey);
   console.log(`channelId: ${channelId}`);
   const { publicKey, secretKey } = await nacl.sign.keyPair();
+  localforage.setItem(`explorer_pk`, publicKey);
+  localforage.setItem(`explorer_sk`, secretKey);
   const b64PublicKey = base64js.fromByteArray(publicKey);
   localforage.setItem(`explorer_signing_key`, b64PublicKey);
   const b64SecretKey = base64js.fromByteArray(secretKey);
-  localforage.setItem(`explorer_secret_key`, b64PublicKey);
+  localforage.setItem(`explorer_secret_key`, b64SecretKey);
   const data = {
     data: JSON.stringify({
       signingKey: b64PublicKey,

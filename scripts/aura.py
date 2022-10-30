@@ -62,9 +62,15 @@ def read_data_from_db(db_url):
         t = ea['_to'].replace('energy/', '')
         links[f'{f}:{t}']['allocation'] = int(
             float(ea['allocation']) / scales[f] * 100)
-        links[f'{f}:{t}']['history'].append(ea['modified'])
+        links[f'{f}:{t}']['history'].append([ea['modified'], 'energyFlow'])
 
-    for ef in snapshot_db.collection('energyFlow'):
+    energyFlow = snapshot_db.aql.execute('''
+        FOR d IN energyFlow
+            COLLECT f=d._from, t=d._to INTO g
+            LET conns = (FOR c IN g[*] SORT c.timestamp RETURN c)
+            RETURN conns[0].d
+    ''')
+    for ef in energyFlow:
         f = ef['_from'].replace('energy/', '')
         t = ef['_to'].replace('energy/', '')
         nodes[f]['outEnergy'] += float(ef['energy'])
@@ -89,12 +95,18 @@ def read_data_from_db(db_url):
         nodes[v['user']]['aura_level'] = v['level']
         nodes[v['user']]['aura_score'] = v['score']
 
+    comments = []
+    for c in db.collection('comments'):
+        del c['_id']
+        del c['_rev']
+        comments.append(c)
+
     if db_url.find('test') > -1:
         json_file = '../aura-test.json.gz'
     else:
         json_file = '../aura.json.gz'
 
-    json_graph = {'nodes': list(nodes.values()), 'links': list(links.values())}
+    json_graph = {'nodes': list(nodes.values()), 'links': list(links.values()), 'comments': comments}
     with gzip.open(json_file, 'w') as f:
         f.write(json.dumps(json_graph).encode('utf-8'))
 

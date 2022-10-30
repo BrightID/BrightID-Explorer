@@ -5,10 +5,12 @@ const red = "#FF0000";
 const gray = "#BB8FCE";
 const honestyLinkColor = "orange";
 const energyLinkColor = "blue";
+var aura;
+var auraComments = [];
 
 const auraGraphView = { honesty: true, energy: true };
 const auraLinkDirection = { incoming: true, outgoing: true };
-var allNum = goldNum = silverNum = bronzeNum = susNum = 0;
+var allNum = goldNum = silverNum = bronzeNum = susNum = unverifiedNum = 0;
 
 function formatId(id) {
   return `${id.slice(0, 4)}...${id.slice(-4)}`;
@@ -31,7 +33,6 @@ function prepare() {
   $(`<li><span style="background:${gray};"></span>Unverified</li>`).appendTo(
     "#legendNodes"
   );
-
   $("#legendLinks").empty();
   $(
     `<li><a href="#" id="ratingLinks" onclick="selectAuraView('honesty')" style="text-decoration: none; color: black;"><span style="background:${honestyLinkColor};"></span>honesty</a></li>`
@@ -48,7 +49,6 @@ function prepare() {
   $(
     `<li><a href="#" id="outgoingLink" onclick="selectAuraLinkDirection('outgoing')" style="text-decoration: none; color: black;"><span style="background:yellow;">⬈</span> outgoing</a></li>`
   ).appendTo("#legendDirection");
-
   $("#aurastatisticsbtntitle").show();
   $("#graphbtntitle").hide();
   $("#groupbtntitle").hide();
@@ -74,11 +74,9 @@ function selectAuraNode(node, showDetails, focus) {
   $("#neighborsHistoryContainer").hide();
   $("#groupsContainer").hide();
   $("#auraConnectionsContainer").show();
-
   if (selectedNode) {
     selectedNode.selected = false;
   }
-
   node.selected = true;
   selectedNode = node;
   $("#brightidText").html(node.id);
@@ -189,13 +187,15 @@ function selectAuraNode(node, showDetails, focus) {
   openCollapsible("userDetails", true);
 }
 
-function placeComment() {
-  console.log("nodes:", selectedNodes);
-  const message = document.getElementById("nodesComment").value;
-  console.log("message:", message);
+function strToUint8Array(str) {
+  if (!("TextEncoder" in window)) {
+    alert("Error!", "Sorry, this browser does not support TextEncoder...");
+  }
+  var enc = new TextEncoder();
+  return enc.encode(str);
 }
 
-function selectAuraNodes(nodes) {
+async function selectAuraNodes(nodes, openCommentForm = false) {
   selectedNodes = nodes;
   $("#userDetailsContent").show();
   $("#seedData").hide();
@@ -206,10 +206,13 @@ function selectAuraNodes(nodes) {
   $("#neighborContainer").hide();
 
   const highlightNodes = new Set();
-  sumX = 0;
-  sumY = 0;
+  let sumX = 0;
+  let sumY = 0;
   nodes.forEach((id) => {
     highlightNodes.add(id);
+    const node = allNodes[id];
+    sumX += node.x;
+    sumY += node.y;
   });
 
   const highlightLinks = new Set();
@@ -219,22 +222,8 @@ function selectAuraNodes(nodes) {
     }
   });
 
-  const selectedNodesText = nodes.join("\n");
-  alert(
-    "Submit Comment:",
-    `You selected ${nodes.length} nodes.
-    <br>
-    Please submit your comment.
-    <br>
-    <div class="text-center">
-      <textarea id="nodesComment" name="nodesComment"></textarea>
-      <br>
-      <button id="placeCommentBtn" class="btn btn-primary" onclick="placeComment()">
-        Submit
-      </button>
-    </div>`
-  );
-
+  const cneterX = Math.round(sumX / nodes.length);
+  const cneterY = Math.round(sumY / nodes.length);
   Graph.linkVisibility((l) => (highlightLinks.has(l) ? true : false))
     .nodeColor((n) => {
       if (highlightNodes.has(n.id)) return resetAuraNodesColor(n);
@@ -243,18 +232,45 @@ function selectAuraNodes(nodes) {
     .linkDirectionalArrowLength((l) => (highlightLinks.has(l) ? 6 : 2))
     .linkColor((l) =>
       highlightLinks.has(l) ? resetAuraLinksColor(l) : fadedColor
+    )
+    .centerAt(cneterX + 200, cneterY)
+    .zoom(1.2, 1000);
+
+  let authorized_user = false;
+  if (await localforage.getItem("brightid_has_imported")) {
+    const owner = await localforage.getItem("explorer_owner");
+    if (auraNodes[owner]?.energy > 0) {
+      authorized_user = true;
+    }
+  }
+
+  if (openCommentForm & authorized_user) {
+    const selectedNodesText = nodes.join("\n");
+    alert(
+      "Comment form:",
+      `You selected ${nodes.length} nodes. Please write your comment about them.
+      <div class="text-center mt-1">
+        <div class="input-group">
+          <textarea class="form-control" id="nodesComment" name="nodesComment"></textarea>
+        </div>
+        <button id="addCommentBtn" class="btn btn-primary btn-sm mt-1" onclick="addComment()">
+          Submit
+        </button>
+      </div>`
     );
+  }
 }
 
-async function getAuraData(fname) {
-  const { nodes, links } = await $.ajax({
-    url: `./${fname}.json`,
+async function getAuraData(fileName) {
+  const { nodes, links, comments } = await $.ajax({
+    url: `./${fileName}.json`,
     cache: false,
   });
 
-  allNum = goldNum = silverNum = bronzeNum = susNum = 0
+  allNum = goldNum = silverNum = bronzeNum = susNum = unverifiedNum = 0;
   auraNodes = {};
   auraLinks = {};
+  auraComments = comments;
 
   nodes.forEach((n) => {
     // Skip if node data doesn't exist in the main graph, it happens for the newly joined nodes to the BrightID.
@@ -269,6 +285,7 @@ async function getAuraData(fname) {
     else if (n.aura_level == "Silver") silverNum += 1;
     else if (n.aura_level == "Bronze") bronzeNum += 1;
     else if (n.aura_level == "Sus") susNum += 1;
+    else unverifiedNum += 1;
   });
 
   let energies = [];
@@ -287,10 +304,10 @@ async function getAuraData(fname) {
 
     auraLinks[`${l.source}:${l.target}`] = l;
     auraLinks[`${l.source}:${l.target}`]["honestyWidth"] =
-      ((parseFloat(l.honesty) - 0) * (5 - 1)) / (4 - 0) + 1;
+      ((parseFloat(l.honesty) - 0) * (3 - 1)) / (4 - 0) + 1;
     if (l.energy > 0) {
       auraLinks[`${l.source}:${l.target}`]["energyWidth"] =
-        ((l.energy - minEnergy) * (5 - 2)) / (maxEnergy - minEnergy) + 2;
+        ((l.energy - minEnergy) * (3 - 1)) / (maxEnergy - minEnergy) + 1;
     }
   });
 
@@ -325,20 +342,35 @@ async function getAuraData(fname) {
   });
 }
 
-async function drawAura(fname) {
+async function drawAura(fileName) {
+  aura = fileName;
   prepare();
 
-  if ((await localforage.getItem("brightid_has_imported")) && !autoLoginDone) {
+  const brightid_has_imported = await localforage.getItem(
+    "brightid_has_imported"
+  );
+  if (brightid_has_imported && !autoLoginDone) {
     await loadPersonalData();
   }
 
-  await getAuraData(fname);
+  await getAuraData(fileName);
+
+  const owner = await localforage.getItem("explorer_owner");
+  if (brightid_has_imported & (auraNodes[owner]?.energy > 0)) {
+    $("#auracommentsbtntitle").show();
+  }
+
   $("#goldNum").html(goldNum);
+  $("#goldQualifiedNum").html(goldNum);
   $("#silverNum").html(silverNum);
+  $("#silverQualifiedNum").html(silverNum + goldNum);
   $("#bronzeNum").html(bronzeNum);
+  $("#bronzeQualifiedNum").html(silverNum + goldNum + bronzeNum);
   $("#susNum").html(susNum);
+  $("#unverifiedNum").html(unverifiedNum);
   $("#allNum").html(allNum);
 
+  loadComments();
   await drawAuraGraph(auraNodes, auraLinks);
 }
 
@@ -539,4 +571,161 @@ async function selectAuraLinkDirection(type) {
   if (selectedNode) {
     selectAuraNode(selectedNode, true);
   }
+}
+
+function timestampToDate(timestamp) {
+  var o = new Date(timestamp);
+  var months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return o.getDate() + " " + months[o.getMonth()] + " " + o.getFullYear();
+}
+
+async function addComment() {
+  // should remove after test
+  if (aura == "aura") {
+    return alert("Error!", "This feature is only available on the aura-test for now.");
+    return;
+  }
+  const comment = document.getElementById("nodesComment").value;
+  if (!comment || selectedNodes.length == 0) {
+    return alert("Error!", "Please check your inputs and retry.");
+  }
+  const user = await localforage.getItem("explorer_owner");
+  let data = {
+    user,
+    comment,
+    nodes: selectedNodes,
+    aura,
+  };
+  const message = strToUint8Array(JSON.stringify(data));
+  const secretKey = await localforage.getItem("explorer_sk");
+  const sig = base64js.fromByteArray(nacl.sign.detached(message, secretKey));
+  data["signing_key"] = await localforage.getItem("explorer_signing_key");
+  data["sig"] = sig;
+  console.log("DATA", data);
+  let request = $.ajax({
+    type: "PUT",
+    url: "/aura-api/comment",
+    data: JSON.stringify(data),
+    contentType: "application/json",
+    success: function (response, status, xhr) {
+      let rsp = JSON.parse(response);
+      if (rsp.status == 200) {
+        auraComments.push({
+          _key: rsp._key,
+          user,
+          comment,
+          nodes: selectedNodes,
+        });
+        loadComments();
+        $("#alert").modal("hide");
+        alert("Info", "The request was successful and will apply in 5 minutes.");
+      } else {
+        alert("Error!", rsp.message);
+      }
+    },
+    error: function (xhr, exception) {
+      alert("Error!", exception);
+    },
+    complete: function (response, status, xhr) {
+      console.log("Finished!");
+    },
+  });
+}
+
+async function removeComment(commentKey) {
+  let data = {
+    user: await localforage.getItem("explorer_owner"),
+    _key: commentKey,
+    aura,
+  };
+  const message = strToUint8Array(JSON.stringify(data));
+  const secretKey = await localforage.getItem("explorer_sk");
+  const sig = base64js.fromByteArray(nacl.sign.detached(message, secretKey));
+  data["signing_key"] = await localforage.getItem("explorer_signing_key");
+  data["sig"] = sig;
+  console.log("DATA", data);
+  let request = $.ajax({
+    type: "DELETE",
+    url: "/aura-api/comment",
+    data: JSON.stringify(data),
+    contentType: "application/json",
+    success: function (response, status, xhr) {
+      let rsp = JSON.parse(response);
+      if (rsp.status == 200) {
+        auraComments = auraComments.filter((c) => c._key != commentKey);
+        loadComments();
+        alert("Info", "The request was successful and will apply in 5 minutes.");
+      } else {
+        alert("Error!", rsp.message);
+      }
+    },
+    error: function (xhr, exception) {
+      alert("Error!", exception);
+    },
+    complete: function (response, status, xhr) {
+      console.log("Finished!");
+    },
+  });
+}
+
+async function loadComments(active) {
+  $("#comments").empty();
+  if (auraComments.length == 0) {
+    $("#comments").prepend(
+      '<div class="carousel-item text-center text-small active" slide="1"><h3>No comment</h3></div>'
+    );
+    return;
+  }
+  const user = await localforage.getItem("explorer_owner");
+  auraComments.sort((a, b) => b.timestamp - a.timestamp);
+  for (var i = 0; i < auraComments.length; i++) {
+    let c = auraComments[i];
+    if (!active) {
+      active = auraComments[0]._key;
+    }
+
+    domString = `
+      <div class="carousel-item text-center text-small ${
+        active == c._key ? "active" : ""
+      }" id="${c._key}" slide="${i}">
+        <div class="input-group-sm comment-nodes-container">
+          <select class="custom-select text-small" size="2" id="selectCommentNode">`;
+
+    for (const n of c.nodes) {
+      domString += `<option value="${n}">${
+        allNodes[n]?.name || formatId(n)
+      }</option>`;
+    }
+    domString += `
+      </select>
+        </div>
+        <p>${c.comment}</p>
+        <p class="text-too-small">${
+          allNodes[c.user]?.name || formatId(c.user)
+        } (${timestampToDate(c.timestamp)})</p>`;
+    if (c.user == user) {
+      domString += `
+        <button id="removeCommentBtn" class="btn btn-sm btn-primary" onclick="removeComment(${c._key})">Remove</button>`;
+    }
+    domString += `</div>`;
+    $("#comments").prepend(domString);
+  }
+
+  $("#commentsCarousel").bind("slide.bs.carousel", function (e) {
+    const slide = e.relatedTarget.getAttribute("slide");
+    selectAuraNodes(auraComments[slide].nodes);
+  });
 }

@@ -87,22 +87,22 @@
 }
 
 .text-center {
-  text-align: center
+  text-align: center;
 }
 
 .profile-image {
   width: 10vw;
-  border-radius: 50%
+  border-radius: 50%;
 }
 
 .user-image {
   width: 6vw;
-  border-radius: 50%
+  border-radius: 50%;
 }
 
 .group-image {
   width: 6vw;
-  border-radius: 50%
+  border-radius: 50%;
 }
 
 @media (min-width: 768px) {
@@ -130,8 +130,8 @@
   right: 0;
   bottom: 0;
   background-color: #ed795d;
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
   border-radius: 34px;
 }
 
@@ -143,27 +143,27 @@
   left: 4px;
   bottom: 4px;
   background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 
-input:checked+.slider {
+input:checked + .slider {
   background-color: #2ab934;
 }
 
-input:focus+.slider {
-  box-shadow: 0 0 1px #2196F3;
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
   -webkit-transform: translateX(26px);
   -ms-transform: translateX(26px);
   transform: translateX(55px);
 }
 
 .slider:after {
-  content: '2D';
+  content: "2D";
   color: black;
   display: block;
   position: absolute;
@@ -174,11 +174,11 @@ input:checked+.slider:before {
   font-family: Verdana, sans-serif;
 }
 
-input:checked+.slider:after {
-  content: '3D';
+input:checked + .slider:after {
+  content: "3D";
 }
 
-input[type=range] {
+input[type="range"] {
   -webkit-appearance: none;
   background-color: #e8b9ae;
   width: 95%;
@@ -192,6 +192,10 @@ input[type="range"]::-webkit-slider-thumb {
   opacity: 0.7;
   width: 10px;
   height: 20px;
+}
+
+.text-too-small {
+  font-size: 10px;
 }
 
 .text-small {
@@ -237,7 +241,7 @@ option {
 
 .player-buttons {
   cursor: pointer;
-  padding-left: .5em;
+  padding-left: 0.5em;
   color: white !important;
 }
 
@@ -315,4 +319,11 @@ ul,
 
 .active {
   display: block;
+}
+
+.comment-nodes-container {
+  margin-top: 0.25rem !important;
+  margin-right: 3rem !important;
+  margin-left: 3rem !important;
+  margin-bottom: 0.5rem !important;
 }
