@@ -628,6 +628,7 @@ async function addComment() {
           user,
           comment,
           nodes: selectedNodes,
+          timestamp: Date.now(),
         });
         alert("Info", "The request was successful and will apply in 5 minutes.");
         loadComments();
