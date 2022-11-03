@@ -210,13 +210,15 @@
               </div>
 
               <div class="row">
-                <span class="title">BrightID:
+                <span class="title"
+                  >BrightID:
                   <span class="value" id="brightidText"></span>
                 </span>
               </div>
 
               <div class="row">
-                <span class="title">Joined At:
+                <span class="title"
+                  >Joined At:
                   <span class="value" id="nodeCreatedAt"></span>
                 </span>
               </div>
@@ -230,7 +232,8 @@
 
               <div class="hidden" id="neighborsContainer">
                 <div class="row">
-                  <div class="combo-title">Connections:
+                  <div class="combo-title">
+                    Connections:
                     <span class="value" id="neighborsCount"></span>
                   </div>
                 </div>
@@ -360,12 +363,14 @@
 
               <div id="seedData" class="hidden">
                 <div class="row">
-                  <span class="title">No. Seed Groups:
+                  <span class="title"
+                    >No. Seed Groups:
                     <span class="value" id="noSeedGroups"></span>
                   </span>
                 </div>
                 <div class="row">
-                  <span class="title">Seed Quota:
+                  <span class="title"
+                    >Seed Quota:
                     <span class="value" id="quotaValue"></span>
                   </span>
                 </div>
@@ -373,7 +378,8 @@
 
               <div id="groupsContainer">
                 <div class="row">
-                  <div class="combo-title">Groups:
+                  <div class="combo-title">
+                    Groups:
                     <span class="value" id="groupsCount"></span>
                   </div>
                 </div>
@@ -408,27 +414,34 @@
                 <img id="groupImg" class="group-image" />
               </div>
               <div class="row" id="groupNameContainer">
-                <span class="title">Name:
+                <span class="title"
+                  >Name:
                   <span class="value" id="groupName"></span>
                 </span>
               </div>
               <div class="row" id="groupQuotaContainer">
-                <span class="title">Quota:
+                <span class="title"
+                  >Quota:
                   <span class="value" id="groupQuota"></span>
                 </span>
               </div>
               <div class="row">
-                <span class="title">ID:
+                <span class="title"
+                  >ID:
                   <span class="value" id="groupIdText"></span>
                 </span>
               </div>
               <div class="text-center mt-2">
-                <button id="drawGroupSubgraphBtn" class="btn btn-primary btn-sm">
+                <button
+                  id="drawGroupSubgraphBtn"
+                  class="btn btn-primary btn-sm"
+                >
                   Draw Subgraph
                 </button>
               </div>
               <div class="row">
-                <span class="combo-title">Members:
+                <span class="combo-title"
+                  >Members:
                   <span class="value" id="groupMembersCount"></span>
                 </span>
               </div>
@@ -546,33 +559,32 @@
                   id="commentsCarousel"
                   class="carousel slide"
                   data-ride="carousel"
-                  data-interval="false"
                 >
                   <div class="carousel-inner" id="comments"></div>
-                  <a
+                  <button
                     class="carousel-control-prev"
-                    href="#commentsCarousel"
-                    role="button"
-                    data-slide="prev"
+                    type="button"
+                    data-bs-target="#commentsCarousel"
+                    data-bs-slide="prev"
                   >
                     <span
                       class="carousel-control-prev-icon"
                       aria-hidden="true"
                     ></span>
-                    <span class="sr-only">Previous</span>
-                  </a>
-                  <a
+                    <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button
                     class="carousel-control-next"
-                    href="#commentsCarousel"
-                    role="button"
-                    data-slide="next"
+                    type="button"
+                    data-bs-target="#commentsCarousel"
+                    data-bs-slide="next"
                   >
                     <span
                       class="carousel-control-next-icon"
                       aria-hidden="true"
                     ></span>
-                    <span class="sr-only">Next</span>
-                  </a>
+                    <span class="visually-hidden">Next</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -811,7 +823,8 @@
           </a>
           <div class="hidden menu-item-body" id="graphDetails">
             <div class="d-flex justify-content-start">
-              <div class="title" id="connectionLevel">Already known
+              <div class="title" id="connectionLevel">
+                Already known
                 <i
                   class="fas fa-question-circle text-white"
                   data-toggle="tooltip"
@@ -883,10 +896,7 @@
               </label>
             </div>
             <div class="text-center mt-2">
-              <button
-                id="drawCustomGraph"
-                class="btn btn-primary btn-sm"
-              >
+              <button id="drawCustomGraph" class="btn btn-primary btn-sm">
                 Draw
               </button>
             </div>
