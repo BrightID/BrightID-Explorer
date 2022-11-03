@@ -212,21 +212,20 @@ option {
 
 .title {
   font-size: 16px;
-  margin-top: 1rem !important;
   color: #fff !important;
+  margin-top: 0.5rem !important;
+  margin-left: 0.5rem !important;
 }
 
 .combo-title {
   font-size: 16px;
-  margin-top: 1rem !important;
+  margin-top: 0.5rem !important;
   color: #fff !important;
-  margin-left: 1.5rem !important;
+  margin-left: 0.5rem !important;
 }
 
 .value {
   font-size: 12px;
-  margin-top: 1.4rem !important;
-  margin-left: 0.5rem !important;
   color: #fff !important;
 }
 
