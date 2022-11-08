@@ -6,11 +6,11 @@ const gray = "#BB8FCE";
 const honestyLinkColor = "orange";
 const energyLinkColor = "blue";
 var aura;
-var auraComments = [];
+var auraComments = {};
 
 const auraGraphView = { honesty: true, energy: true };
 const auraLinkDirection = { incoming: true, outgoing: true };
-var allNum = goldNum = silverNum = bronzeNum = susNum = unverifiedNum = 0;
+var allNum = (goldNum = silverNum = bronzeNum = susNum = unverifiedNum = 0);
 
 function formatId(id) {
   return `${id.slice(0, 4)}...${id.slice(-4)}`;
@@ -143,8 +143,13 @@ function selectAuraNode(node, showDetails, focus) {
     } ⬋`;
     $("#auraConnections").append(new Option(connText, n));
   });
+
+  loadUserComments(node.id);
+
   $("#auraStatistics").show();
   $("#auraConnectionsContainer").show();
+  $("#connectionsStatistics").show();
+  $("#userCommentsContainar").show();
 
   const highlightNodes = new Set([...Object.keys(node.neighbors), node.id]);
   const highlightLinks = new Set();
@@ -245,19 +250,7 @@ async function selectAuraNodes(nodes, openCommentForm = false) {
   }
 
   if (openCommentForm & authorized_user) {
-    const selectedNodesText = nodes.join("\n");
-    alert(
-      "Comment form:",
-      `You selected ${nodes.length} nodes. Please write your comment about them.
-      <div class="text-center mt-1">
-        <div class="input-group">
-          <textarea class="form-control" id="nodesComment" name="nodesComment"></textarea>
-        </div>
-        <button id="addCommentBtn" class="btn btn-primary btn-sm mt-1" onclick="addComment()">
-          Submit
-        </button>
-      </div>`
-    );
+    openCommentModal(nodes.length);
   }
 }
 
@@ -270,7 +263,18 @@ async function getAuraData(fileName) {
   allNum = goldNum = silverNum = bronzeNum = susNum = unverifiedNum = 0;
   auraNodes = {};
   auraLinks = {};
-  auraComments = comments;
+
+  comments.forEach((c) => {
+    if (!c["mainCommentKey"]) {
+      c["replies"] = [];
+    }
+    auraComments[c._key] = c;
+  });
+  comments.forEach((c) => {
+    if (c["mainCommentKey"]) {
+      auraComments[c["mainCommentKey"]]["replies"].push([c._key]);
+    }
+  });
 
   nodes.forEach((n) => {
     // Skip if node data doesn't exist in the main graph, it happens for the newly joined nodes to the BrightID.
@@ -370,7 +374,7 @@ async function drawAura(fileName) {
   $("#unverifiedNum").html(unverifiedNum);
   $("#allNum").html(allNum);
 
-  loadComments();
+  await loadComments();
   await drawAuraGraph(auraNodes, auraLinks);
 }
 
@@ -592,55 +596,137 @@ function timestampToDate(timestamp) {
   return o.getDate() + " " + months[o.getMonth()] + " " + o.getFullYear();
 }
 
-async function addComment() {
+function openCommentModal(selectNodesLength) {
+  $("#comment").val("");
+  $("#commentCategorySeter").val("");
+  $("#selectNodesLength").html(selectNodesLength);
+  $("#addCommentModal").modal("show");
+}
+
+function openReplyModal(commentKey) {
+  $("#replyComment").val("");
+  const comment = auraComments[commentKey];
+  domString = `
+    <row class="chat">
+      <span class="text-small">${comment.comment}</span>
+      <br>
+      <span class="text-too-small">${
+        allNodes[comment.user]?.name || formatId(comment.user)
+      }</span>
+      <span class="text-too-small">(${timestampToDate(
+        comment.timestamp
+      )})</span>
+      </span>
+    </row>`;
+  comment["replies"].forEach((k) => {
+    const reply = auraComments[k];
+    if (reply.user == comment.user) {
+      domString += `
+        <row class="chat mt-2">
+          <span class="text-small">${reply.comment}</span>
+          <br>
+          <span class="text-too-small">${
+            allNodes[reply.user]?.name || formatId(reply.user)
+          }</span>
+          <span class="text-too-small">(${timestampToDate(
+            reply.timestamp
+          )})</span>
+        </row>`;
+    } else {
+      domString += `
+        <row class="chat-reply mt-2">
+          <span class="text-small">${reply.comment}</span>
+          <br>
+          <span class="text-too-small">${
+            allNodes[reply.user]?.name || formatId(reply.user)
+          }</span>
+          <span class="text-too-small">(${timestampToDate(
+            reply.timestamp
+          )})</span>
+        </row>`;
+    }
+  });
+  $("#mainComment").html(domString);
+  $("#mainCommentId").val(commentKey);
+  $("#replyCommentModal").modal("show");
+}
+
+function replyComment() {
+  const commentKey = $("#mainCommentId").val();
+  addComment(commentKey);
+}
+
+async function addComment(mainCommentKey) {
   // should remove after test
   if (aura == "aura") {
-    return alert("Error!", "This feature is only available on the aura-test for now.");
+    return alert(
+      "Error!",
+      "This feature is only available on the aura-test for now."
+    );
     return;
   }
-  const comment = document.getElementById("nodesComment").value;
-  if (!comment || selectedNodes.length == 0) {
-    return alert("Error!", "Please check your inputs and retry.");
+
+  let category, comment;
+  if (mainCommentKey) {
+    comment = $("#replyComment").val();
+    const mainComment = auraComments[mainCommentKey];
+    category = mainComment.category || "Old";
+    selectedNodes = mainComment.nodes;
+  } else {
+    comment = $("#comment").val();
+    category = $("#commentCategorySeter").val();
   }
+
   const user = await localforage.getItem("explorer_owner");
   let data = {
     user,
     comment,
+    category,
     nodes: selectedNodes,
     aura,
   };
+  if (mainCommentKey) {
+    data["mainCommentKey"] = mainCommentKey;
+  }
+  data = sortObject(data);
   const message = strToUint8Array(JSON.stringify(data));
   const secretKey = await localforage.getItem("explorer_sk");
   const sig = base64js.fromByteArray(nacl.sign.detached(message, secretKey));
   data["signing_key"] = await localforage.getItem("explorer_signing_key");
   data["sig"] = sig;
-  console.log("DATA", data);
   let request = $.ajax({
     type: "PUT",
     url: "/aura-api/comment",
     data: JSON.stringify(data),
     contentType: "application/json",
-    success: function (response, status, xhr) {
+    success: async function (response, status, xhr) {
       let rsp = JSON.parse(response);
       if (rsp.status == 200) {
-        auraComments.push({
-          _key: rsp._key,
-          user,
-          comment,
-          nodes: selectedNodes,
-          timestamp: Date.now(),
-        });
-        alert("Info", "The request was successful and will apply in 5 minutes.");
-        loadComments();
+        if (mainCommentKey) {
+          auraComments[mainCommentKey]["replies"].push(rsp._key);
+        } else {
+          data["replies"] = [];
+        }
+        data["_key"] = rsp._key;
+        data["timestamp"] = Date.now();
+        auraComments[rsp._key] = data;
+        alert(
+          "Info",
+          "The request was successful and will apply in 5 minutes."
+        );
+        await loadComments();
       } else {
+        console.log("Error!", rsp);
         alert("Error!", rsp.message);
       }
     },
     error: function (xhr, exception) {
       alert("Error!", exception);
+      console.log("Error!", exception);
     },
     complete: function (response, status, xhr) {
-      console.log("Finished!");
+      $("#addCommentModal").modal("hide");
+      $("#replyCommentModal").modal("hide");
     },
   });
 }
@@ -651,55 +737,69 @@ async function removeComment(commentKey) {
     _key: commentKey,
     aura,
   };
+  data = sortObject(data);
   const message = strToUint8Array(JSON.stringify(data));
   const secretKey = await localforage.getItem("explorer_sk");
   const sig = base64js.fromByteArray(nacl.sign.detached(message, secretKey));
   data["signing_key"] = await localforage.getItem("explorer_signing_key");
   data["sig"] = sig;
-  console.log("DATA", data);
   let request = $.ajax({
     type: "DELETE",
     url: "/aura-api/comment",
     data: JSON.stringify(data),
     contentType: "application/json",
-    success: function (response, status, xhr) {
+    success: async function (response, status, xhr) {
       let rsp = JSON.parse(response);
       if (rsp.status == 200) {
-        auraComments = auraComments.filter((c) => c._key != commentKey);
-        loadComments();
-        alert("Info", "The request was successful and will apply in 5 minutes.");
+        delete auraComments[commentKey];
+        await loadComments();
+        alert(
+          "Info",
+          "The request was successful and will apply in 5 minutes."
+        );
       } else {
+        console.log("Error!", rsp);
         alert("Error!", rsp.message);
       }
     },
     error: function (xhr, exception) {
+      console.log("Error!", exception);
       alert("Error!", exception);
     },
     complete: function (response, status, xhr) {
-      console.log("Finished!");
+      $("#addCommentModal").modal("hide");
+      $("#replyCommentModal").modal("hide");
     },
   });
 }
 
-async function loadComments(active) {
+async function loadComments(category) {
   $("#comments").empty();
-  if (auraComments.length == 0) {
+
+  selectedComments = Object.values(auraComments).filter((c) => {
+    if (!category || category == "All") {
+      return "replies" in c;
+    } else {
+      return (c.category == category) & ("replies" in c);
+    }
+  });
+
+  if (Object.keys(selectedComments).length == 0) {
     $("#comments").prepend(
       '<div class="carousel-item text-center text-small active" slide="1"><h3>No comment</h3></div>'
     );
     return;
   }
+
   const user = await localforage.getItem("explorer_owner");
-  auraComments.sort((a, b) => b.timestamp - a.timestamp);
-  for (var i = 0; i < auraComments.length; i++) {
-    let c = auraComments[i];
-    if (!active) {
-      active = auraComments[0]._key;
-    }
+  selectedComments.sort((a, b) => b.timestamp - a.timestamp);
+
+  for (var i = 0; i < selectedComments.length; i++) {
+    let c = selectedComments[i];
 
     domString = `
       <div class="carousel-item text-center text-small ${
-        active == c._key ? "active" : ""
+        selectedComments[0]._key == c._key ? "active" : ""
       }" id="${c._key}" slide="${i}">
         <div class="input-group-sm comment-nodes-container">
           <select class="custom-select text-small" size="2" id="selectCommentNode">`;
@@ -715,17 +815,79 @@ async function loadComments(active) {
         <p>${c.comment}</p>
         <p class="text-too-small">${
           allNodes[c.user]?.name || formatId(c.user)
-        } (${timestampToDate(c.timestamp)})</p>`;
+        } (${timestampToDate(c.timestamp)})</p>
+        <p class="text-too-small">${c["replies"].length} ${
+      c["replies"].length > 1 ? "replies" : "reply"
+    }</p>`;
+    domString += `
+      <div class="d-flex justify-content-evenly">
+        <button id="replyCommentBtn" class="btn btn-primary btn-sm" onclick="openReplyModal(${c._key})">Reply</button>`;
     if (c.user == user) {
       domString += `
-        <button id="removeCommentBtn" class="btn btn-sm btn-primary" onclick="removeComment(${c._key})">Remove</button>`;
+        <button id="removeCommentBtn" class="btn btn-primary btn-sm" onclick="removeComment(${c._key})">Remove</button>`;
     }
-    domString += `</div>`;
+    domString += `</div></div>`;
     $("#comments").prepend(domString);
   }
 
   $("#commentsCarousel").bind("slide.bs.carousel", function (e) {
     const slide = e.relatedTarget.getAttribute("slide");
-    selectAuraNodes(auraComments[slide].nodes);
+    selectAuraNodes(selectedComments[slide].nodes);
+  });
+}
+
+async function loadUserComments(sn) {
+  $("#userComments").empty();
+
+  userComments = Object.values(auraComments).filter(
+    (c) => c.user == sn || c.nodes.includes(sn)
+  );
+
+  if (Object.keys(userComments).length == 0) {
+    $("#userComments").prepend(
+      '<div class="carousel-item text-center text-small active" slide="1"><h3>No comment</h3></div>'
+    );
+    return;
+  }
+
+  userComments.sort((a, b) => b.timestamp - a.timestamp);
+  for (var i = 0; i < userComments.length; i++) {
+    let c = userComments[i];
+    domString = `
+      <div class="carousel-item text-center text-small ${
+        userComments[0]._key == c._key ? "active" : ""
+      }" id="${c._key}" slide="${i}">
+        <div class="input-group-sm comment-nodes-container">
+          <select class="custom-select text-small" size="2" id="selectCommentNode">`;
+
+    for (const n of c.nodes) {
+      domString += `<option value="${n}">${
+        allNodes[n]?.name || formatId(n)
+      }</option>`;
+    }
+    domString += `
+      </select>
+        </div>
+        <p>${c.comment}</p>
+        <p class="text-too-small">${
+          allNodes[c.user]?.name || formatId(c.user)
+        } (${timestampToDate(c.timestamp)})</p>
+        <p class="text-too-small">${c["replies"].length} ${
+      c["replies"].length > 1 ? "replies" : "reply"
+    }</p>`;
+    domString += `
+      <div class="d-flex justify-content-evenly">
+        <button id="replyCommentBtn" class="btn btn-primary btn-sm" onclick="openReplyModal(${c._key})">Reply</button>`;
+    if (c.user == sn) {
+      domString += `
+        <button id="removeCommentBtn" class="btn btn-primary btn-sm" onclick="removeComment(${c._key})">Remove</button>`;
+    }
+    domString += `</div></div>`;
+    $("#userComments").prepend(domString);
+  }
+
+  $("#userCommentsCarousel").bind("slide.bs.carousel", function (e) {
+    const slide = e.relatedTarget.getAttribute("slide");
+    selectAuraNodes(userComments[slide].nodes);
   });
 }

@@ -54,10 +54,10 @@
     <script src="//unpkg.com/force-graph"></script>
     <script src="//unpkg.com/3d-force-graph"></script>
     <script src="js/login.js?version=1667151915"></script>
-    <script src="js/main.js?version=1667151915"></script>
+    <script src="js/main.js?version=1667917702"></script>
     <script src="js/graphs.js?version=1666424118"></script>
-    <script src="js/aura.js?version=1667151915"></script>
-    <script src="js/tools.js?version=1653629921"></script>
+    <script src="js/aura.js?version=1667917702"></script>
+    <script src="js/tools.js?version=1667917702"></script>
     <script src="js/usersIllustrator.js?version=1654346384"></script>
     <script src="js/starsIllustrator.js?version=1653629921"></script>
   </head>
@@ -314,7 +314,7 @@
                 </div>
               </div>
 
-              <div id="connectionsStatistics">
+              <div id="connectionsStatistics" class="hidden">
                 <div class="row">
                   <div class="title">Connections Statistics:</div>
                 </div>
@@ -358,6 +358,45 @@
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              <div class="hidden" id="userCommentsContainar">
+                <div class="row">
+                  <div class="title">Comments:</div>
+                </div>
+                <div style="display: block" class="text-white">
+                  <div
+                    id="userCommentsCarousel"
+                    class="carousel slide"
+                    data-ride="carousel"
+                  >
+                    <div class="carousel-inner" id="userComments"></div>
+                    <button
+                      class="carousel-control-prev"
+                      type="button"
+                      data-bs-target="#userCommentsCarousel"
+                      data-bs-slide="prev"
+                    >
+                      <span
+                        class="carousel-control-prev-icon"
+                        aria-hidden="true"
+                      ></span>
+                      <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button
+                      class="carousel-control-next"
+                      type="button"
+                      data-bs-target="#userCommentsCarousel"
+                      data-bs-slide="next"
+                    >
+                      <span
+                        class="carousel-control-next-icon"
+                        aria-hidden="true"
+                      ></span>
+                      <span class="visually-hidden">Next</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -553,7 +592,20 @@
             Comments
           </a>
           <div class="hidden menu-item-body" id="auraCommentsDetails">
-            <div class="containar">
+
+            <div class="input-group-sm mb-3 px-2 text-small">
+              <select
+                class="form-select form-select-sm"
+                id="commentCategoryFilter"
+                required
+              >
+                <option selected value="All">All</option>
+                <option value="Possible Sybils">Possible Sybils</option>
+                <option value="Bad Actor">Bad Actor</option>
+                <option value="Honest Region">Honest Region</option>
+              </select>
+            </div>
+            <div class="containar mt-4">
               <div style="display: block" class="text-white">
                 <div
                   id="commentsCarousel"
@@ -939,24 +991,105 @@
         </div>
       </div>
     </div>
-    <div class="modal fade" id="alert" role="dialog">
+
+    <div class="modal fade" id="alertModal">
       <div class="modal-dialog modal-sm">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="alertTitle"></h5>
-            <button type="button" class="close" data-dismiss="modal">
-              &times;
-            </button>
+            <h6 class="modal-title" id="alertTitle"></h6>
+            <button
+              type="button"
+              class="btn-close btn-sm"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <p id="alertBody"></p>
           </div>
-          <!-- <div class="modal-footer modal-sm">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        </div> -->
         </div>
       </div>
     </div>
+
+    <div class="modal fade" id="addCommentModal">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h6 class="modal-title">Comment form:</h6>
+            <button
+              type="button"
+              class="btn-close btn-sm"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              You selected <span id="selectNodesLength"></span> nodes. Please
+              write your comment about them.
+            </p>
+            <form id="commentForm" class="was-validated text-center mt-2">
+              <div class="input-group">
+                <select
+                  class="form-select form-select-sm"
+                  id="commentCategorySeter"
+                  required
+                >
+                  <option selected disabled value="">Choose subject</option>
+                  <option value="Possible Sybils">Possible Sybils</option>
+                  <option value="Bad Actor">Bad Actor</option>
+                  <option value="Honest Region">Honest Region</option>
+                </select>
+              </div>
+              <div class="input-group mt-1">
+                <textarea
+                  class="form-control"
+                  id="comment"
+                  placeholder="Comment"
+                  required
+                ></textarea>
+              </div>
+            </form>
+            <button class="btn btn-primary btn-sm mt-2" onclick="addComment()">
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="replyCommentModal">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h6 class="modal-title">Comment form:</h6>
+            <button
+              type="button"
+              class="btn-close btn-sm"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" id="mainCommentId" class="hidden" />
+            <p id="mainComment"></p>
+            <form id="replyForm" class="was-validated text-center mt-2">
+              <div class="input-group mt-1">
+                <textarea
+                  class="form-control"
+                  id="replyComment"
+                  placeholder="Reply"
+                  required
+                ></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary btn-sm" onclick="replyComment()">
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"

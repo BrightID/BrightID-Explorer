@@ -326,3 +326,23 @@ ul,
   margin-left: 3rem !important;
   margin-bottom: 0.5rem !important;
 }
+
+.chat {
+  width: 90% !important;
+  border: 2px solid #dedede;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px 0;
+  float: left;
+}
+
+.chat-reply {
+  width: 90% !important;
+  border-color: #ccc;
+  background-color: #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px 0;
+  float: right;
+}

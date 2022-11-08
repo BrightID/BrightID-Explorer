@@ -575,7 +575,7 @@ function updateStatistics() {
 function alert(alertTitle, alertBody) {
   $("#alertTitle").html(alertTitle);
   $("#alertBody").html(alertBody);
-  $("#alert").modal("show");
+  $("#alertModal").modal("show");
 }
 
 function updateLegend(index) {
@@ -652,6 +652,11 @@ function showAuraConnection() {
 function showAuraNode() {
   const node = allNodes[$("#selectCommentNode").val()];
   move(node.x, node.y, 1.2);
+}
+
+async function filterComments() {
+  const commentCategory = $("#commentCategoryFilter").val();
+  await loadComments(commentCategory);
 }
 
 $(document).ready(function () {
@@ -844,4 +849,5 @@ $(document).ready(function () {
   $("#drawGroupSubgraphBtn").click(drawGroupSubgraph);
   $("#auraConnections").change(showAuraConnection);
   $("#selectCommentNode").change(showAuraNode);
+  $("#commentCategoryFilter").change(filterComments);
 });
