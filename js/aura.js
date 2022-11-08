@@ -850,6 +850,7 @@ async function loadUserComments(sn) {
     return;
   }
 
+  const user = await localforage.getItem("explorer_owner");
   userComments.sort((a, b) => b.timestamp - a.timestamp);
   for (var i = 0; i < userComments.length; i++) {
     let c = userComments[i];
@@ -878,7 +879,7 @@ async function loadUserComments(sn) {
     domString += `
       <div class="d-flex justify-content-evenly">
         <button id="replyCommentBtn" class="btn btn-primary btn-sm" onclick="openReplyModal(${c._key})">Reply</button>`;
-    if (c.user == sn) {
+    if (c.user == user) {
       domString += `
         <button id="removeCommentBtn" class="btn btn-primary btn-sm" onclick="removeComment(${c._key})">Remove</button>`;
     }
