@@ -119,7 +119,7 @@ def remove_comment(data):
             or c.mainCommentKey == @key
             REMOVE { _key: c._key } IN comments
     ''', bind_vars={
-        'key': data['_key']
+        'key': str(data['_key'])
     })
     return json.dumps({'status': 200})
 
