@@ -659,6 +659,26 @@ async function filterComments() {
   await loadComments(commentCategory);
 }
 
+function changeMode() {
+  if (!$("#darkMode").is(":checked")) {
+    $("#darkModeBtn").text("Light Mode");
+    $("#darkModeBtn").removeClass("btn-outline-light");
+    $("#darkModeBtn").addClass("btn-light");
+    Graph.backgroundColor("#212529")
+    $("#defaultLegend").addClass("text-white")
+    $(".legend-link").removeClass("text-dark")
+    $(".legend-link").addClass("text-white")
+  } else {
+    $("#darkModeBtn").text("Dark Mode");
+    $("#darkModeBtn").removeClass("btn-light");
+    $("#darkModeBtn").addClass("btn-outline-light");
+    Graph.backgroundColor("#fff")
+    $("#defaultLegend").removeClass("text-white")
+    $(".legend-link").addClass("text-dark")
+
+  }
+}
+
 $(document).ready(function () {
   $("#loadingoverlay").fadeIn();
   let dataFileAddr;
@@ -850,4 +870,5 @@ $(document).ready(function () {
   $("#auraConnections").change(showAuraConnection);
   $("#selectCommentNode").change(showAuraNode);
   $("#commentCategoryFilter").change(filterComments);
+  $("#darkModeBtn").click(changeMode);
 });

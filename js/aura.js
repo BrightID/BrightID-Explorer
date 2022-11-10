@@ -35,19 +35,19 @@ function prepare() {
   );
   $("#legendLinks").empty();
   $(
-    `<li><a href="#" id="ratingLinks" onclick="selectAuraView('honesty')" style="text-decoration: none; color: black;"><span style="background:${honestyLinkColor};"></span>honesty</a></li>`
+    `<li><a href="#" id="ratingLinks" onclick="selectAuraView('honesty')" class="legend-link text-dark"><span style="background:${honestyLinkColor};"></span>honesty</a></li>`
   ).appendTo("#legendLinks");
   $(
-    `<li><a href="#" id="energyLinks" onclick="selectAuraView('energy')" style="text-decoration: none; color: black;"><span style="background:${energyLinkColor};"></span>energy transfer</a></li>`
+    `<li><a href="#" id="energyLinks" onclick="selectAuraView('energy')" class="legend-link text-dark"><span style="background:${energyLinkColor};"></span>energy transfer</a></li>`
   ).appendTo("#legendLinks");
 
   $("#legendDirectionContainar").show();
   $("#legendDirection").empty();
   $(
-    `<li><a href="#" id="incomingLink" onclick="selectAuraLinkDirection('incoming')" style="text-decoration: none; color: black;"><span style="background:yellow;">⬋</span> incoming</a></li>`
+    `<li><a href="#" id="incomingLink" onclick="selectAuraLinkDirection('incoming')" class="legend-link text-dark"><span style="background:yellow;">⬋</span> incoming</a></li>`
   ).appendTo("#legendDirection");
   $(
-    `<li><a href="#" id="outgoingLink" onclick="selectAuraLinkDirection('outgoing')" style="text-decoration: none; color: black;"><span style="background:yellow;">⬈</span> outgoing</a></li>`
+    `<li><a href="#" id="outgoingLink" onclick="selectAuraLinkDirection('outgoing')" class="legend-link text-dark"><span style="background:yellow;">⬈</span> outgoing</a></li>`
   ).appendTo("#legendDirection");
   $("#aurastatisticsbtntitle").show();
   $("#graphbtntitle").hide();
