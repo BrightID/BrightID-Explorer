@@ -399,16 +399,12 @@ function resetAuraNodesLabel(n) {
   label += `<br/>level: ${n.aura_level || "_"} <br/> score: ${parseInt(
     n.aura_score || 0
   ).toLocaleString("en-US")}`;
-  if (auraGraphView.energy) {
-    label += `<br/>energy: ${parseInt(n.energy || 0).toLocaleString(
-      "en-US"
-    )} (${n.inEnergyNum} ⬋ / ${n.outEnergyNum} ⬈)`;
-  }
-  if (auraGraphView.honesty) {
-    label += `<br/>honesty: ${n.inHonesty || 0} (${n.inHonestyNum} ⬋ / ${
-      n.outHonestyNum
-    } ⬈)`;
-  }
+  label += `<br/>energy: ${parseInt(n.energy || 0).toLocaleString("en-US")} (${
+    n.inEnergyNum
+  } ⬋ / ${n.outEnergyNum} ⬈)`;
+  label += `<br/>honesty: ${n.inHonesty || 0} (${n.inHonestyNum} ⬋ / ${
+    n.outHonestyNum
+  } ⬈)`;
   return label;
 }
 
@@ -434,27 +430,19 @@ function resetAuraLinksLabel(l) {
   const target = allNodes[l.target.id]?.name || formatId(l.target.id);
 
   label += `${source} -> ${target}`;
-  if (auraGraphView.energy) {
-    label += ` energy: ${parseInt(l.energy || 0).toLocaleString("en-US")} (${
-      l.allocation || 0
-    }%)`;
-  }
-  if (auraGraphView.honesty) {
-    label += ` honesty: ${l.honesty || 0}`;
-  }
+  label += ` energy: ${parseInt(l.energy || 0).toLocaleString("en-US")} (${
+    l.allocation || 0
+  }%)`;
+  label += ` honesty: ${l.honesty || 0}`;
 
   if (auraLinkDirection.incoming && auraLinkDirection.outgoing) {
     const rl = auraLinks[`${l.target.id}:${l.source.id}`];
     if (rl) {
       label += `<br/>${target} -> ${source}`;
-      if (auraGraphView.energy) {
-        label += ` energy: ${parseInt(rl.energy || 0).toLocaleString(
-          "en-US"
-        )} (${rl.allocation || 0}%)`;
-      }
-      if (auraGraphView.honesty) {
-        label += ` honesty: ${rl.honesty || 0}`;
-      }
+      label += ` energy: ${parseInt(rl.energy || 0).toLocaleString("en-US")} (${
+        rl.allocation || 0
+      }%)`;
+      label += ` honesty: ${rl.honesty || 0}`;
     }
   }
   return label;
