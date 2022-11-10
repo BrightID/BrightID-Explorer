@@ -95,6 +95,7 @@ colors = [
   "#000000",
   "#F1FF09",
 ];
+
 function resetNodesColor(n, fade = false, clusters = false) {
   let color;
   if (clusters) {

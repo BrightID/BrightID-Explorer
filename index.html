@@ -54,7 +54,7 @@
     <script src="//unpkg.com/force-graph"></script>
     <script src="//unpkg.com/3d-force-graph"></script>
     <script src="js/login.js?version=1667151915"></script>
-    <script src="js/main.js?version=1668080259"></script>
+    <script src="js/main.js?version=1668099713"></script>
     <script src="js/graphs.js?version=1666424118"></script>
     <script src="js/aura.js?version=1668080259"></script>
     <script src="js/tools.js?version=1667917702"></script>
@@ -110,8 +110,32 @@
             </button>
           </li>
           <li>
-            <input type="checkbox" class="btn-check" id="darkMode" autocomplete="off">
-            <label id="darkModeBtn" class="btn btn-outline-light btn-sm mr-5 mt-2" for="darkMode">Dark Mode</label>
+            <input
+              type="checkbox"
+              class="btn-check"
+              id="privateMode"
+              autocomplete="off"
+            />
+            <label
+              id="privateModeBtn"
+              class="btn btn-outline-light btn-sm mr-5 mt-2"
+              for="privateMode"
+              >Public Mode</label
+            >
+          </li>
+          <li>
+            <input
+              type="checkbox"
+              class="btn-check"
+              id="darkMode"
+              autocomplete="off"
+            />
+            <label
+              id="darkModeBtn"
+              class="btn btn-outline-light btn-sm mr-5 mt-2"
+              for="darkMode"
+              >Dark Mode</label
+            >
           </li>
           <li class="nav-item active">
             <a href="https://brightid.org" style="outline: none">
@@ -597,7 +621,6 @@
             Comments
           </a>
           <div class="hidden menu-item-body" id="auraCommentsDetails">
-
             <div class="input-group-sm mb-3 px-2 text-small">
               <select
                 class="form-select form-select-sm"

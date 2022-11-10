@@ -664,19 +664,45 @@ function changeMode() {
     $("#darkModeBtn").text("Light Mode");
     $("#darkModeBtn").removeClass("btn-outline-light");
     $("#darkModeBtn").addClass("btn-light");
-    Graph.backgroundColor("#212529")
-    $("#defaultLegend").addClass("text-white")
-    $(".legend-link").removeClass("text-dark")
-    $(".legend-link").addClass("text-white")
+    Graph.backgroundColor("#212529");
+    $("#defaultLegend").addClass("text-white");
+    $(".legend-link").removeClass("text-dark");
+    $(".legend-link").addClass("text-white");
   } else {
     $("#darkModeBtn").text("Dark Mode");
     $("#darkModeBtn").removeClass("btn-light");
     $("#darkModeBtn").addClass("btn-outline-light");
-    Graph.backgroundColor("#fff")
-    $("#defaultLegend").removeClass("text-white")
-    $(".legend-link").addClass("text-dark")
-
+    Graph.backgroundColor("#fff");
+    $("#defaultLegend").removeClass("text-white");
+    $(".legend-link").addClass("text-dark");
   }
+}
+
+async function changePrivateMode() {
+  if (!$("#privateMode").is(":checked")) {
+    $("#privateModeBtn").text("Personal Mode");
+    $("#privateModeBtn").removeClass("btn-outline-light");
+    $("#privateModeBtn").addClass("btn-light");
+    const owner = await localforage.getItem("explorer_owner");
+    const user = allNodes[owner];
+    Object.assign(allNodes[owner], { name: "", img: "" });
+    for (const neighbor of Object.keys(user.neighbors) || []) {
+      Object.assign(allNodes[neighbor], { name: "", img: "" });
+    }
+    Graph.zoom(Graph.zoom());
+  } else {
+    await loadPersonalData();
+    $("#privateModeBtn").text("Public Mode");
+    $("#privateModeBtn").removeClass("btn-light");
+    $("#privateModeBtn").addClass("btn-outline-light");
+    Graph.zoom(Graph.zoom());
+  }
+  $("#privateModeBtn").prop("disabled", true);
+  $("#privateMode").prop("disabled", true);
+  setTimeout(() => {
+    $("#privateModeBtn").prop("disabled", false);
+    $("#privateMode").prop("disabled", false);
+  }, 5000);
 }
 
 $(document).ready(function () {
@@ -871,4 +897,5 @@ $(document).ready(function () {
   $("#selectCommentNode").change(showAuraNode);
   $("#commentCategoryFilter").change(filterComments);
   $("#darkModeBtn").click(changeMode);
+  $("#privateModeBtn").click(changePrivateMode);
 });
