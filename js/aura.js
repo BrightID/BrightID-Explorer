@@ -59,9 +59,13 @@ function prepare() {
   $("#neighborsHistoryContainer").hide();
   $("#groupsContainer").hide();
   $("#resetBtn").hide();
+  $("#auraleaderboardbtntitle").show();
 }
 
 function selectAuraNode(node, showDetails, focus) {
+  if (node in graphNodes) {
+    node = graphNodes[node];
+  }
   $("#userDetailsContent").show();
   $("#seedData").hide();
   $("#groupsData").hide();
@@ -189,7 +193,12 @@ function selectAuraNode(node, showDetails, focus) {
     .centerAt(node.x + 200, node.y)
     .zoom(1.2, 1000);
 
-  openCollapsible("userDetails", true);
+  if (showDetails) {
+    openCollapsible("userDetails", true);
+  }
+  if (focus) {
+    move(node.x, node.y, 1.2);
+  }
 }
 
 function strToUint8Array(str) {
@@ -292,7 +301,7 @@ async function getAuraData(fileName) {
     else unverifiedNum += 1;
   });
 
-  let energies = [];
+  const energies = [];
   links.forEach((l) => {
     if (l.energy > 0) {
       energies.push(l.energy);
@@ -316,21 +325,38 @@ async function getAuraData(fileName) {
   });
 
   const honesties = [];
-  energies = [];
+  const nodesEnergy = {};
   Object.values(auraNodes).forEach((n) => {
     if (n.inHonesty != 0) {
       honesties.push(n.inHonesty);
     }
     if (n.energy != 0) {
-      energies.push(n.energy);
+      nodesEnergy[n.id] = n.energy;
     }
+  });
+
+  const sortedNodesEnergy = Object.entries(nodesEnergy)
+    .sort(([, a], [, b]) => b - a)
+    .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+
+  Object.keys(sortedNodesEnergy).forEach((id) => {
+    $("#auraLeaderBoardTable tbody").append(
+      `<tr role="button" node="${id}" onclick="selectAuraNode('${id}', false, true)"><td>${
+        allNodes[id]?.name || formatId(id)
+      }</td><td>${parseInt(sortedNodesEnergy[id]).toLocaleString(
+        "en-US"
+      )}</td></tr>`
+    );
   });
 
   const maxHonesty = Math.max(...honesties);
   const minHonesty = Math.min(...honesties);
 
-  maxEnergy = Math.max(...energies);
-  minEnergy = Math.min(...energies);
+  maxEnergy = Object.values(sortedNodesEnergy)[0];
+  minEnergy =
+    Object.values(sortedNodesEnergy)[
+      Object.values(sortedNodesEnergy).length - 1
+    ];
 
   Object.values(auraNodes).forEach((n) => {
     auraNodes[n.id]["honestyVal"] =

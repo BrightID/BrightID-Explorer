@@ -56,7 +56,7 @@
     <script src="js/login.js?version=1667151915"></script>
     <script src="js/main.js?version=1668099713"></script>
     <script src="js/graphs.js?version=1666424118"></script>
-    <script src="js/aura.js?version=1668080259"></script>
+    <script src="js/aura.js?version=1668174786"></script>
     <script src="js/tools.js?version=1667917702"></script>
     <script src="js/usersIllustrator.js?version=1654346384"></script>
     <script src="js/starsIllustrator.js?version=1653629921"></script>
@@ -603,6 +603,35 @@
                         <th>All</th>
                         <td id="allNum"></td>
                         <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <a
+            id="auraleaderboardbtntitle"
+            href="#"
+            onclick="openCollapsible('auraLeaderBoardDetails')"
+            class="list-group-item list-group-item-action bg-primary hidden"
+          >
+            <i style="font-size: 16px" class="fas">&#xf105; </i>
+            Leader Board
+          </a>
+          <div class="hidden menu-item-body" id="auraLeaderBoardDetails">
+            <div class="containar">
+              <div style="display: block">
+                <div class="table-wrapper text-white text-small">
+                  <table
+                    class="table table-sm table-dark table-hover"
+                    id="auraLeaderBoardTable"
+                  >
+                    <tbody>
+                      <tr>
+                        <th>User</th>
+                        <th>Energy</th>
                       </tr>
                     </tbody>
                   </table>
