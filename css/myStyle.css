@@ -350,3 +350,12 @@ ul,
 .legend-link {
   text-decoration: none;
 }
+
+.table-wrapper {
+  width: 95% !important;
+  max-height: 300px;
+  overflow: auto;
+  display:inline-block;
+  margin-left: 0.5rem !important;
+  margin-right: 1rem !important;
+}
