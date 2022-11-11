@@ -1070,14 +1070,6 @@
     <div class="modal fade" id="addCommentModal">
       <div class="modal-dialog modal-sm">
         <div class="modal-content">
-          <div class="modal-header">
-            <h6 class="modal-title">Comment form:</h6>
-            <button
-              type="button"
-              class="btn-close btn-sm"
-              data-bs-dismiss="modal"
-            ></button>
-          </div>
           <div class="modal-body">
             <p>
               You selected <span id="selectNodesLength"></span> nodes. Please
@@ -1116,19 +1108,11 @@
     <div class="modal fade" id="replyCommentModal">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
-          <div class="modal-header">
-            <h6 class="modal-title">Comment form:</h6>
-            <button
-              type="button"
-              class="btn-close btn-sm"
-              data-bs-dismiss="modal"
-            ></button>
-          </div>
           <div class="modal-body">
             <input type="text" id="mainCommentId" class="hidden" />
             <p id="mainComment"></p>
             <form id="replyForm" class="was-validated text-center mt-2">
-              <div class="input-group mt-1">
+              <div class="input-group">
                 <textarea
                   class="form-control"
                   id="replyComment"

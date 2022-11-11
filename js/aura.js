@@ -341,7 +341,7 @@ async function getAuraData(fileName) {
 
   Object.keys(sortedNodesEnergy).forEach((id) => {
     $("#auraLeaderBoardTable tbody").append(
-      `<tr role="button" node="${id}" onclick="selectAuraNode('${id}', false, true)"><td>${
+      `<tr role="button" onclick="selectAuraNode('${id}', false, true)"><td>${
         allNodes[id]?.name || formatId(id)
       }</td><td>${parseInt(sortedNodesEnergy[id]).toLocaleString(
         "en-US"
@@ -621,43 +621,34 @@ function openReplyModal(commentKey) {
   $("#replyComment").val("");
   const comment = auraComments[commentKey];
   domString = `
-    <row class="chat">
-      <span class="text-small">${comment.comment}</span>
+    <row class="main-comment">
+      <span class="text-medium">${comment.comment}</span>
       <br>
       <span class="text-too-small">${
         allNodes[comment.user]?.name || formatId(comment.user)
-      }</span>
-      <span class="text-too-small">(${timestampToDate(
-        comment.timestamp
-      )})</span>
+      } (${timestampToDate(comment.timestamp)})</span>
       </span>
     </row>`;
   comment["replies"].forEach((k) => {
     const reply = auraComments[k];
     if (reply.user == comment.user) {
       domString += `
-        <row class="chat mt-2">
-          <span class="text-small">${reply.comment}</span>
-          <br>
-          <span class="text-too-small">${
-            allNodes[reply.user]?.name || formatId(reply.user)
-          }</span>
-          <span class="text-too-small">(${timestampToDate(
-            reply.timestamp
-          )})</span>
-        </row>`;
+      <row class="chat mb-1">
+        <span class="text-small">${reply.comment}</span>
+        <br>
+        <span class="text-too-small">${
+          allNodes[reply.user]?.name || formatId(reply.user)
+        } (${timestampToDate(reply.timestamp)})</span>
+      </row>`;
     } else {
       domString += `
-        <row class="chat-reply mt-2">
-          <span class="text-small">${reply.comment}</span>
-          <br>
-          <span class="text-too-small">${
-            allNodes[reply.user]?.name || formatId(reply.user)
-          }</span>
-          <span class="text-too-small">(${timestampToDate(
-            reply.timestamp
-          )})</span>
-        </row>`;
+      <row class="chat-reply mb-1">
+        <span class="text-small">${reply.comment}</span>
+        <br>
+        <span class="text-too-small">${
+          allNodes[reply.user]?.name || formatId(reply.user)
+        } (${timestampToDate(reply.timestamp)})</span>
+      </row>`;
     }
   });
   $("#mainComment").html(domString);
@@ -835,7 +826,7 @@ async function loadComments(category) {
     }</p>`;
     domString += `
       <div class="d-flex justify-content-evenly">
-        <button id="replyCommentBtn" class="btn btn-primary btn-sm" onclick="openReplyModal(${c._key})">Reply</button>`;
+        <button id="replyCommentBtn" class="btn btn-primary btn-sm" onclick="openReplyModal(${c._key})">Open</button>`;
     if (c.user == user) {
       domString += `
         <button id="removeCommentBtn" class="btn btn-primary btn-sm" onclick="removeComment(${c._key})">Remove</button>`;
@@ -892,7 +883,7 @@ async function loadUserComments(sn) {
     }</p>`;
     domString += `
       <div class="d-flex justify-content-evenly">
-        <button id="replyCommentBtn" class="btn btn-primary btn-sm" onclick="openReplyModal(${c._key})">Reply</button>`;
+        <button id="replyCommentBtn" class="btn btn-primary btn-sm" onclick="openReplyModal(${c._key})">Open</button>`;
     if (c.user == user) {
       domString += `
         <button id="removeCommentBtn" class="btn btn-primary btn-sm" onclick="removeComment(${c._key})">Remove</button>`;
