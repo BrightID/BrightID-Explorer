@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, ValidationError
+from marshmallow import Schema, fields, ValidationError, pre_load, post_load
 from flask import Flask, request
 from arango import ArangoClient
 import ed25519
@@ -12,27 +12,37 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 
-class AddCommentSchema(Schema):
+class ReqSchema(Schema):
     user = fields.String(required=True)
     comment = fields.String(required=True)
-    nodes = fields.List(fields.String(), metadata={'allow_blank': False})
+    nodes = fields.List(fields.String(required=True), required=True)
     aura = fields.String(required=True)
     signing_key = fields.String(required=True)
     sig = fields.String(required=True)
     category = fields.String(required=True)
     mainCommentKey = fields.String(required=True)
-
-
-class RemoveCommentSchema(Schema):
     _key = fields.Integer(required=True)
-    user = fields.String(required=True)
-    aura = fields.String(required=True)
-    signing_key = fields.String(required=True)
-    sig = fields.String(required=True)
+
+    @pre_load
+    def _pre_load(self, data, **kwargs):
+        if 'nodes' in data and len(data['nodes']) == 0:
+            raise ValidationError(
+                message=['Field may not be empty.'], field_name='nodes')
+
+        for k, v in data.items():
+            if v == '':
+                data[k] = None
+        return data
+
+    @post_load
+    def _post_load(self, data, **kwargs):
+        for k, v in data.items():
+            if v is None:
+                data[k] = ''
+        return data
 
 
-add_comment_schema = AddCommentSchema()
-remove_comment_schema = RemoveCommentSchema()
+req_schema = ReqSchema()
 
 
 @app.route('/comment', methods=['PUT', 'DELETE'])
@@ -47,7 +57,7 @@ def comments():
 
 def add_comment(data):
     try:
-        data = add_comment_schema.load(data, partial=("mainCommentKey",))
+        data = req_schema.load(data, partial=('mainCommentKey', '_key'))
     except ValidationError as err:
         raise ErrorToClient(err.messages, 400)
 
@@ -97,7 +107,8 @@ def add_comment(data):
 
 def remove_comment(data):
     try:
-        data = remove_comment_schema.load(data)
+        data = req_schema.load(data, partial=(
+            'comment', 'nodes', 'category', 'mainCommentKey'))
     except ValidationError as err:
         raise ErrorToClient(err.messages, 400)
 

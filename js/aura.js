@@ -736,12 +736,12 @@ async function addComment(mainCommentKey) {
         await loadComments();
       } else {
         console.log("Error!", rsp);
-        alert("Error!", rsp.message);
+        alert("Error!", JSON.stringify(rsp.message));
       }
     },
     error: function (xhr, exception) {
-      alert("Error!", exception);
       console.log("Error!", exception);
+      alert("Error!", JSON.stringify(exception));
     },
     complete: function (response, status, xhr) {
       $("#addCommentModal").modal("hide");
@@ -778,12 +778,12 @@ async function removeComment(commentKey) {
         );
       } else {
         console.log("Error!", rsp);
-        alert("Error!", rsp.message);
+        alert("Error!", JSON.stringify(rsp.message));
       }
     },
     error: function (xhr, exception) {
       console.log("Error!", exception);
-      alert("Error!", exception);
+      alert("Error!", JSON.stringify(exception));
     },
     complete: function (response, status, xhr) {
       $("#addCommentModal").modal("hide");
