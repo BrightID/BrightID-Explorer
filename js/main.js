@@ -22,6 +22,7 @@ var selectedLevels;
 var boldMood = 0;
 var auraMode = false;
 var FocusedOnCenterNode = false;
+var graphBg = "#FFFFFF";
 
 var areaPoints = [];
 $(document).keyup(function (e) {
@@ -659,20 +660,22 @@ async function filterComments() {
   await loadComments(commentCategory);
 }
 
-function changeMode() {
+function updateTheme() {
   if (!$("#darkMode").is(":checked")) {
+    graphBg = "#212529";
+    Graph.backgroundColor(graphBg);
     $("#darkModeBtn").text("Light Mode");
     $("#darkModeBtn").removeClass("btn-outline-light");
     $("#darkModeBtn").addClass("btn-light");
-    Graph.backgroundColor("#212529");
     $("#defaultLegend").addClass("text-white");
     $(".legend-link").removeClass("text-dark");
     $(".legend-link").addClass("text-white");
   } else {
+    graphBg = "#FFFFFF";
+    Graph.backgroundColor(graphBg);
     $("#darkModeBtn").text("Dark Mode");
     $("#darkModeBtn").removeClass("btn-light");
     $("#darkModeBtn").addClass("btn-outline-light");
-    Graph.backgroundColor("#fff");
     $("#defaultLegend").removeClass("text-white");
     $(".legend-link").addClass("text-dark");
   }
@@ -896,6 +899,6 @@ $(document).ready(function () {
   $("#auraConnections").change(showAuraConnection);
   $("#selectCommentNode").change(showAuraNode);
   $("#commentCategoryFilter").change(filterComments);
-  $("#darkModeBtn").click(changeMode);
+  $("#darkModeBtn").click(updateTheme);
   $("#privateModeBtn").click(changePrivateMode);
 });

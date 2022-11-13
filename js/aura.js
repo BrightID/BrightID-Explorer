@@ -484,6 +484,7 @@ async function drawAuraGraph(nodes, links) {
   Graph = ForceGraph()(elem);
   Graph.nodeColor(resetAuraNodesColor)
     .graphData(data)
+    .backgroundColor(graphBg)
     .nodeId("id")
     .nodeVal(resetAuraNodesVal)
     .nodeLabel(resetAuraNodesLabel)

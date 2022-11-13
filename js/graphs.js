@@ -276,6 +276,7 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph()(elem)
     .minZoom(0.009)
+    .backgroundColor(graphBg)
     .linkVisibility(false)
     .cooldownTime(cooldownTime)
     .enableNodeDrag(false)
@@ -369,6 +370,7 @@ function drawGraph3d(data, cooldownTime, linkVisibility) {
   $("#graphDiv").empty();
   const elem = document.getElementById("graphDiv");
   Graph = ForceGraph3D()(elem)
+    .backgroundColor(graphBg)
     .cooldownTime(cooldownTime)
     .enableNodeDrag(false)
     .linkColor(resetLinksColor)
