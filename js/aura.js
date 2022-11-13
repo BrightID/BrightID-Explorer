@@ -263,6 +263,34 @@ async function selectAuraNodes(nodes, openCommentForm = false) {
   }
 }
 
+function LoadLeaderBoard() {
+  $("#auraLeaderBoardTable tbody").empty();
+  const nodesEnergy = {};
+  Object.values(auraNodes).forEach((n) => {
+    if (n.energy != 0) {
+      nodesEnergy[n.id] = n.energy;
+    }
+  });
+
+  const sortedNodesEnergy = Object.entries(nodesEnergy)
+    .sort(([, a], [, b]) => b - a)
+    .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+
+  $("#auraLeaderBoardTable tbody").append(
+    `<tr><th>User</th><th>Energy</th></tr>`
+  );
+
+  Object.keys(sortedNodesEnergy).forEach((id) => {
+    $("#auraLeaderBoardTable tbody").append(
+      `<tr role="button" onclick="selectAuraNode('${id}', false, true)"><td>${
+        allNodes[id]?.name || formatId(id)
+      }</td><td>${parseInt(sortedNodesEnergy[id]).toLocaleString(
+        "en-US"
+      )}</td></tr>`
+    );
+  });
+}
+
 async function getAuraData(fileName) {
   const { nodes, links, comments } = await $.ajax({
     url: `./${fileName}.json`,
@@ -301,7 +329,7 @@ async function getAuraData(fileName) {
     else unverifiedNum += 1;
   });
 
-  const energies = [];
+  let energies = [];
   links.forEach((l) => {
     if (l.energy > 0) {
       energies.push(l.energy);
@@ -325,38 +353,21 @@ async function getAuraData(fileName) {
   });
 
   const honesties = [];
-  const nodesEnergy = {};
+  energies = [];
   Object.values(auraNodes).forEach((n) => {
     if (n.inHonesty != 0) {
       honesties.push(n.inHonesty);
     }
     if (n.energy != 0) {
-      nodesEnergy[n.id] = n.energy;
+      energies.push(n.energy);
     }
-  });
-
-  const sortedNodesEnergy = Object.entries(nodesEnergy)
-    .sort(([, a], [, b]) => b - a)
-    .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-
-  Object.keys(sortedNodesEnergy).forEach((id) => {
-    $("#auraLeaderBoardTable tbody").append(
-      `<tr role="button" onclick="selectAuraNode('${id}', false, true)"><td>${
-        allNodes[id]?.name || formatId(id)
-      }</td><td>${parseInt(sortedNodesEnergy[id]).toLocaleString(
-        "en-US"
-      )}</td></tr>`
-    );
   });
 
   const maxHonesty = Math.max(...honesties);
   const minHonesty = Math.min(...honesties);
 
-  maxEnergy = Object.values(sortedNodesEnergy)[0];
-  minEnergy =
-    Object.values(sortedNodesEnergy)[
-      Object.values(sortedNodesEnergy).length - 1
-    ];
+  maxEnergy = Math.max(...energies);
+  minEnergy = Math.min(...energies);
 
   Object.values(auraNodes).forEach((n) => {
     auraNodes[n.id]["honestyVal"] =
@@ -384,6 +395,8 @@ async function drawAura(fileName) {
   }
 
   await getAuraData(fileName);
+
+  LoadLeaderBoard();
 
   const owner = await localforage.getItem("explorer_owner");
   if (brightid_has_imported & (auraNodes[owner]?.energy > 0)) {

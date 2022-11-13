@@ -23,6 +23,7 @@ var boldMood = 0;
 var auraMode = false;
 var FocusedOnCenterNode = false;
 var graphBg = "#FFFFFF";
+var privateMode = false;
 
 var areaPoints = [];
 $(document).keyup(function (e) {
@@ -683,6 +684,7 @@ function updateTheme() {
 
 async function changePrivateMode() {
   if (!$("#privateMode").is(":checked")) {
+    privateMode = true;
     $("#privateModeBtn").text("Personal Mode");
     $("#privateModeBtn").removeClass("btn-outline-light");
     $("#privateModeBtn").addClass("btn-light");
@@ -694,12 +696,18 @@ async function changePrivateMode() {
     }
     Graph.zoom(Graph.zoom());
   } else {
+    privateMode = false;
     await loadPersonalData();
     $("#privateModeBtn").text("Public Mode");
     $("#privateModeBtn").removeClass("btn-light");
     $("#privateModeBtn").addClass("btn-outline-light");
     Graph.zoom(Graph.zoom());
   }
+
+  if (auraMode) {
+    LoadLeaderBoard();
+  }
+
   $("#privateModeBtn").prop("disabled", true);
   $("#privateMode").prop("disabled", true);
   setTimeout(() => {
