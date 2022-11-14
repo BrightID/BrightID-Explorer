@@ -858,7 +858,7 @@ async function loadUserComments(sn) {
   $("#userComments").empty();
 
   userComments = Object.values(auraComments).filter(
-    (c) => c.user == sn || c.nodes.includes(sn)
+    ("replies" in c) & ((c) => c.user == sn || c.nodes.includes(sn))
   );
 
   if (Object.keys(userComments).length == 0) {
