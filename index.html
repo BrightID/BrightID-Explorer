@@ -1092,9 +1092,12 @@
                 ></textarea>
               </div>
             </form>
-            <button class="btn btn-primary btn-sm mt-2" onclick="addComment()">
-              Submit
-            </button>
+            <div class="d-flex justify-content-evenly">
+              <button type="button" class="btn btn-sm btn-secondary mt-2" data-bs-dismiss="modal">Close</button>
+              <button class="btn btn-primary btn-sm mt-2" onclick="addComment()">
+                Submit
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1118,9 +1121,12 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-primary btn-sm" onclick="replyComment()">
-              Submit
-            </button>
+            <div class="d-flex justify-content-evenly">
+              <button type="button" class="btn btn-sm btn-secondary mt-2" data-bs-dismiss="modal">Close</button>
+              <button class="btn btn-primary btn-sm" onclick="replyComment()">
+                Submit
+              </button>
+            </div>
           </div>
         </div>
       </div>
