@@ -511,9 +511,8 @@ async function drawAuraGraph(nodes, links) {
       if (evt.shiftKey) {
         Graph.pauseAnimation();
         const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
-        var rect = document.getElementById("graphDiv").getBoundingClientRect();
-        drawCoordinates(p.x, p.y, 5 / Graph.zoom() ** 0.5);
         areaPoints.push([p.x, p.y]);
+        drawBoundaries();
         return;
       }
 
