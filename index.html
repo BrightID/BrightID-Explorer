@@ -1080,7 +1080,7 @@
                   id="commentCategorySeter"
                   required
                 >
-                  <option selected value="General">General</option>
+                  <option value="General" selected>General</option>
                   <option value="Requesting Information">Requesting Information</option>
                   <option value="Possible Sybils">Possible Sybils</option>
                   <option value="Bad Actor">Bad Actor</option>
@@ -1134,18 +1134,16 @@
             </form>
           </div>
           <div class="modal-footer">
-            <div class="d-flex justify-content-evenly">
-              <button
-                type="button"
-                class="btn btn-sm btn-secondary mt-2"
-                data-bs-dismiss="modal"
-              >
-                Close
-              </button>
-              <button class="btn btn-primary btn-sm" onclick="replyComment()">
-                Submit
-              </button>
-            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-secondary mt-2 mr-4"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button class="btn btn-primary btn-sm mt-2 ml-4" onclick="replyComment()">
+              Submit
+            </button>
           </div>
         </div>
       </div>
