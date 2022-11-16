@@ -510,9 +510,8 @@ async function drawAuraGraph(nodes, links) {
     .onBackgroundClick((evt) => {
       if (evt.shiftKey) {
         Graph.pauseAnimation();
-        const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
-        areaPoints.push([p.x, p.y]);
-        drawBoundaries();
+        Graph.enablePanInteraction(false);
+        drawLasso();
         return;
       }
 

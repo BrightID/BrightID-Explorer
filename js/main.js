@@ -51,7 +51,9 @@ $(document).keyup(function (e) {
       selectNodes(nodes);
     }
   }
+
   areaPoints = [];
+  Graph.enablePanInteraction(true);
 
   // clear area points from canvas
   Graph.resumeAnimation();
@@ -67,10 +69,11 @@ $(document).keydown(function (e) {
       $("#linkVisibility").prop("checked", true);
       Graph.linkVisibility(true);
     }
-  }
-  if (e.keyCode == 50 && e.shiftKey) {
+  } else if (e.keyCode == 50 && e.shiftKey) {
     boldMood = (boldMood += 1) % 3;
     Graph.nodeVal(resetNodesVal);
+  } else if (e.shiftKey) {
+    Graph.enablePanInteraction(false);
   }
 });
 
