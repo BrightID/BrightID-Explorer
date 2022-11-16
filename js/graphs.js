@@ -97,6 +97,7 @@ function drawBoundaries() {
       ctx.closePath();
     }
   }
+  ctx.setLineDash([])
 }
 
 function inside(point, vs) {
