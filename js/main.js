@@ -74,6 +74,8 @@ $(document).keydown(function (e) {
     Graph.nodeVal(resetNodesVal);
   } else if (e.shiftKey) {
     Graph.enablePanInteraction(false);
+    Graph.pauseAnimation();
+    drawLasso();
   }
 });
 

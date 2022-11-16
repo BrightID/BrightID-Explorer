@@ -508,13 +508,6 @@ async function drawAuraGraph(nodes, links) {
       selectAuraNode(node, true);
     })
     .onBackgroundClick((evt) => {
-      if (evt.shiftKey) {
-        Graph.pauseAnimation();
-        Graph.enablePanInteraction(false);
-        drawLasso();
-        return;
-      }
-
       for (const id in graphNodes) {
         graphNodes[id].selected = false;
       }

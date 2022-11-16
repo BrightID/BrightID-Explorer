@@ -45,61 +45,6 @@ function drawSubgraph(nodes, links) {
   }
 }
 
-function drawBoundaries() {
-  var canvas = document.getElementsByTagName("canvas")[0];
-  var ctx = canvas.getContext("2d");
-  const size = 5 / Graph.zoom() ** 0.5;
-
-  // it's a trick and should find a solution later
-  if (areaPoints.length > 3) {
-    let fp = areaPoints[0];
-    let pp = areaPoints[areaPoints.length - 2];
-    ctx.strokeStyle = graphBg;
-    ctx.lineWidth = size / 9;
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.closePath();
-    ctx.moveTo(pp[0], pp[1]);
-    ctx.lineTo(fp[0], fp[1]);
-    ctx.stroke();
-    ctx.closePath();
-  }
-
-  ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-  ctx.fillStyle = "rgba(255, 0, 0, 1)";
-
-  for (let i = 0; i < areaPoints.length; i++) {
-    let p = areaPoints[i];
-    ctx.beginPath();
-    ctx.arc(p[0], p[1], size, 0, Math.PI * 2, true);
-    ctx.fill();
-    ctx.closePath();
-
-    if (i > 0) {
-      ctx.beginPath();
-      ctx.setLineDash([]);
-      ctx.lineWidth = size / 4;
-      let pp = areaPoints[i - 1];
-      ctx.moveTo(pp[0], pp[1]);
-      ctx.lineTo(p[0], p[1]);
-      ctx.stroke();
-      ctx.closePath();
-    }
-
-    if ((areaPoints.length > 2) & (i + 1 == areaPoints.length)) {
-      ctx.beginPath();
-      let fp = areaPoints[0];
-      ctx.setLineDash([1, 2]);
-      ctx.lineWidth = size / 10;
-      ctx.moveTo(p[0], p[1]);
-      ctx.lineTo(fp[0], fp[1]);
-      ctx.stroke();
-      ctx.closePath();
-    }
-  }
-  ctx.setLineDash([])
-}
-
 function inside(point, vs) {
   var x = point[0],
     y = point[1];
@@ -339,14 +284,6 @@ function drawGraph2d(data, cooldownTime, linkVisibility) {
       }
     })
     .onBackgroundClick((evt) => {
-      if (evt.shiftKey) {
-        Graph.pauseAnimation();
-        const p = Graph.screen2GraphCoords(evt.layerX, evt.layerY);
-        areaPoints.push([p.x, p.y]);
-        drawBoundaries();
-        return;
-      }
-
       for (const id in graphNodes) {
         graphNodes[id].selected = false;
       }
