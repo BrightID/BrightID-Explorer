@@ -667,15 +667,6 @@ function replyComment() {
 }
 
 async function addComment(mainCommentKey) {
-  // should remove after test
-  if (aura == "aura") {
-    return alert(
-      "Error!",
-      "This feature is only available on the aura-test for now."
-    );
-    return;
-  }
-
   let category, comment;
   if (mainCommentKey) {
     comment = $("#replyComment").val();
