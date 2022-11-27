@@ -64,13 +64,7 @@ def read_data_from_db(db_url):
             float(ea['allocation']) / scales[f] * 100)
         links[f'{f}:{t}']['history'].append([ea['modified'], 'energyFlow'])
 
-    energyFlow = snapshot_db.aql.execute('''
-        FOR d IN energyFlow
-            COLLECT f=d._from, t=d._to INTO g
-            LET conns = (FOR c IN g[*] SORT c.timestamp RETURN c)
-            RETURN conns[0].d
-    ''')
-    for ef in energyFlow:
+    for ef in db.collection('energyFlow'):
         f = ef['_from'].replace('energy/', '')
         t = ef['_to'].replace('energy/', '')
         nodes[f]['outEnergy'] += float(ef['energy'])
