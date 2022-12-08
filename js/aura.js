@@ -54,6 +54,7 @@ function prepare() {
   $("#groupbtntitle").hide();
   $("#statisticsbtntitle").hide();
   $("#starillustratorbtntitle").hide();
+  $("#usersillustratorbtntitle").hide();
   $("#seedData").hide();
   $("#neighborsContainer").hide();
   $("#neighborsHistoryContainer").hide();
@@ -277,16 +278,31 @@ function LoadLeaderBoard() {
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
 
   $("#auraLeaderBoardTable tbody").append(
-    `<tr><th>User</th><th>Energy</th></tr>`
+    `<tr><th>User</th><th>Current Energy</th><th>Trailing 10</th><th>Trailing 30</th></tr>`
   );
 
+  const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
   Object.keys(sortedNodesEnergy).forEach((id) => {
+    let e10 = (e30 = n10 = n30 = 0);
+    allNodes[id]["energyHistory"].forEach((t) => {
+      if (t[0] > tenDaysAgo) {
+        e10 += t[1];
+        n10 += 1;
+      }
+      if (t[0] > thirtyDaysAgo) {
+        e30 += t[1];
+        n30 += 1;
+      }
+    });
+
     $("#auraLeaderBoardTable tbody").append(
       `<tr role="button" onclick="selectAuraNode('${id}', false, true)"><td>${
         allNodes[id]?.name || formatId(id)
-      }</td><td>${parseInt(sortedNodesEnergy[id]).toLocaleString(
-        "en-US"
-      )}</td></tr>`
+      }</td><td>${parseInt(sortedNodesEnergy[id]).toLocaleString("en-US")}</td>
+      <td>${parseInt(e10 / n10).toLocaleString("en-US")}</td>
+      <td>${parseInt(e30 / n30).toLocaleString("en-US")}</td>
+      </tr>`
     );
   });
 }

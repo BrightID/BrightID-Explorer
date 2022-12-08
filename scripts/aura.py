@@ -1,6 +1,7 @@
 from arango import ArangoClient
 import json
 import gzip
+import time
 
 
 aura_node = ''
@@ -40,11 +41,12 @@ def read_data_from_db(db_url):
         nodes[f]['outHonestyNum'] += 1
         nodes[t]['inHonesty'] += float(d['honesty'])
         nodes[f]['outHonesty'] += float(d['honesty'])
+        nodes[f]['energyHistory'] = []
+        nodes[t]['energyHistory'] = []
 
         links[f'{f}:{t}'] = {
             'source': f,
             'target': t,
-            'history': [],
             'honesty': float(d['honesty']),
         }
 
@@ -62,7 +64,6 @@ def read_data_from_db(db_url):
         t = ea['_to'].replace('energy/', '')
         links[f'{f}:{t}']['allocation'] = int(
             float(ea['allocation']) / scales[f] * 100)
-        links[f'{f}:{t}']['history'].append([ea['modified'], 'energyFlow'])
 
     for ef in db.collection('energyFlow'):
         f = ef['_from'].replace('energy/', '')
@@ -70,6 +71,10 @@ def read_data_from_db(db_url):
         nodes[f]['outEnergy'] += float(ef['energy'])
         nodes[t]['inEnergy'] += float(ef['energy'])
         links[f'{f}:{t}']['energy'] = float(ef['energy'])
+
+    for et in snapshot_db.collection('energyTotals'):
+        key = et['user'].replace('users/', '')
+        nodes[key]['energyHistory'].append([et['timestamp'], et['energy']])
 
     for e in snapshot_db.collection('energy'):
         nodes[e['_key']]['energy'] = e['energy']
@@ -106,7 +111,6 @@ def read_data_from_db(db_url):
 
 
 def run():
-    import time
     t1 = time.time()
     print('\nUpdating the Aura graph explorer data ... ')
     read_data_from_db(aura_node)
