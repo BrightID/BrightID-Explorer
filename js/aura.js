@@ -278,12 +278,14 @@ function LoadLeaderBoard() {
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
 
   $("#auraLeaderBoardTable tbody").append(
-    `<tr><th>User</th><th>Current Energy</th><th>Trailing 10</th><th>Trailing 30</th></tr>`
+    `<tr><th>#</th><th>User</th><th>Current Energy</th><th>Trailing 10</th><th>Trailing 30</th></tr>`
   );
 
   const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  let rowNo = 0;
   Object.keys(sortedNodesEnergy).forEach((id) => {
+    rowNo += 1;
     let e10 = (e30 = n10 = n30 = 0);
     allNodes[id]["energyHistory"].forEach((t) => {
       if (t[0] > tenDaysAgo) {
@@ -297,9 +299,10 @@ function LoadLeaderBoard() {
     });
 
     $("#auraLeaderBoardTable tbody").append(
-      `<tr role="button" onclick="selectAuraNode('${id}', false, true)"><td>${
-        allNodes[id]?.name || formatId(id)
-      }</td><td>${parseInt(sortedNodesEnergy[id]).toLocaleString("en-US")}</td>
+      `<tr role="button" onclick="selectAuraNode('${id}', false, true)">
+      <td>${rowNo}</td>
+      <td>${allNodes[id]?.name || formatId(id)}</td>
+      <td>${parseInt(sortedNodesEnergy[id]).toLocaleString("en-US")}</td>
       <td>${parseInt(e10 / n10).toLocaleString("en-US")}</td>
       <td>${parseInt(e30 / n30).toLocaleString("en-US")}</td>
       </tr>`
