@@ -62,6 +62,9 @@ def read_data_from_db(db_url):
     for ea in db.collection('energyAllocation'):
         f = ea['_from'].replace('energy/', '')
         t = ea['_to'].replace('energy/', '')
+        if ea['allocation'] == 0:
+            links[f'{f}:{t}']['allocation'] = 0
+            continue
         links[f'{f}:{t}']['allocation'] = int(
             float(ea['allocation']) / scales[f] * 100)
 
@@ -105,7 +108,8 @@ def read_data_from_db(db_url):
     else:
         json_file = '../aura.json.gz'
 
-    json_graph = {'nodes': list(nodes.values()), 'links': list(links.values()), 'comments': comments}
+    json_graph = {'nodes': list(nodes.values()), 'links': list(
+        links.values()), 'comments': comments}
     with gzip.open(json_file, 'w') as f:
         f.write(json.dumps(json_graph).encode('utf-8'))
 
