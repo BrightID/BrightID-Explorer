@@ -129,23 +129,48 @@ function selectAuraNode(node, showDetails, focus) {
     .empty()
     .append(
       new Option(
-        "connection ↭ energy-out | honesty-out ⬈ energy-in | honesty-in ⬋",
+        "connection ↭ level | energy | honesty ⬈ level | energy | honesty ⬋",
         "none"
       )
     );
   Object.keys(node.neighbors).forEach((n) => {
+    const fData =
+      node.neighbors[n]["from"].length > 0
+        ? node.neighbors[n]["from"][node.neighbors[n]["from"].length - 1]
+        : [null, null];
+    const tData =
+      node.neighbors[n]["to"].length > 0
+        ? node.neighbors[n]["to"][node.neighbors[n]["to"].length - 1]
+        : [null, null];
+    if (fData[1]) {
+      if (fData[1] == "reported") {
+        fLevel = "reported";
+      } else {
+        fLevel = fData[1][0].toUpperCase();
+      }
+    } else {
+      fLevel = "_";
+    }
+    if (tData[1]) {
+      if (tData[1] == "reported") {
+        tLevel = "reported";
+      } else {
+        tLevel = tData[1][0].toUpperCase();
+      }
+    } else {
+      tLevel = "_";
+    }
+
     const l = auraLinks[`${node.id}:${n}`];
     const rl = auraLinks[`${n}:${node.id}`];
     if (!l && !rl) {
       return;
     }
-    const connText = `${allNodes[n]?.name || formatId(n)} ↭ 
-    ${l ? parseInt(l.energy || 0).toLocaleString("en-US") : "_"} | ${
-      l ? l.honesty || 0 : "_"
-    } ⬈ 
-    ${rl ? parseInt(rl.energy || 0).toLocaleString("en-US") : "_"} | ${
-      rl ? rl.honesty || 0 : "_"
-    } ⬋`;
+    const connText = `${allNodes[n]?.name || formatId(n)} ↭ ${tLevel} | ${
+      l ? parseInt(l.energy || 0).toLocaleString("en-US") : "_"
+    } (${l?.allocation || 0}%) | ${l ? l.honesty || 0 : "_"} ⬈ ${fLevel} | ${
+      rl ? parseInt(rl.energy || 0).toLocaleString("en-US") : "_"
+    } (${rl?.allocation || 0}%) | ${rl ? rl.honesty || 0 : "_"} ⬋`;
     $("#auraConnections").append(new Option(connText, n));
   });
 
